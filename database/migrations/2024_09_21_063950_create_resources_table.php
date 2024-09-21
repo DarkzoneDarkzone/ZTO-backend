@@ -13,7 +13,16 @@ return new class extends Migration
     {
         Schema::create('resources', function (Blueprint $table) {
             $table->id();
+            $table->integer('parent_id')->nullable();
+            $table->string('name')->nullable();
+            $table->text('description')->nullable();
+            $table->string('icon')->nullable();
+            $table->string('path')->nullable();
+            $table->integer('sort_group')->nullable();
+            $table->boolean('active')->default(true);
+            $table->string('created_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
