@@ -13,7 +13,17 @@ return new class extends Migration
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->string('phone')->unique();
+            $table->string('address');
+            $table->unsignedBigInteger('customer_level_id');
+            $table->boolean('active')->default(true);
+            $table->boolean('verify')->default(true);
+            $table->boolean('create_by');
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('customer_level_id')->references('id')->on('customer_levels');
         });
     }
 
