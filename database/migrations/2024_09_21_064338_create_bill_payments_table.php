@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('bill_payments', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('bill_id');
+            $table->unsignedBigInteger('payment_id');
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('bill_id')->references('id')->on('bills');
+            $table->foreign('payment_id')->references('id')->on('payments');
         });
     }
 

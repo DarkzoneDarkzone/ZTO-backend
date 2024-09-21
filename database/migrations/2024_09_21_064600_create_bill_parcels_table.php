@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('bill_parcels', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('bill_id');
+            $table->unsignedBigInteger('parcel_id');
+            $table->string('create_by');
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('bill_id')->references('id')->on('bills');
+            $table->foreign('parcel_id')->references('id')->on('parcels');
         });
     }
 

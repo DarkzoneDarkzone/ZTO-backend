@@ -13,7 +13,16 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('bill_id');
+            $table->string('car_number');
+            $table->string('driver_name');
+            $table->float('weigth');
+            $table->float('refund_amount_lak');
+            $table->float('refund_amount_cny');
+            $table->boolean('verify')->default(false);
+            $table->string('create_by');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

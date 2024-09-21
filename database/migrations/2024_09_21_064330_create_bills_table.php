@@ -13,7 +13,17 @@ return new class extends Migration
     {
         Schema::create('bills', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('customer_id');
+            $table->string('phone');
+            $table->string('bill_no');
+            $table->float('amount_lak');
+            $table->float('amount_cny');
+            $table->string('status');
+            $table->string('create_by');
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('customer_id')->references('id')->on('customers');
         });
     }
 
