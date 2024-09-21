@@ -11,16 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('role_resources', function (Blueprint $table) {
-            $table->id();
+        Schema::table('users', function (Blueprint $table) {
+            $table->unsignedBigInteger('department_id');
             $table->unsignedBigInteger('role_id');
-            $table->unsignedBigInteger('resource_id');
-            $table->string('created_by')->nullable();
-            $table->timestamps();
-            $table->softDeletes();
 
+            $table->foreign('department_id')->references('id')->on('departments');
             $table->foreign('role_id')->references('id')->on('roles');
-            $table->foreign('resource_id')->references('id')->on('resources');
         });
     }
 
@@ -29,6 +25,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('role_resources');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('department_id');
+            $table->dropColumn('role_id');
+        });
     }
 };
