@@ -11,7 +11,11 @@ Route::group([
 ], function ($router) {
     Route::post('/users', [UserController::class, 'register'])->name('register');
     Route::post('/login', [UserController::class, 'login'])->name('login');
-    Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:api')->name('logout');
-    // Route::post('/refresh', [UserController::class, 'refresh'])->middleware('auth:api')->name('refresh');
-    Route::post('/me', [UserController::class, 'me'])->middleware('auth:api')->name('me');
+});
+
+Route::middleware('auth:api')->group(function () {
+    // Route::post('/refresh', [UserController::class, 'refresh'])->name('refresh');
+    Route::post('/logout', [UserController::class, 'logout'])->name('logout');
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/me', [UserController::class, 'me'])->name('me');
 });

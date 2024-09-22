@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserListResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -9,6 +10,19 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
+    public function index()
+    {
+        return response()->json(
+            UserListResource::collection(User::with([
+                'Department' => function ($query) {
+                    $query->select('id', 'name');
+                },
+                'Role' => function ($query) {
+                    $query->select('id', 'name');
+                },
+            ])->get())
+        );
+    }
     /**
      * Register a User.
      *
