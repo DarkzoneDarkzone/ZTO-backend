@@ -20,4 +20,5 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/users/{id}', [UserController::class, 'getById']);
     Route::patch('/users/{id}', [UserController::class, 'update']);
     Route::post('/me', [UserController::class, 'me'])->name('me');
+    Route::get('/customer', [UserController::class, 'getById']);
 });
