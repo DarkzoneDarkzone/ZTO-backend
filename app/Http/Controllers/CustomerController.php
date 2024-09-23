@@ -5,50 +5,94 @@ namespace App\Http\Controllers;
 use App\Http\Resources\CustomerListResource;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Exception;
 
 class CustomerController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * get data all
      */
     public function index()
     {
         return response()->json(
             CustomerListResource::collection(Customer::with([
-                'CustomerLevel'
+                'CustomerLevel' => function ($query) {
+                    $query->select('id', 'name');
+                },
             ])->get())
         );
     }
 
     /**
-     * Show the form for creating a new resource.
+     * get data by id
+     */
+    public function getById($id)
+    {
+        $customer = Customer::with([
+            'CustomerLevel' => function ($query) {
+                $query->select('id', 'name');
+            },
+        ])->where('id', $id)->first();
+        if (!$customer) {
+            return response()->json([
+                'code' => 401,
+                'status' => 'ERROR',
+                'errors' => array()
+            ], 400);
+        }
+        return response()->json([
+            'code' => 200,
+            'status' => 'OK',
+            'data' => $customer
+        ], 200);
+    }
+
+    /**
+     * create data 
      */
     public function create(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'phone' => 'required',
-            'address' => 'string',
-            'level_id' => 'required|string',
-            'verify' => 'required|boolean',
-            'active' => 'required|boolean',
-        ]);
+        try{
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string',
+                'phone' => 'required|string',
+                'address' => 'string',
+                'level_id' => 'required|string',
+                'verify' => 'required|boolean',
+                'active' => 'required|boolean',
+            ]);
+            if ($validator->fails()) {
+                return response()->json([
+                    'msg' => ' went wrong.',
+                    'errors' => $validator->errors()->toJson(),
+                    'status' => 'Unauthorized',
+                ], 400);
+            }
+            $customer = new Customer();
+            $customer->name = $request->name;
+            $customer->phone = $request->phone;
+            $customer->address = $request->address;
+            $customer->level_id = $request->level_id;
+            $customer->verify = $request->verify;
+            $customer->active = $request->active;
+            $customer->save();
+            return response()->json([
+                'status' => 'Created',
+                'code' => 201,
+                'data' => $customer
+            ], 201);
+            
+        } catch (Exception $e){
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'Unauthorized',
+            ], 500);
         }
-        
-        $customer = new Customer();
-        $customer->name = $request->name;
-        $customer->phone = $request->phone;
-        $customer->address = $request->address;
-        $customer->level_id = $request->level_id;
-        $customer->verify = $request->verify;
-        $customer->active = $request->active;
-        $customer->save();
 
-        return response()->json($customer, 201);
 
     }
 
@@ -77,18 +121,87 @@ class CustomerController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update date.
      */
-    public function update(Request $request, Customer $customer)
+    public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'phone' => 'required|string',
+            'address' => 'string',
+            'level_id' => 'required|integer',
+            'verify' => 'required|boolean',
+            'active' => 'required|boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $customer = Customer::where('id', $id)->first();
+            if (!$customer) {
+                return response()->json([
+                    'msg' => 'customer not found.',
+                    'status' => 'ERROR',
+                    'data' => null
+                ], 400);
+            }
+
+            $customer->name = $request->name;
+            $customer->phone = $request->phone;
+            $customer->address = $request->address;
+            $customer->level_id = $request->level_id;
+            $customer->verify = $request->verify;
+            $customer->active = $request->active;
+
+            $customer->save();
+            DB::commit();
+            return response()->json([
+                'status'=> 'OK',
+                'code' => 200,
+                'data' => $customer
+            ], 200
+            );
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Customer $customer)
+    public function destroy($id)
     {
-        //
+        try {
+            $customer = Customer::where('id', $id)->first();
+            if (!$customer) {
+                return response()->json([
+                    'msg' => 'customer not found.',
+                    'status' => 'ERROR',
+                    'data' => null
+                ], 400);
+            }
+            $customer->delete();
+            return response()->json([
+                'status'=> 'OK',
+                'code' => 200,
+                'data' => array()
+            ], 200
+            );
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'Unauthorized',
+            ], 500);
+        }
     }
 }

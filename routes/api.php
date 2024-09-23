@@ -26,6 +26,11 @@ Route::middleware('auth:api')->group(function () {
     //// customer
     Route::post('/customer', [CustomerController::class, 'create']);
     Route::get('/customer', [CustomerController::class, 'index']);
+    Route::get('/customer/{id}', [CustomerController::class, 'getById']);
+    Route::patch('/customer/{id}', [CustomerController::class, 'update']);
+    Route::delete('/customer/{id}', [CustomerController::class, 'destroy']);
+
+
 
     // role & permission
     Route::post('/role', [RoleController::class, 'create']);
