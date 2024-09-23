@@ -18,4 +18,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/me', [UserController::class, 'me'])->name('me');
+
+    //// customer
+    Route::post('/customer', [CustomerController::class, 'create']);
+    Route::get('/customer', [CustomerController::class, 'index']);
 });

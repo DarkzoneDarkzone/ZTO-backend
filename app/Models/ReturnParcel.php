@@ -7,5 +7,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReturnParcel extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 }

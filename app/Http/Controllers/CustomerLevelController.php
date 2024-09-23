@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CustomerLevel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class CustomerLevelController extends Controller
 {
@@ -12,15 +13,35 @@ class CustomerLevelController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(
+             CustomerLevel::all()
+        );
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'description' => 'string',
+            'active' => 'required|boolean',
+            'rate' => 'required|float',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+        
+        $customerLevel = new CustomerLevel();
+        $customerLevel->name = $request->name;
+        $customerLevel->description = $request->description;
+        $customerLevel->active = $request->active;
+        $customerLevel->rate = $request->rate;
+        $customerLevel->save();
+
+        return response()->json($customerLevel, 201);
     }
 
     /**
