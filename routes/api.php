@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\RegisterController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -30,4 +31,7 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/customer/{id}', [CustomerController::class, 'destroy']);
 
 
+
+    // role & permission
+    Route::post('/role', [RoleController::class, 'create']);
 });
