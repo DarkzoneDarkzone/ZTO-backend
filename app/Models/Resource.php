@@ -10,4 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Resource extends Model
 {
     use HasFactory, SoftDeletes;
+
+    public function Role()
+    {
+        return $this->belongsToMany(Role::class);
+    }
 }

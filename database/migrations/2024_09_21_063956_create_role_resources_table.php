@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('role_resources', function (Blueprint $table) {
+        Schema::create('resource_role', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('role_id');
             $table->unsignedBigInteger('resource_id');
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('role_resources');
+        Schema::dropIfExists('resource_role');
     }
 };

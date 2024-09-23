@@ -153,6 +153,7 @@ class UserController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
+            'user' => Auth::user(),
             'expired' => Auth::factory()->getTTL() * 60 * 3
         ]);
     }

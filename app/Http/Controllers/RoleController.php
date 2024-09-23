@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class RoleController extends Controller
@@ -31,12 +33,30 @@ class RoleController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
-        $role = new Role();
-        $role->name = $request->name;
-        $role->description = $request->description;
-        $role->active = $request->active;
-        $role->save();
-        // $usr->buy()->attach($request->codecs);
+
+        DB::beginTransaction();
+        try {
+            $role = new Role();
+            $role->name = $request->name;
+            $role->description = $request->description;
+            $role->active = $request->active;
+            $role->save();
+
+            $role->Resources()->sync($request->permission);
+            DB::commit();
+            return response()->json([
+                'status' => 'Created',
+                'code' => 200,
+                'data' => $role
+            ], 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 500);
+        }
     }
 
     /**
