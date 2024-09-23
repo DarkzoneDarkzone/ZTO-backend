@@ -23,5 +23,5 @@ Route::middleware('auth:api')->group(function () {
 
     //// customer
     Route::post('/customer', [CustomerController::class, 'create']);
-    Route::get('/customer', [CustomerController::class, 'index']);
+    Route::get('/customer222', [CustomerController::class, 'index']);
 });
