@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UserListResource;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -22,6 +24,32 @@ class UserController extends Controller
                 },
             ])->get())
         );
+    }
+
+    public function getById($id)
+    {
+        $user = User::with([
+            'Department' => function ($query) {
+                $query->select('id', 'name');
+            },
+            'Role' => function ($query) {
+                $query->select('id', 'name');
+            },
+        ])->where('id', $id)->first();
+
+        if (!$user) {
+            return response()->json([
+                'msg' => 'User not found.',
+                'status' => 'ERROR',
+                'data' => null
+            ], 400);
+        }
+
+        return response()->json([
+            'msg' => 'User found.',
+            'status' => 'OK',
+            'data' => $user
+        ], 200);
     }
     /**
      * Register a User.
@@ -125,7 +153,55 @@ class UserController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expired' => Auth::factory()->getTTL() * 60
+            'expired' => Auth::factory()->getTTL() * 60 * 3
         ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8',
+            'department_id' => 'required|integer',
+            'role_id' => 'required|integer',
+            'active' => 'required|boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $user = User::where('id', $id)->first();
+            if (!$user) {
+                return response()->json([
+                    'msg' => 'User not found.',
+                    'status' => 'ERROR',
+                    'data' => null
+                ], 400);
+            }
+
+            $user->first_name = $request->name;
+            $user->email = $request->email;
+            $user->password = bcrypt($request->password);
+            $user->department_id = $request->department_id;
+            $user->role_id = $request->role_id;
+            $user->active = $request->active;
+            $user->save();
+            DB::commit();
+            return response()->json(
+                $user,
+                200
+            );
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 500);
+        }
     }
 }

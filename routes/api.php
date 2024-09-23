@@ -17,6 +17,8 @@ Route::middleware('auth:api')->group(function () {
     // Route::post('/refresh', [UserController::class, 'refresh'])->name('refresh');
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::get('/users', [UserController::class, 'index']);
+    Route::get('/users/{id}', [UserController::class, 'getById']);
+    Route::patch('/users/{id}', [UserController::class, 'update']);
     Route::post('/me', [UserController::class, 'me'])->name('me');
 
     //// customer
