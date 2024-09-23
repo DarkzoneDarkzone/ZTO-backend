@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\RegisterController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,5 +21,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/users/{id}', [UserController::class, 'getById']);
     Route::patch('/users/{id}', [UserController::class, 'update']);
     Route::post('/me', [UserController::class, 'me'])->name('me');
-    Route::get('/customer', [UserController::class, 'getById']);
+
+    //// customer
+    Route::post('/customer', [CustomerController::class, 'create']);
+    Route::get('/customer', [CustomerController::class, 'index']);
 });
