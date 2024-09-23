@@ -23,6 +23,6 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/me', [UserController::class, 'me'])->name('me');
 
     //// customer
-    Route::post('/customer', [CustomerController::class, 'create']);
-    Route::get('/customer222', [CustomerController::class, 'index']);
+    Route::post('/customer1234', [CustomerController::class, 'create']);
+    Route::get('/customer', [CustomerController::class, 'index']);
 });
