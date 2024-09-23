@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\RegisterController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
