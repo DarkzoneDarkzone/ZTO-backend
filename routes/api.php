@@ -2,9 +2,12 @@
 
 use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\RegisterController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerLevelController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Models\CustomerLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -30,7 +33,19 @@ Route::middleware('auth:api')->group(function () {
     Route::patch('/customer/{id}', [CustomerController::class, 'update']);
     Route::delete('/customer/{id}', [CustomerController::class, 'destroy']);
 
+    //// customer_level
+    Route::post('/customer_level', [CustomerLevelController::class, 'create']);
+    Route::get('/customer_level', [CustomerLevelController::class, 'index']);
+    Route::get('/customer_level/{id}', [CustomerLevelController::class, 'getById']);
+    Route::patch('/customer_level/{id}', [CustomerLevelController::class, 'update']);
+    Route::delete('/customer_level/{id}', [CustomerLevelController::class, 'destroy']);
 
+    //// currency
+    Route::post('/currency', [CurrencyController::class, 'create']);
+    Route::get('/currency', [CurrencyController::class, 'index']);
+    Route::get('/currency/{id}', [CurrencyController::class, 'getById']);
+    Route::patch('/currency/{id}', [CurrencyController::class, 'update']);
+    Route::delete('/currency/{id}', [CurrencyController::class, 'destroy']);
 
     // role & permission
     Route::post('/role', [RoleController::class, 'create']);
