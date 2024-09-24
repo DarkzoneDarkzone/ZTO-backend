@@ -48,5 +48,9 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/currency/{id}', [CurrencyController::class, 'destroy']);
 
     // role & permission
+    Route::get('/role', [RoleController::class, 'index']);
+    Route::get('/role/{id}', [RoleController::class, 'getById']);
     Route::post('/role', [RoleController::class, 'create']);
+    Route::patch('/role/{id}', [RoleController::class, 'update']);
+    Route::delete('/role/{id}', [RoleController::class, 'destroy']);
 });
