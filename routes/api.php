@@ -5,6 +5,7 @@ use App\Http\Controllers\API\RegisterController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerLevelController;
+use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Models\CustomerLevel;
@@ -56,4 +57,11 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/role', [RoleController::class, 'create']);
     Route::patch('/role/{id}', [RoleController::class, 'update']);
     Route::delete('/role/{id}', [RoleController::class, 'destroy']);
+
+    // department
+    Route::get('/department', [DepartmentController::class, 'index']);
+    Route::get('/department/{id}', [DepartmentController::class, 'getById']);
+    Route::post('/department', [DepartmentController::class, 'create']);
+    Route::patch('/department/{id}', [DepartmentController::class, 'update']);
+    Route::delete('/department/{id}', [DepartmentController::class, 'destroy']);
 });

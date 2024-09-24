@@ -138,7 +138,7 @@ class RoleController extends Controller
             $role->Resources()->sync($request->permission);
             DB::commit();
             return response()->json([
-                'status' => 'Created',
+                'status' => 'Updated',
                 'code' => 200,
                 'data' => null
             ], 200);
