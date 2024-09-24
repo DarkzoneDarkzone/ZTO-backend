@@ -13,6 +13,6 @@ class Role extends Model
 
     public function Resources()
     {
-        return $this->belongsToMany(Resource::class);
+        return $this->belongsToMany(Resource::class, 'role_resources', 'role_id', 'resource_id');
     }
 }
