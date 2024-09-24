@@ -20,10 +20,13 @@ Route::group([
 
 Route::middleware('auth:api')->group(function () {
     // Route::post('/refresh', [UserController::class, 'refresh'])->name('refresh');
+
+    // users
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'getById']);
     Route::patch('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
     Route::post('/me', [UserController::class, 'me'])->name('me');
 
     //// customer

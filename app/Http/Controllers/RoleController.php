@@ -49,13 +49,12 @@ class RoleController extends Controller
             'name' => 'required|string',
             'description' => 'string',
             'active' => 'required|boolean',
-            "permission"    => "required|array"
+            "permission" => "required|array|numeric",
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
-
         DB::beginTransaction();
         try {
             $role = new Role();
@@ -126,7 +125,7 @@ class RoleController extends Controller
             $role = Role::find($id);
             if (!$role) {
                 return response()->json([
-                    'message' => 'User not found',
+                    'message' => 'Role not found',
                     'status' => 'ERROR',
                     'code' => 404,
                 ], 400);
@@ -161,7 +160,7 @@ class RoleController extends Controller
         $role = Role::find($id);
         if (!$role) {
             return response()->json([
-                'message' => 'User not found',
+                'message' => 'Role not found',
                 'status' => 'ERROR',
                 'code' => 404,
             ], 400);
