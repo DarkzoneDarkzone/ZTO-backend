@@ -5,6 +5,7 @@ use App\Http\Controllers\API\RegisterController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerLevelController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Models\CustomerLevel;
@@ -46,6 +47,13 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/currency/{id}', [CurrencyController::class, 'getById']);
     Route::patch('/currency/{id}', [CurrencyController::class, 'update']);
     Route::delete('/currency/{id}', [CurrencyController::class, 'destroy']);
+
+    //// payment
+    Route::post('/payment', [PaymentController::class, 'create']);
+    Route::get('/payment', [PaymentController::class, 'index']);
+    Route::get('/payment/{id}', [PaymentController::class, 'getById']);
+    Route::patch('/payment/{id}', [PaymentController::class, 'update']);
+    Route::delete('/payment/{id}', [PaymentController::class, 'destroy']);
 
     // role & permission
     Route::post('/role', [RoleController::class, 'create']);

@@ -14,8 +14,14 @@ class CustomerLevelController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        // $page = $request->page;
+        // $per_page = $request->per_page;
+        // $filters = $request->filters;
+        // $sorts = $request->sorts;
+        // dd($page, $per_page, $filters, $sorts);
+
         $customerLevel = CustomerLevel::orderBy('id', 'asc')->get();
         return response()->json([
             'code' => 200,
@@ -38,8 +44,6 @@ class CustomerLevelController extends Controller
                 'data' => array()
             ], 400);
         }
-        // $customerLevel->updated_at = $customerLevel->updated_at->format('Y-m-d H:i:s');
-            // 'updated_at' => $this->updated_at->format('Y-m-d H:i:s');
         return response()->json([
             'code' => 200,
             'status' => 'OK',

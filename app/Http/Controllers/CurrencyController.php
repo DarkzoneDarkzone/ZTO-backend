@@ -51,7 +51,7 @@ class CurrencyController extends Controller
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'date' => 'required|date_format:Y-m-d H:i:s' ,
+            // 'date' => 'required|date_format:Y-m-d H:i:s' ,
             'exchange_cny' => 'required|numeric',
             'exchange_lak' => 'numeric',
         ]);
@@ -67,7 +67,7 @@ class CurrencyController extends Controller
         $auth_id = Auth::user()->id;
 
         $currency = new Currency();
-        $currency->date = $request->date;
+        // $currency->date = $request->date;
         $currency->exchange_cny = $request->exchange_cny;
         $currency->exchange_lak = $request->exchange_lak;
         $currency->create_by = $auth_id;
