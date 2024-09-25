@@ -15,7 +15,29 @@ class RoleController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json([
+            'status' => 'OK',
+            'code' => 200,
+            "data" => Role::get()
+        ], 200);
+    }
+
+    public function getById($id)
+    {
+        $role = Role::find($id);
+        if (!$role) {
+            return response()->json([
+                'message' => 'User not found',
+                'status' => 'ERROR',
+                'code' => 404,
+            ], 400);
+        }
+
+        return response()->json([
+            'status' => 'OK',
+            'code' => '200',
+            'data' => $role
+        ], 200);
     }
 
     /**
@@ -25,15 +47,14 @@ class RoleController extends Controller
     {
         $validator = Validator::make(request()->all(), [
             'name' => 'required|string',
-            'description' => 'required|string',
-            'active' => 'required',
-            "permission"    => "required|array"
+            'description' => 'string',
+            'active' => 'required|boolean',
+            "permission" => "required|array|numeric",
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
         }
-
         DB::beginTransaction();
         try {
             $role = new Role();
@@ -86,16 +107,71 @@ class RoleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Role $role)
+    public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make(request()->all(), [
+            'name' => 'required|string',
+            'description' => 'string',
+            'active' => 'required|boolean',
+            "permission"    => "required|array"
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $role = Role::find($id);
+            if (!$role) {
+                return response()->json([
+                    'message' => 'Role not found',
+                    'status' => 'ERROR',
+                    'code' => 404,
+                ], 400);
+            }
+            $role->name = $request->name;
+            $role->description = $request->description;
+            $role->active = $request->active;
+            $role->save();
+
+            $role->Resources()->sync($request->permission);
+            DB::commit();
+            return response()->json([
+                'status' => 'Updated',
+                'code' => 200,
+                'data' => null
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Role $role)
+    public function destroy($id)
     {
-        //
+        $role = Role::find($id);
+        if (!$role) {
+            return response()->json([
+                'message' => 'Role not found',
+                'status' => 'ERROR',
+                'code' => 404,
+            ], 400);
+        }
+
+        $role->delete();
+
+        return response()->json([
+            'status' => 'OK',
+            'code' => '200',
+            'data' => null
+        ], 200);
     }
 }

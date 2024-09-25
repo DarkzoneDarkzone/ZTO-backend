@@ -6,6 +6,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerLevelController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Models\CustomerLevel;
@@ -21,10 +22,13 @@ Route::group([
 
 Route::middleware('auth:api')->group(function () {
     // Route::post('/refresh', [UserController::class, 'refresh'])->name('refresh');
+
+    // users
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'getById']);
     Route::patch('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
     Route::post('/me', [UserController::class, 'me'])->name('me');
 
     //// customer
@@ -56,5 +60,16 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/payment/{id}', [PaymentController::class, 'destroy']);
 
     // role & permission
+    Route::get('/role', [RoleController::class, 'index']);
+    Route::get('/role/{id}', [RoleController::class, 'getById']);
     Route::post('/role', [RoleController::class, 'create']);
+    Route::patch('/role/{id}', [RoleController::class, 'update']);
+    Route::delete('/role/{id}', [RoleController::class, 'destroy']);
+
+    // department
+    Route::get('/department', [DepartmentController::class, 'index']);
+    Route::get('/department/{id}', [DepartmentController::class, 'getById']);
+    Route::post('/department', [DepartmentController::class, 'create']);
+    Route::patch('/department/{id}', [DepartmentController::class, 'update']);
+    Route::delete('/department/{id}', [DepartmentController::class, 'destroy']);
 });

@@ -131,6 +131,26 @@ class UserController extends Controller
         return response()->json(['message' => 'Successfully logged out']);
     }
 
+    public function destroy($id)
+    {
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found',
+                'status' => 'ERROR',
+                'code' => 404,
+            ], 400);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'status' => 'OK',
+            'code' => '200',
+            'data' => null
+        ], 200);
+    }
+
     /**
      * Refresh a token.
      *
