@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Currency;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class CurrencyController extends Controller
@@ -27,21 +29,19 @@ class CurrencyController extends Controller
      */
     public function getById($id)
     {
-        $customerLevel = Currency::where('id', $id)->first();
+        $currency = Currency::where('id', $id)->first();
 
-        if (!$customerLevel) {
+        if (!$currency) {
             return response()->json([
-                'msg' => 'customerLevel not found.',
+                'msg' => 'currency not found.',
                 'status' => 'ERROR',
                 'data' => array()
             ], 400);
         }
-        // $customerLevel->updated_at = $customerLevel->updated_at->format('Y-m-d H:i:s');
-            // 'updated_at' => $this->updated_at->format('Y-m-d H:i:s');
         return response()->json([
             'code' => 200,
             'status' => 'OK',
-            'data' => $customerLevel
+            'data' => $currency
         ], 200);
     }
 
@@ -63,21 +63,29 @@ class CurrencyController extends Controller
                 'status' => 'Unauthorized',
             ], 400);
         }
-        
-        $auth_id = Auth::user()->id;
 
-        $currency = new Currency();
-        // $currency->date = $request->date;
-        $currency->exchange_cny = $request->exchange_cny;
-        $currency->exchange_lak = $request->exchange_lak;
-        $currency->create_by = $auth_id;
-        $currency->save();
+        try {
+            $auth_id = Auth::user()->id;
+            $currency = new Currency();
+            // $currency->date = $request->date;
+            $currency->amount_cny = $request->exchange_cny;
+            $currency->amount_lak = $request->exchange_lak;
+            $currency->create_by = $auth_id;
+            $currency->save();
 
-        return response()->json([
-            'code' => 201,
-            'status' => 'Created',
-            'data' => $currency
-        ], 201);
+            return response()->json([
+                'code' => 201,
+                'status' => 'Created',
+                'data' => $currency
+            ], 201);
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+                'code' => 422,
+            ], 500);
+        }
     }
 
     /**
@@ -107,16 +115,74 @@ class CurrencyController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Currency $currency)
+    public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            // 'date' => 'required|date_format:Y-m-d H:i:s' ,
+            'exchange_cny' => 'required|numeric',
+            'exchange_lak' => 'numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'msg' => ' went wrong.',
+                'errors' => $validator->errors()->toJson(),
+                'status' => 'Unauthorized',
+                'code' => 400,
+            ], 400);
+        }
+
+        try {
+            $auth_id = Auth::user()->id;
+            $currency = Currency::where('id', $id)->first();
+            if (!$currency) {
+                return response()->json([
+                    'msg' => 'currency not found.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
+            // $currency->date = $request->date;
+            $currency->amount_cny = $request->exchange_cny;
+            $currency->amount_lak = $request->exchange_lak;
+            $currency->create_by = $auth_id;
+            $currency->save();
+
+            return response()->json([
+                'code' => 200,
+                'status' => 'OK',
+                'data' => $currency
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+                'code' => 500,
+            ], 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Currency $currency)
+    public function destroy($id)
     {
-        //
+        $currency = Currency::find($id);
+        if (!$currency) {
+            return response()->json([
+                'message' => 'currency not found',
+                'status' => 'ERROR',
+                'code' => 404,
+            ], 400);
+        }
+
+        $currency->delete();
+
+        return response()->json([
+            'status' => 'OK',
+            'code' => '200',
+            'data' => array()
+        ], 200);
     }
 }

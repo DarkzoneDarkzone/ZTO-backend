@@ -162,7 +162,6 @@ class CustomerController extends Controller
                 ], 400);
             }
 
-            $auth_id = Auth::user()->id;
 
             $customer->name = $request->name;
             $customer->phone = $request->phone;
@@ -170,6 +169,8 @@ class CustomerController extends Controller
             $customer->customer_level_id = $request->level_id;
             $customer->verify = $request->verify;
             $customer->active = $request->active;
+            
+            $auth_id = Auth::user()->id;
             $customer->create_by = $auth_id;
 
             $customer->save();
@@ -185,9 +186,10 @@ class CustomerController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
-                'msg' => 'Something went wrong.',
-                'errors' => array(),
-                'status' => $e->getMessage(),
+                'msg' => 'Something wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+                'code' => 500
             ], 500);
         }
     }
@@ -220,7 +222,8 @@ class CustomerController extends Controller
             return response()->json([
                 'msg' => 'Something went wrong.',
                 'errors' => $e->getMessage(),
-                'status' => 'Unauthorized',
+                'status' => 'ERROR',
+                'code' => 500
             ], 500);
         }
     }

@@ -11,7 +11,6 @@ class Customer extends Model
 {
     use HasFactory, SoftDeletes;
 
-
     public function CustomerLevel()
     {
         return $this->belongsTo(CustomerLevel::class);

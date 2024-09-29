@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('bill_no');
             $table->float('amount_lak');
             $table->float('amount_cny');
-            $table->string('status');
+            $table->enum('status', ['shipped', 'ready']);
             $table->string('create_by');
             $table->timestamps();
             $table->softDeletes();

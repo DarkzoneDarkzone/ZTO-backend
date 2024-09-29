@@ -13,11 +13,10 @@ return new class extends Migration
     {
         Schema::create('currencies', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('description');
-            $table->float('rate');
+            $table->float('amount_lak');
+            $table->float('amount_cny');
             $table->boolean('active')->default(true);
-            $table->string('create_by');
+            $table->string('create_by')->nullable();;
             $table->timestamps();
             $table->softDeletes();
 
