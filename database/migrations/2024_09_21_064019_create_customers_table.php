@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('customer_level_id');
             $table->boolean('active')->default(false);
             $table->boolean('verify')->default(false);
-            $table->string('create_by')->nullable();
+            $table->string('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

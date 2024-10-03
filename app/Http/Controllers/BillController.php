@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bill;
+use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\Parcel;
 use Exception;
@@ -18,7 +19,12 @@ class BillController extends Controller
      */
     public function index()
     {
-        //
+        $bill = Bill::orderBy('id', 'asc')->get();
+        return response()->json([
+            'code' => 200,
+            'status' => 'OK',
+            'data' => $bill
+        ], 200);
     }
 
     /**
@@ -27,6 +33,8 @@ class BillController extends Controller
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'address' => 'required|string',
             'phone' => 'required|string',
             'item' => 'required|array',
             'item.*' => 'string',
@@ -44,7 +52,11 @@ class BillController extends Controller
         try {
             $auth_id = Auth::user()->id;
             $bill = new Bill();
-            $customer = Customer::whereIn('phone', $request->phone)->get();
+            $customer = Customer::with([
+                'CustomerLevel' => function ($query) {
+                    $query->select('rate');
+                },
+            ])->where('phone',  $request->phone)->first();
             if (!$customer) {
                 return response()->json([
                     'msg' => 'customer not found.',
@@ -52,16 +64,24 @@ class BillController extends Controller
                     'errors' => array()
                 ], 400);
             }
-            $bill->customer_id = $customer->id;
+            $rate = $customer->customer_level->rate;
+
+            $price_parcels  = 0;
             $parcels = Parcel::whereIn('track_no', $request->item)->get();
-            $parcels_id = array();
             foreach ($parcels as $parcel) {
-                array_push($parcels_id, $parcel->id);
+                $price_parcels += ($parcel->price * ($rate / 100));
             }
-            $bill->Payments()->sync($parcels_id);
+
+            $currency_now = Currency::orderBy('id', 'asc')->first();
+
+            $bill->amount_lak = $price_parcels;
+            $bill->amount_cny = $price_parcels / ($currency_now->amount_cny * $currency_now->amount_lak);
+          
+            $bill->name = $request->name;
             $bill->phone = $request->phone;
-            // $bill->amount_lak = ....;
-            // $bill->amount_cny = ....;
+            $bill->address = $request->address;
+            // $bill->bill_no = 'sk....';
+
             $bill->status = 'ready';
             $bill->create_by = $auth_id;
             $bill->save();
@@ -100,9 +120,72 @@ class BillController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Bill $bill)
+    public function createShipping(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'bill_no' => 'required|array',
+            'bill_no.*' => 'string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'msg' => 'validator wrong.',
+                'errors' => $validator->errors()->toJson(),
+                'status' => 'Unauthorized',
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $auth_id = Auth::user()->id;
+            $bill = new Bill();
+            $customer = Customer::with([
+                'CustomerLevel' => function ($query) {
+                    $query->select('rate');
+                },
+            ])->where('phone',  $request->phone)->first();
+            if (!$customer) {
+                return response()->json([
+                    'msg' => 'customer not found.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
+            $rate = $customer->customer_level->rate;
+
+            $price_parcels  = 0;
+            $parcels = Parcel::whereIn('track_no', $request->item)->get();
+            foreach ($parcels as $parcel) {
+                $price_parcels += ($parcel->price * ($rate / 100));
+            }
+
+            $currency_now = Currency::orderBy('id', 'asc')->first();
+
+            $bill->amount_lak = $price_parcels;
+            $bill->amount_cny = $price_parcels / ($currency_now->amount_cny * $currency_now->amount_lak);
+          
+            $bill->name = $request->name;
+            $bill->phone = $request->phone;
+            $bill->address = $request->address;
+            // $bill->bill_no = 'sk....';
+
+            $bill->status = 'ready';
+            $bill->create_by = $auth_id;
+            $bill->save();
+            DB::commit();
+            return response()->json([
+                'code' => 201,
+                'status' => 'Created',
+                'data' => $bill
+            ], 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 500);
+        }
     }
 
     /**

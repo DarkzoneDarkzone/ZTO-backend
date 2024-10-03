@@ -20,7 +20,7 @@ return new class extends Migration
             $table->enum('method', ['cash', 'transffer', 'airpay', 'wechat_pay']);
             $table->enum('status', ['paid', 'pending']);
             $table->boolean('active')->default(true);
-            $table->string('create_by');
+            $table->string('created_by');
             $table->timestamps();
             $table->softDeletes();
         });

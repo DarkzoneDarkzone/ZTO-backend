@@ -16,7 +16,7 @@ return new class extends Migration
             $table->float('amount_lak');
             $table->float('amount_cny');
             $table->boolean('active')->default(true);
-            $table->string('create_by')->nullable();;
+            $table->string('created_by')->nullable();;
             $table->timestamps();
             $table->softDeletes();
 

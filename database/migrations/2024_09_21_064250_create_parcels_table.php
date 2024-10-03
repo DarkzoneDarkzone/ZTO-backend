@@ -14,18 +14,22 @@ return new class extends Migration
         Schema::create('parcels', function (Blueprint $table) {
             $table->id();
             $table->string('track_no');
-            $table->string('phone')->nullable();
+            $table->string('name')->nullable();
+            $table->string('phone')->nullable()->unique();
+            $table->string('address')->nullable();
             $table->float('weight');
+            $table->float('price');
             $table->boolean('active')->default(true);
-            $table->unsignedBigInteger('customer_id');
+            $table->unsignedBigInteger('bill_id');
             $table->string('status');
-            $table->timestamps();
             $table->timestamp('receipt_at')->nullable();
             $table->timestamp('payment_at')->nullable();
             $table->timestamp('shipping_at')->nullable();
+            $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('customer_id')->references('id')->on('customers');
+            $table->foreign('bill_id')->references('id')->on('bills');
+
         });
     }
 

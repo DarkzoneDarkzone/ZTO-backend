@@ -14,12 +14,15 @@ return new class extends Migration
         Schema::create('income_expenses', function (Blueprint $table) {
             $table->id();
             $table->enum('type', ['income', 'expenses']);
-            $table->enum('sbt_type', ['return', 'refund']);
+            $table->enum('sub_type', ['return', 'refund', 'other']);
+            // $table->unsignedBigInteger('parcel_id');
             $table->string('description');
             $table->float('amount_lak');
             $table->float('amount_cny');
             $table->timestamps();
             $table->softDeletes();
+
+            // $table->foreign('parcel_id')->references('id')->on('parcels');
 
         });
     }
