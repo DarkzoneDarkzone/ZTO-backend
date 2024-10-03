@@ -18,8 +18,8 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('bill_id')->references('id')->on('bills');
-            $table->foreign('payment_id')->references('id')->on('payments');
+            $table->foreign('bill_id')->references('id')->on('bills')->onDelete('cascade');
+            $table->foreign('payment_id')->references('id')->on('payments')->onDelete('cascade');
         });
     }
 

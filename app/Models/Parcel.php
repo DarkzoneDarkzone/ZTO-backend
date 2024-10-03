@@ -10,4 +10,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Parcel extends Model
 {
     use HasFactory, SoftDeletes;
+
+    public function Bills()
+    {
+        return $this->belongsTo(Bill::class);
+    }
+
+    public function ReturnParcel()
+    {
+        return $this->hasMany(ReturnParcel::class);
+    }
 }

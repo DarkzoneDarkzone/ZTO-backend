@@ -10,4 +10,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class IncomeExpense extends Model
 {
     use HasFactory, SoftDeletes;
+
+    public function balance()
+    {
+        return $this->hasOne(Balance::class);
+    }
+    
 }

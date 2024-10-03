@@ -16,4 +16,9 @@ class Payment extends Model
     {
         return $this->belongsToMany(Bill::class);
     }
+
+    public function balance()
+    {
+        return $this->hasOne(Balance::class);
+    }
 }
