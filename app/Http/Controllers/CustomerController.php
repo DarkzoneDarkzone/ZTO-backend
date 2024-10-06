@@ -15,19 +15,63 @@ class CustomerController extends Controller
     /**
      * get data all
      */
-    public function index()
+    public function index(Request $request)
     {
-        $customer =  CustomerListResource::collection(Customer::with([
-            'CustomerLevel' => function ($query) {
-                $query->select('id', 'name');
-            },
-        ])->orderBy('id', 'asc')->get());
+        try {
+            // $customer =  CustomerListResource::collection(Customer::with([
+            //     'CustomerLevel' => function ($query) {
+            //         $query->select('id', 'name');
+            //     },
+            // ])->orderBy('id', 'asc')->get());
 
-        return response()->json([
-            'code' => 200,
-            'status' => 'OK',
-            'data' => $customer
-        ], 200);
+            // return response()->json([
+            //     'code' => 200,
+            //     'status' => 'OK',
+            //     'data' => $customer
+            // ], 200);
+
+            $query = Customer::query();
+
+            if ($request->has('filters')) {
+                $Operator = new FiltersOperator();
+                $arrayFilter = explode(',', $request->query('filters', []));
+                foreach ($arrayFilter as $filter) {
+                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
+                }
+            }
+
+            if ($request->has('sorts')) {
+                $arraySorts = explode(',', $request->query('sorts', []));
+                foreach ($arraySorts as $sort) {
+                    [$field, $direction] = explode(':', $sort);
+                    $query->orderBy($field, $direction);
+                }
+            }
+
+            $query->with([
+                'CustomerLevel' => function ($query) {
+                    $query->select('id', 'name');
+                },
+            ]);
+            if ($request->has('per_page')) {
+                $customer =  CustomerListResource::collection($query->paginate($request->query('per_page')));
+            } else {
+                $customer =  CustomerListResource::collection($query->get());
+            }
+            // return $customer;
+            return response()->json([
+                'code' => 200,
+                'status' => 'OK',
+                'data' => $customer,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => $e,
+                'status' => 'ERROR',
+                'error' => array(),
+                'code' => 401
+            ], 401);
+        }
     }
 
     /**
@@ -88,7 +132,7 @@ class CustomerController extends Controller
             $customer->customer_level_id = $request->level_id;
             $customer->verify = $request->verify;
             $customer->active = $request->active;
-            $customer->create_by = $auth_id;
+            $customer->created_by = $auth_id;
             $customer->save();
 
             return response()->json([
@@ -169,9 +213,9 @@ class CustomerController extends Controller
             $customer->customer_level_id = $request->level_id;
             $customer->verify = $request->verify;
             $customer->active = $request->active;
-            
+
             $auth_id = Auth::user()->id;
-            $customer->create_by = $auth_id;
+            $customer->created_by = $auth_id;
 
             $customer->save();
             DB::commit();
@@ -209,7 +253,7 @@ class CustomerController extends Controller
                 ], 400);
             }
             $customer->delete();
-            
+
             return response()->json(
                 [
                     'status' => 'OK',

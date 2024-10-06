@@ -16,14 +16,14 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('phone')->unique()->nullable();
             $table->string('address')->nullable();
-            $table->unsignedBigInteger('customer_level_id');
+            $table->unsignedBigInteger('customer_level_id')->nullable();
             $table->boolean('active')->default(false);
             $table->boolean('verify')->default(false);
             $table->string('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('customer_level_id')->references('id')->on('customer_levels');
+            $table->foreign('customer_level_id')->references('id')->on('customer_levels')->nullable()->nullOnDelete()->cascadeOnUpdate();;
         });
     }
 

@@ -14,14 +14,46 @@ class CurrencyController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $currency = Currency::orderBy('id', 'asc')->get();
-        return response()->json([
-            'code' => 200,
-            'status' => 'OK',
-            'data' => $currency
-        ], 200);
+        try {
+            $query = Currency::query();
+
+            if ($request->has('filters')) {
+                $Operator = new FiltersOperator();
+                $arrayFilter = explode(',', $request->query('filters', []));
+                foreach ($arrayFilter as $filter) {
+                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
+                }
+            }
+
+            if ($request->has('sorts')) {
+                $arraySorts = explode(',', $request->query('sorts', []));
+                foreach ($arraySorts as $sort) {
+                    [$field, $direction] = explode(':', $sort);
+                    $query->orderBy($field, $direction);
+                }
+            }
+
+            if ($request->has('per_page')) {
+                $currency = $query->paginate($request->query('per_page'));
+            } else {
+                $currency = $query->get();
+            }
+
+            return response()->json([
+                'code' => 200,
+                'status' => 'OK',
+                'data' => $currency,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => $e,
+                'status' => 'ERROR',
+                'error' => array(),
+                'code' => 401
+            ], 401);
+        }
     }
 
     /**
@@ -70,7 +102,7 @@ class CurrencyController extends Controller
             // $currency->date = $request->date;
             $currency->amount_cny = $request->exchange_cny;
             $currency->amount_lak = $request->exchange_lak;
-            $currency->create_by = $auth_id;
+            $currency->created_by = $auth_id;
             $currency->save();
 
             return response()->json([
@@ -145,7 +177,7 @@ class CurrencyController extends Controller
             // $currency->date = $request->date;
             $currency->amount_cny = $request->exchange_cny;
             $currency->amount_lak = $request->exchange_lak;
-            $currency->create_by = $auth_id;
+            $currency->created_by = $auth_id;
             $currency->save();
 
             return response()->json([

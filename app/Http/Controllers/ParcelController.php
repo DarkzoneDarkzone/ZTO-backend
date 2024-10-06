@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Parcel;
+use Exception;
 use Illuminate\Http\Request;
 
 class ParcelController extends Controller
@@ -10,9 +11,46 @@ class ParcelController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        try {
+            $query = Parcel::query();
+
+            if ($request->has('filters')) {
+                $Operator = new FiltersOperator();
+                $arrayFilter = explode(',', $request->query('filters', []));
+                foreach ($arrayFilter as $filter) {
+                    $query ->where($Operator->FiltersOperators(explode(':', $filter)));
+                }
+            }
+
+            if ($request->has('sorts')) {
+                $arraySorts = explode(',', $request->query('sorts', []));
+                foreach ($arraySorts as $sort) {
+                    [$field, $direction] = explode(':', $sort);
+                    $query->orderBy($field, $direction);
+                }
+            }
+
+            if ($request->has('per_page')) {
+                $parcel = $query->paginate($request->query('per_page'));
+            } else {
+                $parcel = $query->get();
+            }
+
+            return response()->json([
+                'code' => 200,
+                'status' => 'OK',
+                'data' => $parcel,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => $e,
+                'status' => 'ERROR',
+                'error' => array(),
+                'code' => 401
+            ], 401);
+        }
     }
 
     /**

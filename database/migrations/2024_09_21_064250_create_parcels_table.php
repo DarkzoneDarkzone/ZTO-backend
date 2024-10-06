@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('track_no');
             $table->string('name')->nullable();
-            $table->string('phone')->nullable()->unique();
+            $table->string('phone')->nullable();
             $table->string('address')->nullable();
             $table->float('weight');
             $table->float('price');
             $table->boolean('active')->default(true);
-            $table->unsignedBigInteger('bill_id');
+            $table->unsignedBigInteger('bill_id')->nullable();
             $table->string('status');
             $table->timestamp('receipt_at')->nullable();
             $table->timestamp('payment_at')->nullable();
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('bill_id')->references('id')->on('bills');
+            $table->foreign('bill_id')->references('id')->on('bills')->nullable()->nullOnDelete()->cascadeOnUpdate();;
 
         });
     }

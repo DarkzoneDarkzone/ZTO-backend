@@ -8,9 +8,11 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerLevelController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\ParcelController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Models\CustomerLevel;
+use App\Models\Parcel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -81,4 +83,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/shipping', [BillController::class, 'createShipping']);
     Route::patch('/bill/{id}', [BillController::class, 'update']);
     Route::delete('/bill/{id}', [BillController::class, 'destroy']);
+
+    //// parcel
+    Route::get('/parcel', [ParcelController::class, 'index']);
 });
