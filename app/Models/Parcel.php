@@ -10,4 +10,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Parcel extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected $fillable = [
+        'track_no',
+        'phone',
+        'weight',
+        'customer_id',
+        'status',
+        'active'
+    ];
 }
