@@ -14,7 +14,7 @@ class Payment extends Model
 
     public function Bills() : BelongsToMany
     {
-        return $this->belongsToMany(Bill::class);
+        return $this->belongsToMany(Bill::class)->withTimestamps();
     }
 
     public function balance()

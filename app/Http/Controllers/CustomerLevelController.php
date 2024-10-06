@@ -16,18 +16,44 @@ class CustomerLevelController extends Controller
      */
     public function index(Request $request)
     {
-        // $page = $request->page;
-        // $per_page = $request->per_page;
-        // $filters = $request->filters;
-        // $sorts = $request->sorts;
-        // dd($page, $per_page, $filters, $sorts);
+        try {
+            $query = CustomerLevel::query();
 
-        $customerLevel = CustomerLevel::orderBy('id', 'asc')->get();
-        return response()->json([
-            'code' => 200,
-            'status' => 'OK',
-            'data' => $customerLevel
-        ], 200);
+            if ($request->has('filters')) {
+                $Operator = new FiltersOperator();
+                $arrayFilter = explode(',', $request->query('filters', []));
+                foreach ($arrayFilter as $filter) {
+                    $query ->where($Operator->FiltersOperators(explode(':', $filter)));
+                }
+            }
+
+            if ($request->has('sorts')) {
+                $arraySorts = explode(',', $request->query('sorts', []));
+                foreach ($arraySorts as $sort) {
+                    [$field, $direction] = explode(':', $sort);
+                    $query->orderBy($field, $direction);
+                }
+            }
+
+            if ($request->has('per_page')) {
+                $customerLevel = $query->paginate($request->query('per_page'));
+            } else {
+                $customerLevel = $query->get();
+            }
+
+            return response()->json([
+                'code' => 200,
+                'status' => 'OK',
+                'data' => $customerLevel,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => $e,
+                'status' => 'ERROR',
+                'error' => array(),
+                'code' => 401
+            ], 401);
+        }
     }
 
     /**
@@ -35,19 +61,25 @@ class CustomerLevelController extends Controller
      */
     public function getById($id)
     {
+        // $customerLevel = CustomerLevel::with([
+        //     'Customers' => function ($query) {
+        //         $query->select('id', 'name');
+        //     },
+        // ])->where('id', $id)->first();
         $customerLevel = CustomerLevel::where('id', $id)->first();
-
+        // $customerLevel->Customers;
         if (!$customerLevel) {
             return response()->json([
                 'msg' => 'customerLevel not found.',
                 'status' => 'ERROR',
-                'data' => array()
+                'data' => array(),
+                'code' => 400
             ], 400);
         }
         return response()->json([
             'code' => 200,
             'status' => 'OK',
-            'data' => $customerLevel
+            'data' => $customerLevel,
         ], 200);
     }
 
@@ -77,7 +109,7 @@ class CustomerLevelController extends Controller
         $customerLevel->description = $request->description;
         $customerLevel->active = $request->active;
         $customerLevel->rate = $request->rate;
-        $customerLevel->create_by = $auth_id;
+        $customerLevel->created_by = $auth_id;
         $customerLevel->save();
 
         return response()->json([
@@ -149,7 +181,7 @@ class CustomerLevelController extends Controller
             $customerLevel->description = $request->description;
             $customerLevel->active = $request->active;
             $customerLevel->rate = $request->rate;
-            $customerLevel->create_by = $auth_id;
+            $customerLevel->created_by = $auth_id;
 
             $customerLevel->save();
             DB::commit();
@@ -186,7 +218,7 @@ class CustomerLevelController extends Controller
                 ], 400);
             }
             $customerLevel->delete();
-            
+
             return response()->json(
                 [
                     'status' => 'OK',

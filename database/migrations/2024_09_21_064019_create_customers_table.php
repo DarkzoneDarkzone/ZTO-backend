@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('customer_level_id')->references('id')->on('customer_levels');
+            $table->foreign('customer_level_id')->references('id')->on('customer_levels')->nullable()->nullOnDelete()->cascadeOnUpdate();;
         });
     }
 

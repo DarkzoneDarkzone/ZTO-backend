@@ -11,7 +11,11 @@ class CustomerLevel extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public function Customer()
+    protected $ASC = 'asc';
+    protected $DESC = 'desc';
+    protected $EQUAL = 'equal';
+
+    public function Customers()
     {
         return $this->hasMany(Customer::class);
     }
