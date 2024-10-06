@@ -16,6 +16,10 @@ use App\Models\Parcel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+Route::get('health_check', function () {
+    return 'ok';
+});
+
 Route::group([
     'middleware' => 'api',
 ], function ($router) {
@@ -34,28 +38,32 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
     Route::post('/me', [UserController::class, 'me'])->name('me');
 
-    //// customer
+    // customer
+    Route::post('/customer', [CustomerController::class, 'create']);
     Route::get('/customer', [CustomerController::class, 'index']);
     Route::get('/customer/{id}', [CustomerController::class, 'getById']);
     Route::post('/customer', [CustomerController::class, 'create']);
     Route::patch('/customer/{id}', [CustomerController::class, 'update']);
     Route::delete('/customer/{id}', [CustomerController::class, 'destroy']);
 
-    //// customer_level
+    // customer_level
+    Route::post('/customer_level', [CustomerLevelController::class, 'create']);
     Route::get('/customer_level', [CustomerLevelController::class, 'index']);
     Route::get('/customer_level/{id}', [CustomerLevelController::class, 'getById']);
     Route::post('/customer_level', [CustomerLevelController::class, 'create']);
     Route::patch('/customer_level/{id}', [CustomerLevelController::class, 'update']);
     Route::delete('/customer_level/{id}', [CustomerLevelController::class, 'destroy']);
 
-    //// currency
+    // currency
+    Route::post('/currency', [CurrencyController::class, 'create']);
     Route::get('/currency', [CurrencyController::class, 'index']);
     Route::get('/currency/{id}', [CurrencyController::class, 'getById']);
     Route::post('/currency', [CurrencyController::class, 'create']);
     Route::patch('/currency/{id}', [CurrencyController::class, 'update']);
     Route::delete('/currency/{id}', [CurrencyController::class, 'destroy']);
 
-    //// payment
+    // payment
+    Route::post('/payment', [PaymentController::class, 'create']);
     Route::get('/payment', [PaymentController::class, 'index']);
     Route::get('/payment/{id}', [PaymentController::class, 'getById']);
     Route::post('/payment', [PaymentController::class, 'create']);
@@ -76,7 +84,12 @@ Route::middleware('auth:api')->group(function () {
     Route::patch('/department/{id}', [DepartmentController::class, 'update']);
     Route::delete('/department/{id}', [DepartmentController::class, 'destroy']);
 
-    //// bill
+    // parcel
+    Route::post('/return', [ParcelController::class, 'create']);
+    Route::post('/extract', [ParcelController::class, 'import']);
+    Route::get('/export', [ParcelController::class, 'export']);
+
+    // bill
     Route::get('/bill', [BillController::class, 'index']);
     Route::get('/bill/{id}', [BillController::class, 'getById']);
     Route::post('/bill', [BillController::class, 'create']);
