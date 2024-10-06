@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\ParcelExport;
 use App\Imports\ParcelImport;
+use App\Models\Customer;
 use App\Models\Parcel;
 use App\Models\ReturnParcel;
 use Exception;
@@ -115,7 +116,7 @@ class ParcelController extends Controller
      */
     public function export()
     {
-        return Excel::download(new ParcelExport, 'users.xlsx');
+        return Excel::download(new ParcelExport, 'parcels.xlsx');
     }
 
     /**
@@ -125,10 +126,64 @@ class ParcelController extends Controller
     {
         // Validate incoming request data
         $request->validate([
-            'file' => 'required|max:2048',
+            'file' => 'required',
         ]);
-        Excel::import(new ParcelImport, $request->file('file'));
 
-        return back()->with('success', 'Users imported successfully.');
+        DB::beginTransaction();
+
+        try {
+            $import = new ParcelImport;
+            $import->import($request->file('file'));
+
+            if ($import->failures()->count() > 0) {
+                $failuredArray = array_map(function ($failure) {
+                    return $failure[0];
+                }, $import->failures()->toArray());
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Import excel file failed',
+                    'code' => 400,
+                    'errors' => $failuredArray,
+                ], 400);
+            }
+
+            $parcelArray = $import->getArray();
+            $customer_phone = array_filter(array_column($parcelArray, 'phone'));
+            $customer_phone = array_unique($customer_phone);
+
+            $customerPhoneCreated = Customer::whereIn('phone', $customer_phone)->get()->pluck('phone')->toArray();
+            $customerPhoneDiff = array_diff($customer_phone, $customerPhoneCreated);
+
+            $customerArr = [];
+            foreach ($customerPhoneDiff as $key => $value) {
+                $customer = [
+                    'phone' => $value,
+                    'name' => null,
+                    'address' => null,
+                    'active' => false,
+                ];
+                array_push($customer, $customerArr);
+            }
+
+            Customer::insert($customerArr);
+            Parcel::insert($parcelArray);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Import excel file Successfully',
+                'code' => 201,
+            ], 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Import excel file failed',
+                'code' => 400,
+                'errors' => $e->getMessage(),
+            ], 400);
+        }
     }
 }

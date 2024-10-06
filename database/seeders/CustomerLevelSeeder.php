@@ -20,8 +20,8 @@ class CustomerLevelSeeder extends Seeder
                 "description" => "defult",
                 "rate" => 25.00,
                 "active" => true,
-                "create_by" => null,
-                
+                "created_by" => null,
+
             ],
             [
                 "id" => 2,
@@ -29,7 +29,7 @@ class CustomerLevelSeeder extends Seeder
                 "description" => "defult",
                 "rate" => 20.00,
                 "active" => true,
-                "create_by" => null,
+                "created_by" => null,
             ]
 
         ]);
@@ -43,7 +43,7 @@ class CustomerLevelSeeder extends Seeder
                 "customer_level_id" => 1,
                 "active" => true,
                 "verify" => true,
-                "create_by" => null,
+                "created_by" => null,
             ],
             [
                 "id" => 2,
@@ -53,7 +53,7 @@ class CustomerLevelSeeder extends Seeder
                 "customer_level_id" => 1,
                 "active" => true,
                 "verify" => true,
-                "create_by" => null,
+                "created_by" => null,
             ]
         ]);
 
@@ -63,14 +63,14 @@ class CustomerLevelSeeder extends Seeder
                 "amount_lak" => 3149.30,
                 "amount_cny" => 1,
                 "active" => true,
-                "create_by" => null,
+                "created_by" => null,
             ],
             [
                 "id" => 2,
                 "amount_lak" => 3148.46,
                 "amount_cny" => 1,
                 "active" => true,
-                "create_by" => null,
+                "created_by" => null,
             ]
         ]);
     }

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->float('weight');
             $table->float('price');
             $table->boolean('active')->default(true);
-            $table->unsignedBigInteger('bill_id');
+            $table->unsignedBigInteger('bill_id')->nullable()->default(null);
             $table->string('status');
             $table->timestamp('receipt_at')->nullable();
             $table->timestamp('payment_at')->nullable();
@@ -29,7 +29,6 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('bill_id')->references('id')->on('bills');
-
         });
     }
 
