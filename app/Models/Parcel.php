@@ -19,4 +19,14 @@ class Parcel extends Model
         'status',
         'active'
     ];
+
+    public function Bills()
+    {
+        return $this->belongsTo(Bill::class);
+    }
+
+    public function ReturnParcel()
+    {
+        return $this->hasMany(ReturnParcel::class);
+    }
 }

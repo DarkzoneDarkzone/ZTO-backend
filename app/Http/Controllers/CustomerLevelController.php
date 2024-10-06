@@ -165,8 +165,8 @@ class CustomerLevelController extends Controller
             DB::rollBack();
             return response()->json([
                 'msg' => 'Something went wrong.',
-                'errors' => array(),
-                'status' => $e->getMessage(),
+                'errors' =>  $e->getMessage(),
+                'status' => 'ERROR',
             ], 500);
         }
     }

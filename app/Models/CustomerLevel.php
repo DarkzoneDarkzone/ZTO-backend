@@ -10,4 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class CustomerLevel extends Model
 {
     use HasFactory, SoftDeletes;
+
+    public function Customer()
+    {
+        return $this->hasMany(Customer::class);
+    }
 }

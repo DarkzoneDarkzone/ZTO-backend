@@ -20,7 +20,7 @@ return new class extends Migration
             $table->float('refund_amount_lak');
             $table->float('refund_amount_cny');
             $table->boolean('verify')->default(false);
-            $table->string('create_by');
+            $table->string('created_by');
             $table->timestamps();
             $table->softDeletes();
 

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->float('rate');
             $table->boolean('active')->default(true);
-            $table->string('create_by')->nullable();
+            $table->string('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
