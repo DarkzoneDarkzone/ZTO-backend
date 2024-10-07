@@ -28,7 +28,7 @@ class ParcelController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query ->where($Operator->FiltersOperators(explode(':', $filter)));
+                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
                 }
             }
 
@@ -56,8 +56,8 @@ class ParcelController extends Controller
                 'msg' => $e,
                 'status' => 'ERROR',
                 'error' => array(),
-                'code' => 401
-            ], 401);
+                'code' => 400
+            ], 400);
         }
     }
 
@@ -151,9 +151,46 @@ class ParcelController extends Controller
     /**
      * @return \Illuminate\Support\Collection
      */
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new ParcelExport, 'parcels.xlsx');
+        $validator = Validator::make(request()->all(), [
+            'start_at' => 'date_format:Y-m-d',
+            'end_at' => 'date_format:Y-m-d',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        try {
+            $query = Parcel::query();
+
+            if ($request->has('start_at')) {
+                $query->where('created_at', '>=', $request->query('start_at'));
+            }
+            if ($request->has('end_at')) {
+                $query->where('created_at', '<=', $request->query('end_at'));
+            }
+
+            if ($request->has('sorts')) {
+                $arraySorts = explode(',', $request->query('sorts', []));
+                foreach ($arraySorts as $sort) {
+                    [$field, $direction] = explode(':', $sort);
+                    $query->orderBy($field, $direction);
+                }
+            }
+
+            $parcel = $query->get();
+
+            return Excel::download(new ParcelExport($parcel), 'parcels.xlsx');
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => $e,
+                'status' => 'ERROR',
+                'error' => array(),
+                'code' => 400
+            ], 400);
+        }
     }
 
     /**
