@@ -64,49 +64,7 @@ class ParcelController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
-    {
-        // inprogress
-        $validator = Validator::make(request()->all(), [
-            // 'phone' => 'required|string',
-            'item' => 'required|array|numeric',
-            'return_date' => 'required|date_format:Y-m-d H:i:s',
-            'delivery_car_no' => 'required|string',
-            'delivery_person' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
-        }
-
-        DB::beginTransaction();
-        try {
-            $returnParcelArr = [];
-            foreach ($request->item as $key => $value) {
-                $arr = [];
-                $arr['parcel_id'] = $value;
-                $arr['driver_name'] = $request->delivery_person;
-                $arr['car_number'] = $request->delivery_car_no;
-                $arr['created_at'] = $request->return_date;
-                $arr['created_by'] = Auth::user()->id;
-                array_push($arr, $returnParcelArr);
-            }
-
-            DB::commit();
-            return response()->json([
-                'status' => 'Created',
-                'code' => 200,
-                // 'data' => $returnParcel
-            ], 200);
-        } catch (Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'msg' => 'Something went wrong.',
-                'errors' => $e->getMessage(),
-                'status' => 'ERROR',
-            ], 500);
-        }
-    }
+    public function create(Request $request) {}
 
     /**
      * Store a newly created resource in storage.
@@ -135,9 +93,48 @@ class ParcelController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Parcel $parcel)
+    public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make(request()->all(), [
+            'name' => 'string',
+            'phone' => 'numeric',
+            'status' => 'required|string|in:pending,ready,success',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $parcel = Parcel::find($id);
+            if (!$parcel) {
+                return response()->json([
+                    'status' => 'Not Found',
+                    'code' => 404,
+                    'msg' => 'Parcel not found',
+                ], 404);
+            }
+
+            $parcel->name = $request->name;
+            $parcel->phone = $request->phone;
+            $parcel->status = $request->status;
+            $parcel->save();
+
+            DB::commit();
+            return response()->json([
+                'status' => 'Updated',
+                'code' => 200,
+                'data' => $parcel
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 400);
+        }
     }
 
     /**

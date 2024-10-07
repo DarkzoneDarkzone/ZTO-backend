@@ -88,6 +88,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/return', [ParcelController::class, 'create']);
     Route::post('/extract', [ParcelController::class, 'import']);
     Route::get('/export', [ParcelController::class, 'export']);
+    Route::get('/parcel', [ParcelController::class, 'index']);
+    Route::put('/parcel/{id}', [ParcelController::class, 'update']);
 
     // bill
     Route::get('/bill', [BillController::class, 'index']);
@@ -96,7 +98,4 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/shipping', [BillController::class, 'createShipping']);
     Route::patch('/bill/{id}', [BillController::class, 'update']);
     Route::delete('/bill/{id}', [BillController::class, 'destroy']);
-
-    //// parcel
-    Route::get('/parcel', [ParcelController::class, 'index']);
 });
