@@ -27,7 +27,7 @@ class PaymentController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
+                    $query->orWhere($Operator->FiltersOperators(explode(':', $filter)));
                 }
             }
 
@@ -52,7 +52,7 @@ class PaymentController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'msg' => $e,
+                'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
                 'code' => 401
@@ -111,12 +111,10 @@ class PaymentController extends Controller
             foreach ($bills as $bill) {
                 array_push($bills_id, $bill->id);
             }
-
-            // $payments_sync = array();
+            $currency_now = Currency::orderBy('id', 'asc')->first();
             foreach ($request->payment_type as $key => $pay) {
                 $payment = new Payment();
                 $payment->method = $pay['name'];
-                $currency_now = Currency::orderBy('id', 'asc')->first();
                 switch ($pay['currency']) {
                     case 'lak':
                         $payment->amount_lak = $pay['amount'];
@@ -239,11 +237,11 @@ class PaymentController extends Controller
             $payment->status = 'pending';
             $payment->created_by = $auth_id;
 
-            // $currentDate = Carbon::now()->format('ym');
-            // $payCount = Bill::whereYear('created_at', Carbon::now()->year)
-            // ->whereMonth('created_at', Carbon::now()->month)
-            // ->count() + 1;
-            // $bill->bill_no = 'SK'.$currentDate .'-'.sprintf('%04d', $payCount);
+            $currentDate = Carbon::now()->format('ym');
+            $payCount = Bill::whereYear('created_at', Carbon::now()->year)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->count() + 1;
+            $bill->bill_no = 'SK'.$currentDate .'-'.sprintf('%04d', $payCount);
 
             $payment->save();
             DB::commit();
