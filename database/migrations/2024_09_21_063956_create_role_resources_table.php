@@ -16,6 +16,12 @@ return new class extends Migration
             $table->unsignedBigInteger('role_id');
             $table->unsignedBigInteger('resource_id');
             $table->string('created_by')->nullable();
+            $table->boolean('can_view')->default(false);
+            $table->boolean('can_create')->default(false);
+            $table->boolean('can_update')->default(false);
+            $table->boolean('can_delete')->default(false);
+            $table->boolean('can_export')->default(false);
+
             $table->timestamps();
             $table->softDeletes();
 

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
@@ -235,8 +236,15 @@ class PaymentController extends Controller
                 array_push($bills_id, $bill->id);
             }
             $payment->Bills()->sync($bills_id);
-            // $payment->status = 'pending';
+            $payment->status = 'pending';
             $payment->created_by = $auth_id;
+
+            // $currentDate = Carbon::now()->format('ym');
+            // $payCount = Bill::whereYear('created_at', Carbon::now()->year)
+            // ->whereMonth('created_at', Carbon::now()->month)
+            // ->count() + 1;
+            // $bill->bill_no = 'SK'.$currentDate .'-'.sprintf('%04d', $payCount);
+
             $payment->save();
             DB::commit();
             return response()->json([

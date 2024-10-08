@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use App\Support\Collection;
 
 class CustomerController extends Controller
 {
@@ -18,18 +19,6 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         try {
-            // $customer =  CustomerListResource::collection(Customer::with([
-            //     'CustomerLevel' => function ($query) {
-            //         $query->select('id', 'name');
-            //     },
-            // ])->orderBy('id', 'asc')->get());
-
-            // return response()->json([
-            //     'code' => 200,
-            //     'status' => 'OK',
-            //     'data' => $customer
-            // ], 200);
-
             $query = Customer::query();
 
             if ($request->has('filters')) {
@@ -53,12 +42,10 @@ class CustomerController extends Controller
                     $query->select('id', 'name');
                 },
             ]);
+            $customer =  CustomerListResource::collection($query->get());
             if ($request->has('per_page')) {
-                $customer =  CustomerListResource::collection($query->paginate($request->query('per_page')));
-            } else {
-                $customer =  CustomerListResource::collection($query->get());
+                $customer = (new Collection($customer))->paginate($request->query('per_page'));
             }
-            // return $customer;
             return response()->json([
                 'code' => 200,
                 'status' => 'OK',

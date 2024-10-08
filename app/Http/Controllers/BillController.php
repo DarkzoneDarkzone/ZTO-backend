@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class BillController extends Controller
 {
@@ -103,7 +104,6 @@ class BillController extends Controller
             $parcels = Parcel::whereIn('track_no', $request->item)->get();
             foreach ($parcels as $parcel) {
                 $price_bill += ($parcel->weight * $rate);
-                
             }
             $currency_now = Currency::orderBy('id', 'asc')->first();
             $bill->amount_lak = $price_bill;
@@ -111,12 +111,19 @@ class BillController extends Controller
             $bill->name = $request->name;
             $bill->phone = $request->phone;
             $bill->address = $request->address;
-            $bill->bill_no = 'SK0001';
             $bill->status = 'ready';
             $bill->created_by = $auth_id;
+
+            $currentDate = Carbon::now()->format('ym');
+            $billCount = Bill::whereYear('created_at', Carbon::now()->year)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->count() + 1;
+            $bill->bill_no = $currentDate .'-'.sprintf('%04d', $billCount);
+
             $bill->save();
             foreach ($parcels as $parcel) {
                 $parcel->bill_id = $bill->id;
+                $parcel->status = 'ready';
                 $parcel->save();
             }
             

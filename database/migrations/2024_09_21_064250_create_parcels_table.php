@@ -22,7 +22,7 @@ return new class extends Migration
             $table->float('price');
             $table->boolean('active')->default(true);
             $table->unsignedBigInteger('bill_id')->nullable()->default(null);
-            $table->string('status');
+            $table->enum('status', ['pending', 'ready', 'success']);
             $table->timestamp('receipt_at')->nullable();
             $table->timestamp('payment_at')->nullable();
             $table->timestamp('shipping_at')->nullable();
