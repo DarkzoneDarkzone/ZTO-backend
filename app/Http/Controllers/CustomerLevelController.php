@@ -23,7 +23,7 @@ class CustomerLevelController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query ->where($Operator->FiltersOperators(explode(':', $filter)));
+                    $query ->orwhere($Operator->FiltersOperators(explode(':', $filter)));
                 }
             }
 

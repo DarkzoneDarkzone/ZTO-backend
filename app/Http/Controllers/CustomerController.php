@@ -25,7 +25,7 @@ class CustomerController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
+                    $query->orWhere($Operator->FiltersOperators(explode(':', $filter)));
                 }
             }
 
@@ -39,7 +39,7 @@ class CustomerController extends Controller
 
             $query->with([
                 'CustomerLevel' => function ($query) {
-                    $query->select('id', 'name');
+                    $query->select('id', 'name', 'rate');
                 },
             ]);
             $customer =  CustomerListResource::collection($query->get());
@@ -53,7 +53,7 @@ class CustomerController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'msg' => $e,
+                'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
                 'code' => 401
