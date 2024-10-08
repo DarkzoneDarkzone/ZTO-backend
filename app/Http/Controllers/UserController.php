@@ -174,7 +174,7 @@ class UserController extends Controller
             'access_token' => $token,
             'token_type' => 'bearer',
             'user' => Auth::user(),
-            'expired' => Auth::factory()->getTTL() * 60 * 3
+            'expired' => Auth::factory()->getTTL()
         ]);
     }
 
