@@ -9,6 +9,7 @@ use App\Http\Controllers\CustomerLevelController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\ParcelController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Models\CustomerLevel;
@@ -98,4 +99,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/shipping', [BillController::class, 'createShipping']);
     Route::patch('/bill/{id}', [BillController::class, 'update']);
     Route::delete('/bill/{id}', [BillController::class, 'destroy']);
+
+    // reports
+    Route::get('/report/account', [ReportController::class, 'reportAccounting']);
 });
