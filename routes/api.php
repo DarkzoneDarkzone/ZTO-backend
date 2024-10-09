@@ -102,4 +102,5 @@ Route::middleware('auth:api')->group(function () {
 
     // reports
     Route::get('/report/account', [ReportController::class, 'reportAccounting']);
+    Route::get('/export/account', [ReportController::class, 'exportReportAccounting']);
 });
