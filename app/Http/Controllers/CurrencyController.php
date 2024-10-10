@@ -48,7 +48,7 @@ class CurrencyController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'msg' => $e,
+                'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
                 'code' => 401

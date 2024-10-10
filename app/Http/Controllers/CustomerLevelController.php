@@ -23,7 +23,7 @@ class CustomerLevelController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query ->orwhere($Operator->FiltersOperators(explode(':', $filter)));
+                    $query->orwhere($Operator->FiltersOperators(explode(':', $filter)));
                 }
             }
 
@@ -48,7 +48,7 @@ class CustomerLevelController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'msg' => $e,
+                'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
                 'code' => 401

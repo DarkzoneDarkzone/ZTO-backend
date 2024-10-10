@@ -52,7 +52,7 @@ class ParcelController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'msg' => $e,
+                'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
                 'code' => 400
@@ -181,7 +181,7 @@ class ParcelController extends Controller
             return Excel::download(new ParcelExport($parcel), 'parcels-' . Carbon::now()->format('Y-m-d') . '.xlsx');
         } catch (Exception $e) {
             return response()->json([
-                'msg' => $e,
+                'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
                 'code' => 400
@@ -245,6 +245,9 @@ class ParcelController extends Controller
                 'status' => true,
                 'message' => 'Import excel file Successfully',
                 'code' => 201,
+                'data' => [
+                    'totalParcel' => count($parcelArray),
+                ]
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();
