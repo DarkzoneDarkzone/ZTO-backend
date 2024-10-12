@@ -6,10 +6,9 @@ use App\Exports\ParcelExport;
 use App\Imports\ParcelImport;
 use App\Models\Customer;
 use App\Models\Parcel;
-use App\Models\ReturnParcel;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
@@ -53,7 +52,7 @@ class ParcelController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'msg' => $e,
+                'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
                 'code' => 400
@@ -179,10 +178,10 @@ class ParcelController extends Controller
 
             $parcel = $query->get();
 
-            return Excel::download(new ParcelExport($parcel), 'parcels.xlsx');
+            return Excel::download(new ParcelExport($parcel), 'parcels-' . Carbon::now()->format('Y-m-d') . '.xlsx');
         } catch (Exception $e) {
             return response()->json([
-                'msg' => $e,
+                'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
                 'code' => 400
@@ -246,6 +245,9 @@ class ParcelController extends Controller
                 'status' => true,
                 'message' => 'Import excel file Successfully',
                 'code' => 201,
+                'data' => [
+                    'totalParcel' => count($parcelArray),
+                ]
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();

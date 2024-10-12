@@ -54,7 +54,7 @@ class BillController extends Controller
             ], 200);
         } catch (Exception $e) {
             return response()->json([
-                'msg' => $e,
+                'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
                 'code' => 400
@@ -137,9 +137,9 @@ class BillController extends Controller
 
             $currentDate = Carbon::now()->format('ym');
             $billCount = Bill::whereYear('created_at', Carbon::now()->year)
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->count() + 1;
-            $bill->bill_no = $currentDate .'-'.sprintf('%04d', $billCount);
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->count() + 1;
+            $bill->bill_no = $currentDate . '-' . sprintf('%04d', $billCount);
 
             $bill->save();
             foreach ($parcels as $parcel) {
@@ -147,7 +147,7 @@ class BillController extends Controller
                 $parcel->status = 'ready';
                 $parcel->save();
             }
-            
+
             DB::commit();
             return response()->json([
                 'code' => 201,
