@@ -15,12 +15,12 @@ return new class extends Migration
         Schema::create('return_parcels', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('parcel_id');
-            $table->string('car_number');
-            $table->string('driver_name');
-            $table->float('weigth');
-            $table->float('refund_amount_lak');
-            $table->float('refund_amount_cny');
-            $table->boolean('verify')->default(false);
+            $table->unsignedBigInteger('income_expenses_id');
+            $table->string('car_number')->nullable();
+            $table->string('driver_name')->nullable();
+            $table->float('weight')->nullable();
+            $table->float('refund_amount_lak')->nullable();
+            $table->float('refund_amount_cny')->nullable();
             $table->string('created_by');
 
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
@@ -28,6 +28,8 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('parcel_id')->references('id')->on('parcels');
+            $table->foreign('income_expense_id')->references('id')->on('income_expenses');
+
         });
     }
 

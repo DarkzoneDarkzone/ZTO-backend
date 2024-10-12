@@ -12,6 +12,7 @@ use App\Http\Controllers\ParcelController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Models\CustomerLevel;
+use App\Models\IncomeExpense;
 use App\Models\Parcel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -98,4 +99,14 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/shipping', [BillController::class, 'createShipping']);
     Route::patch('/bill/{id}', [BillController::class, 'update']);
     Route::delete('/bill/{id}', [BillController::class, 'destroy']);
+
+    // income-expenses
+    Route::get('/income-expenses', [IncomeExpense::class, 'index']);
+    Route::get('/income-expenses/{id}', [IncomeExpense::class, 'getById']);
+    Route::post('/return', [IncomeExpense::class, 'createIncome']);
+    Route::patch('/return/{id}', [IncomeExpense::class, 'updateIncome']);
+    Route::post('/refund', [IncomeExpense::class, 'createExpense']);
+    Route::patch('/refund/{id}', [IncomeExpense::class, 'updateExpense']);
+    Route::patch('/income-expenses/{id}', [IncomeExpense::class, 'updateStatus']);
+    Route::delete('/income-expenses/{id}', [IncomeExpense::class, 'destroy']);
 });

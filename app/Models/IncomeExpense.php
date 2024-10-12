@@ -15,5 +15,10 @@ class IncomeExpense extends Model
     {
         return $this->hasOne(Balance::class);
     }
+
+    public function ReturnParcel()
+    {
+        return $this->hasOne(ReturnParcel::class);
+    }
     
 }

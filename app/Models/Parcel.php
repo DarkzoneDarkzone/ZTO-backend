@@ -27,6 +27,6 @@ class Parcel extends Model
 
     public function ReturnParcel()
     {
-        return $this->hasMany(ReturnParcel::class);
+        return $this->hasOne(ReturnParcel::class);
     }
 }

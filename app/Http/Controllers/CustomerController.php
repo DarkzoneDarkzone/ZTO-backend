@@ -20,12 +20,23 @@ class CustomerController extends Controller
     {
         try {
             $query = Customer::query();
-
+            
+            $Operator = new FiltersOperator();
             if ($request->has('filters')) {
-                $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->orWhere($Operator->FiltersOperators(explode(':', $filter)));
+                    $query->Where($Operator->FiltersOperators(explode(':', $filter)));
+                }
+            }
+
+            if ($request->has('searchText')) {
+                $arraySearchText = ['name', 'phone'];
+                foreach ($arraySearchText as $index => $search) {
+                    if ($index == 0) {
+                        $query->Where($Operator->FiltersOperators([$search, 'like', $request->query('searchText')]));
+                    } else {
+                        $query->orWhere($Operator->FiltersOperators([$search, 'like', $request->query('searchText')]));
+                    }
                 }
             }
 
@@ -56,8 +67,8 @@ class CustomerController extends Controller
                 'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
-                'code' => 401
-            ], 401);
+                'code' => 400
+            ], 400);
         }
     }
 
@@ -74,7 +85,7 @@ class CustomerController extends Controller
 
         if (!$customer) {
             return response()->json([
-                'code' => 401,
+                'code' => 400,
                 'status' => 'ERROR',
                 'errors' => array()
             ], 400);
