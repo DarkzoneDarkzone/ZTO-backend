@@ -16,6 +16,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('payment_id')->nullable();
             $table->unsignedBigInteger('income_id')->nullable();
+            $table->float('amount')->default(0);
+            $table->float('balance_amount')->default(0);
 
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));

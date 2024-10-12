@@ -57,10 +57,31 @@ class BillController extends Controller
                 'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
-                'code' => 401
-            ], 401);
+                'code' => 400
+            ], 400);
         }
     }
+
+        /**
+     * get by id
+     */
+    public function getById($id)
+    {
+        $bill = Bill::where('id', $id)->first();
+        if (!$bill) {
+            return response()->json([
+                'msg' => 'bill not found.',
+                'status' => 'ERROR',
+                'data' => array()
+            ], 400);
+        }
+        return response()->json([
+            'code' => 200,
+            'status' => 'OK',
+            'data' => $bill
+        ], 200);
+    }
+
 
     /**
      * Show the form for creating a new resource.
@@ -179,7 +200,7 @@ class BillController extends Controller
 
         DB::beginTransaction();
         try {
-            $auth_id = Auth::user()->id;
+            // $auth_id = Auth::user()->id;
 
             $bills = Bill::whereIn('bill_no', $request->bill_no)->get();
 

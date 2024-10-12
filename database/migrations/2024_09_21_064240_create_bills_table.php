@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('bill_no');
             $table->float('amount_lak');
             $table->float('amount_cny');
-            $table->enum('status', ['shipped', 'ready']);
+            $table->enum('status', ['shipped', 'ready', 'waiting_payment', 'success']);
             $table->string('created_by');
 
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

@@ -14,4 +14,9 @@ class ReturnParcel extends Model
     {
         return $this->belongsTo(Parcel::class);
     }
+
+    public function IncomeExpense()
+    {
+        return $this->belongsTo(IncomeExpense::class);
+    }
 }

@@ -51,8 +51,8 @@ class CustomerLevelController extends Controller
                 'msg' => $e->getMessage(),
                 'status' => 'ERROR',
                 'error' => array(),
-                'code' => 401
-            ], 401);
+                'code' => 400
+            ], 400);
         }
     }
 

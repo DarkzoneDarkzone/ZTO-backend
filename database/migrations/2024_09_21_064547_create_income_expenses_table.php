@@ -16,16 +16,16 @@ return new class extends Migration
             $table->id();
             $table->enum('type', ['income', 'expenses']);
             $table->enum('sub_type', ['return', 'refund', 'other']);
-            // $table->unsignedBigInteger('parcel_id');
+            $table->enum('status', ['pending', 'verify']);
             $table->string('description');
-            $table->float('amount_lak');
-            $table->float('amount_cny');
+            $table->float('amount_lak')->nullable();
+            $table->float('amount_cny')->nullable();
+            // $table->boolean('verify')->default(false);
 
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
             $table->softDeletes();
 
-            // $table->foreign('parcel_id')->references('id')->on('parcels');
 
         });
     }
