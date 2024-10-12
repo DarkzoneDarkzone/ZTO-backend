@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\ToArray;
 use Maatwebsite\Excel\Concerns\WithStartRow;
@@ -43,9 +44,11 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
                 'name' => $row[5],
                 'phone' => $phone,
                 'address' => null,
-                'shipping_at' => $row[7],
+                'receipt_at' => $row[7],
                 'active' => true,
                 'status' => 'pending',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
             ];
         }
     }
