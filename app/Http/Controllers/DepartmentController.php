@@ -27,7 +27,7 @@ class DepartmentController extends Controller
         }
 
         if ($request->has('searchText')) {
-            $arraySearchText = ['name', 'phone'];
+            $arraySearchText = ['name'];
             $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
         }
 

@@ -41,7 +41,6 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/me', [UserController::class, 'me'])->name('me');
 
     // customer
-    Route::post('/customer', [CustomerController::class, 'create']);
     Route::get('/customer', [CustomerController::class, 'index']);
     Route::get('/customer/{id}', [CustomerController::class, 'getById']);
     Route::post('/customer', [CustomerController::class, 'create']);
@@ -49,7 +48,6 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/customer/{id}', [CustomerController::class, 'destroy']);
 
     // customer_level
-    Route::post('/customer_level', [CustomerLevelController::class, 'create']);
     Route::get('/customer_level', [CustomerLevelController::class, 'index']);
     Route::get('/customer_level/{id}', [CustomerLevelController::class, 'getById']);
     Route::post('/customer_level', [CustomerLevelController::class, 'create']);
@@ -57,7 +55,6 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/customer_level/{id}', [CustomerLevelController::class, 'destroy']);
 
     // currency
-    Route::post('/currency', [CurrencyController::class, 'create']);
     Route::get('/currency', [CurrencyController::class, 'index']);
     Route::get('/currency/{id}', [CurrencyController::class, 'getById']);
     Route::post('/currency', [CurrencyController::class, 'create']);
@@ -65,11 +62,10 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/currency/{id}', [CurrencyController::class, 'destroy']);
 
     // payment
-    Route::post('/payment', [PaymentController::class, 'create']);
     Route::get('/payment', [PaymentController::class, 'index']);
     Route::get('/payment/{id}', [PaymentController::class, 'getByPaymentNo']);
     Route::post('/payment', [PaymentController::class, 'create']);
-    Route::patch('/payment/{id}', [PaymentController::class, 'update']);
+    Route::patch('/payment/{id}', [PaymentController::class, 'updatePaymentNo']);
     Route::delete('/payment/{id}', [PaymentController::class, 'destroy']);
 
     // role & permission

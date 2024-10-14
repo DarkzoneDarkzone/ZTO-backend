@@ -23,7 +23,7 @@ class CurrencyController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->orWhere($Operator->FiltersOperators(explode(':', $filter)));
+                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
                 }
             }
 

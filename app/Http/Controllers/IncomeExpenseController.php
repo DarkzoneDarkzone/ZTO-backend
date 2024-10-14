@@ -31,7 +31,7 @@ class IncomeExpenseController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->Where($Operator->FiltersOperators(explode(':', $filter)));
+                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
                 }
             }
 
