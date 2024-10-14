@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Balance;
 use App\Models\Bill;
 use App\Models\Payment;
 use App\Models\Currency;
@@ -28,9 +29,23 @@ class PaymentController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->Where($Operator->FiltersOperators(explode(':', $filter)));
+                    $ex = explode(':', $filter);
+                    $query->where($Operator->FiltersOperators([$ex[0], $ex[1], $ex[2]]));
                 }
             }
+
+
+            $query = $query->select(
+                DB::raw('ANY_VALUE(payments.id) as id'),
+                'payments.payment_no',
+                DB::raw('ANY_VALUE(payments.status) as status'),
+                DB::raw('SUM(payments.amount_lak) as amount_lak'),
+                DB::raw('SUM(payments.amount_cny) as amount_cny'),
+
+            );
+
+            $query->groupBy('payment_no');
+            // $query->select('id', 'status', 'payment_no');
 
             $bill_payment = Bill::joinSub($query, 'pay_query', function (JoinClause $join) {
                 $join->join('bill_payment', 'bill_payment.payment_id', '=', 'pay_query.id');
@@ -43,6 +58,9 @@ class PaymentController extends Controller
                     $bill_payment->orWhereLike($value,  '%' . $request->query('searchText') . '%');
                 }
             }
+            // dd($bill_payment->get());
+
+
 
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
@@ -99,18 +117,16 @@ class PaymentController extends Controller
      */
     public function getByPaymentNo($payment_no)
     {
-        $query = Payment::query();
-        // $payments = Payment::where('payment_no', $payment_no);
-        $query->where('payment_no', $payment_no);
-        // $payment->Bills; 
-        // dd($payment_no);
-        $bill_payment = Bill::joinSub($query, 'pay_query', function (JoinClause $join) {
+        $query1 = Payment::query();
+        $query1->where('payment_no', $payment_no)->first();
+        $bill_payment = Bill::joinSub($query1, 'pay_query', function (JoinClause $join) {
             $join->join('bill_payment', 'bill_payment.payment_id', '=', 'pay_query.id');
             $join->on('bill_payment.bill_id', '=', 'bills.id');
         });
-        // $bill_payment->select('')
+        // $bill_payment->select('bills.name',);
         $bill_payment = $bill_payment->get();
-        $payment = $query->get();
+
+        $payment = Payment::where('payment_no', $payment_no)->get();
 
         $payment_no_json = (object) array('payment_no' => $payment_no, 'bill_payment' => $bill_payment, 'paymests' => $payment);
         if (!$bill_payment) {
@@ -151,6 +167,7 @@ class PaymentController extends Controller
                 'status' => 'Unauthorized',
             ], 400);
         }
+
         DB::beginTransaction();
         try {
             $auth_id = Auth::user()->id;
@@ -203,12 +220,11 @@ class PaymentController extends Controller
             }
 
             $currentDate = Carbon::now()->format('ym');
-            $payCount = Bill::whereYear('created_at', Carbon::now()->year)
+            $payCount = Payment::whereYear('created_at', Carbon::now()->year)
                 ->whereMonth('created_at', Carbon::now()->month)
                 ->count() + 1;
             $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%04d', $payCount);
-            // dd($payments_price_lak, $bills_price_lak, round($payments_price_cny, 6),  round($bills_price_cny, 6));
-            if ($payments_price_lak >= $bills_price_lak &&  round($payments_price_cny, 6) >= round($bills_price_cny, 6)) {
+            if ($payments_price_lak >= $bills_price_lak &&  round($payments_price_cny, 2) >= round($bills_price_cny, 2)) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
@@ -225,7 +241,6 @@ class PaymentController extends Controller
                     $payment->save();
                     $payment->Bills()->sync($bills_id);
                 }
-                
             } else {
                 foreach ($bills as $bill) {
                     $bill->status = 'waiting_payment';
@@ -281,83 +296,159 @@ class PaymentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    // public function update(Request $request, $id)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'active' => 'required|boolean',
-    //         'payment_type' => 'required|array',
-    //         'payment_type.*.name',
-    //         'payment_type.*.amount',
-    //         'payment_type.*.currency',
-    //         'bill' => 'required|array',
-    //         'bill.*' => 'string',
-    //     ]);
+    public function updatePaymentNo(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'bill' => 'required|array',
+            'bill.*' => 'string',
+            'payment_type' => 'required|array',
+            'payment_type.*.name' => 'required|string',
+            'payment_type.*.amount' => 'required|numeric',
+            'payment_type.*.currency' => 'required|string',
+            'active' => 'required|boolean',
+        ]);
 
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'msg' => ' went wrong.',
-    //             'errors' => $validator->errors()->toJson(),
-    //             'status' => 'Unauthorized',
-    //         ], 400);
-    //     }
-    //     DB::beginTransaction();
-    //     try {
-    //         $auth_id = Auth::user()->id;
-    //         $payment = Payment::where('id', $id)->first();
-    //         if (!$payment) {
-    //             return response()->json([
-    //                 'msg' => 'payment not found.',
-    //                 'status' => 'ERROR',
-    //                 'errors' => array()
-    //             ], 400);
-    //         }
-    //         $payment->method = $request->payment_type->name;
-    //         $currency_now = Currency::orderBy('id', 'asc')->first();
-    //         switch ($request->payment_type->currency) {
-    //             case 'lak':
-    //                 $payment->amount_lak = $request->payment_type->amount;
-    //                 $payment->amount_cny = $request->payment_type->amount / ($currency_now->amount_cny * $currency_now->amount_lak);
-    //                 break;
-    //             case 'cny':
-    //                 $payment->amount_lak = $request->payment_type->amount / ($currency_now->amount_lak * $currency_now->amount_cny);
-    //                 $payment->amount_cny = $request->payment_type->amount;
-    //                 break;
-    //             default:
-    //                 $payment->amount_lak = 0;
-    //                 $payment->amount_cny = 0;
-    //                 break;
-    //         }
-    //         $bills = Bill::whereIn('bill_no', $payment->bill)->get();
-    //         $bills_id = array();
-    //         foreach ($bills as $bill) {
-    //             array_push($bills_id, $bill->id);
-    //         }
-    //         $payment->Bills()->sync($bills_id);
-    //         $payment->status = 'pending';
-    //         $payment->created_by = $auth_id;
+        if ($validator->fails()) {
+            return response()->json([
+                'msg' => ' went wrong.',
+                'errors' => $validator->errors()->toJson(),
+                'status' => 'Unauthorized',
+            ], 400);
+        }
 
-    //         $currentDate = Carbon::now()->format('ym');
-    //         $payCount = Bill::whereYear('created_at', Carbon::now()->year)
-    //             ->whereMonth('created_at', Carbon::now()->month)
-    //             ->count() + 1;
-    //         $bill->bill_no = 'SK' . $currentDate . '-' . sprintf('%04d', $payCount);
+        DB::beginTransaction();
+        try {
+            $auth_id = Auth::user()->id;
+            $payments = Payment::where('payment_no', $id)->get();
+            $bills = Bill::whereIn('bill_no', $request->bill)->get();
+            if (count($payments) == 0) {
+                return response()->json([
+                    'msg' => 'payment_no not found.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
 
-    //         $payment->save();
-    //         DB::commit();
-    //         return response()->json([
-    //             'code' => 200,
-    //             'status' => 'OK',
-    //             'data' => $payment
-    //         ], 200);
-    //     } catch (Exception $e) {
-    //         DB::rollBack();
-    //         return response()->json([
-    //             'msg' => 'Something went wrong.',
-    //             'errors' => array(),
-    //             'status' => $e->getMessage(),
-    //         ], 500);
-    //     }
-    // }
+            if (count($bills) == 0) {
+                return response()->json([
+                    'msg' => 'bill_no not found.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
+
+            $bills_id = array();
+            $bills_price_lak = 0;
+            $bills_price_cny = 0;
+            foreach ($bills as $bill) {
+                array_push($bills_id, $bill->id);
+                $bills_price_lak += $bill->amount_lak;
+                $bills_price_cny += $bill->amount_cny;
+            }
+
+            $payments_methods = array();
+            foreach ($payments as $key => $pay) {
+                array_push($payments_methods, $pay->method);
+                $pay->Bills()->detach($bills_id);
+                // $pay->delete();
+            }
+
+            $currency_now = Currency::orderBy('id', 'desc')->first();
+            $payments_save = array();
+            $payments_price_lak = 0;
+            $payments_price_cny = 0;
+
+            $have_charge_item = false;
+            foreach ($request->payment_type as $key => $pay_type) {
+                if (!in_array($pay_type->name, $payments_methods)) {
+                    $payment = new Payment();
+                    $payment->created_by = $auth_id;
+                    $payment->active = $request->active;
+                    $payment->method = $pay['name'];
+                    switch ($pay['currency']) {
+                        case 'lak':
+                            $payment->amount_lak = $pay['amount'];
+                            $payment->amount_cny = $pay['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
+                            break;
+                        case 'cny':
+                            $payment->amount_lak = $pay['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
+                            $payment->amount_cny = $pay['amount'];
+                            break;
+                        default:
+                            $payment->amount_lak = 0;
+                            $payment->amount_cny = 0;
+                            break;
+                    }
+                    $payments_price_lak += $payment->amount_lak;
+                    $payments_price_cny += $payment->amount_cny;
+                    array_push($payments_save, $payment);
+                    $have_charge_item = true;
+                } else {
+                    // $pay_filter = array_filter($payments, function ($item) {
+                    //     return $item["method"] === $pay_type->name;
+                    // });
+                    foreach ($payments as $key => $pay) {
+                        
+                    }
+
+                }
+            }
+
+            if ($payments_price_lak >= $bills_price_lak && round($payments_price_cny, 2) >= round($bills_price_cny, 2)) {
+                foreach ($bills as $bill) {
+                    $bill->status = 'success';
+                    $bill->save();
+                }
+                $parcels = Parcel::where(['phone' => $request->phone, 'status' => 'ready'])->get();
+                foreach ($parcels as $parcel) {
+                    $parcel->status = 'success';
+                    $parcel->save();
+                }
+                foreach ($payments_save as $key => $payment) {
+                    $payment->payment_no = $id;
+                    $payment->status = 'paid';
+                    $payment->save();
+                    $payment->Bills()->sync($bills_id);
+                }
+                $balanceStack = Balance::orderBy('id', 'desc')->first();
+                $balance = new Balance();
+                $balance->amount_lak = $payments_price_lak;
+                $balance->amount_cny = $payments_price_cny;
+                if ($balanceStack) {
+                    $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payments_price_lak;
+                    $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payments_price_cny;
+                } else {
+                    $balance->balance_amount_lak = $payments_price_lak;
+                    $balance->balance_amount_cny = $payments_price_cny;
+                }
+                $balance->save();
+            } else {
+                foreach ($bills as $bill) {
+                    $bill->status = 'waiting_payment';
+                    $bill->save();
+                }
+                foreach ($payments_save as $key => $payment) {
+                    $payment->payment_no = $id;
+                    $payment->status = 'pending';
+                    $payment->save();
+                    $payment->Bills()->sync($bills_id);
+                }
+            }
+            DB::commit();
+            return response()->json([
+                'code' => 200,
+                'status' => 'OK',
+                'data' => array()
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => array(),
+                'status' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
     /**
      * Remove the specified resource from storage.
