@@ -33,7 +33,7 @@ class ParcelController extends Controller
 
             if ($request->has('searchText')) {
                 $arraySearchText = ['track_no', 'name', 'phone'];
-                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
+                $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
             if ($request->has('sorts')) {
@@ -232,13 +232,14 @@ class ParcelController extends Controller
 
             $customerArr = [];
             foreach ($customerPhoneDiff as $key => $value) {
+                $cusName = collect($parcelArray)->where('phone', $value)->pluck('name')->first();
                 $customer = [
                     'phone' => $value,
-                    'name' => null,
+                    'name' => $cusName ?? null,
                     'address' => null,
                     'active' => false,
                 ];
-                array_push($customer, $customerArr);
+                array_push($customerArr, $customer);
             }
 
             Customer::insert($customerArr);
