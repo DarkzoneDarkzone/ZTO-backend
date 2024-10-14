@@ -244,14 +244,14 @@ class PaymentController extends Controller
 
                     $balanceStack = Balance::orderBy('id', 'desc')->first();
                     $balance = new Balance();
-                    $balance->amount_lak = $payments_price_lak;
-                    $balance->amount_cny = $payments_price_cny;
+                    $balance->amount_lak = $payment->amount_lak;
+                    $balance->amount_cny = $payment->amount_cny;
                     if ($balanceStack) {
-                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payments_price_lak;
-                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payments_price_cny;
+                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payment->amount_lak;
+                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payment->amount_cny;
                     } else {
-                        $balance->balance_amount_lak = $payments_price_lak;
-                        $balance->balance_amount_cny = $payments_price_cny;
+                        $balance->balance_amount_lak = $payment->amount_lak;
+                        $balance->balance_amount_cny = $payment->amount_cny;
                     }
                     $balance->payment_id = $payment->id;
                     $balance->save();
