@@ -136,7 +136,7 @@ class BillController extends Controller
                     ], 400);
                 }
                 ///////// weight is kg. convert to g.
-                $parcel->weight = $parcel->weight * 100;
+                // $parcel->weight = $parcel->weight * 100;
                 $price_bill_lak += ($parcel->weight * $rate);
             }
             $currency_now = Currency::orderBy('id', 'desc')->first();
