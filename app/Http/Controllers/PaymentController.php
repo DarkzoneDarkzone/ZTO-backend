@@ -240,6 +240,20 @@ class PaymentController extends Controller
                     $payment->status = 'paid';
                     $payment->save();
                     $payment->Bills()->sync($bills_id);
+
+                    $balanceStack = Balance::orderBy('id', 'desc')->first();
+                    $balance = new Balance();
+                    $balance->amount_lak = $payments_price_lak;
+                    $balance->amount_cny = $payments_price_cny;
+                    if ($balanceStack) {
+                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payments_price_lak;
+                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payments_price_cny;
+                    } else {
+                        $balance->balance_amount_lak = $payments_price_lak;
+                        $balance->balance_amount_cny = $payments_price_cny;
+                    }
+                    $balance->payment_id = $payment->id;
+                    $balance->save();
                 }
             } else {
                 foreach ($bills as $bill) {
@@ -388,9 +402,7 @@ class PaymentController extends Controller
                     //     return $item["method"] === $pay_type->name;
                     // });
                     foreach ($payments as $key => $pay) {
-                        
                     }
-
                 }
             }
 
@@ -409,19 +421,21 @@ class PaymentController extends Controller
                     $payment->status = 'paid';
                     $payment->save();
                     $payment->Bills()->sync($bills_id);
+
+                    $balanceStack = Balance::orderBy('id', 'desc')->first();
+                    $balance = new Balance();
+                    $balance->amount_lak = $payments_price_lak;
+                    $balance->amount_cny = $payments_price_cny;
+                    if ($balanceStack) {
+                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payments_price_lak;
+                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payments_price_cny;
+                    } else {
+                        $balance->balance_amount_lak = $payments_price_lak;
+                        $balance->balance_amount_cny = $payments_price_cny;
+                    }
+                    $balance->payment_id = $payment->id;
+                    $balance->save();
                 }
-                $balanceStack = Balance::orderBy('id', 'desc')->first();
-                $balance = new Balance();
-                $balance->amount_lak = $payments_price_lak;
-                $balance->amount_cny = $payments_price_cny;
-                if ($balanceStack) {
-                    $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payments_price_lak;
-                    $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payments_price_cny;
-                } else {
-                    $balance->balance_amount_lak = $payments_price_lak;
-                    $balance->balance_amount_cny = $payments_price_cny;
-                }
-                $balance->save();
             } else {
                 foreach ($bills as $bill) {
                     $bill->status = 'waiting_payment';

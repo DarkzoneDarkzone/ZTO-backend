@@ -29,10 +29,10 @@ class CustomerController extends Controller
                 }
             }
 
-            // if ($request->has('searchText')) {
-            //     $arraySearchText = ['name', 'phone'];
-            //     $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
-            // }
+            if ($request->has('searchText')) {
+                $arraySearchText = ['name', 'phone'];
+                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
+            }
 
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
