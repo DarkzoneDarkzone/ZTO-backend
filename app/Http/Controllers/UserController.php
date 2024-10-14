@@ -80,6 +80,8 @@ class UserController extends Controller
             ], 400);
         }
 
+        $user = new UserListResource($user);
+
         return response()->json([
             'msg' => 'User found.',
             'status' => 'OK',
@@ -222,7 +224,7 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'email' => 'required|email',
-            'password' => 'required|min:8',
+            'password' => 'min:8',
             'department_id' => 'required|integer',
             'role_id' => 'required|integer',
             'active' => 'required|boolean'
