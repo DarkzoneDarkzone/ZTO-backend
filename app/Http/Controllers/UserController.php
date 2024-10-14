@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UserListResource;
 use App\Models\User;
+use App\Support\Collection;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,17 +13,51 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = User::with([
+            'Department' => function ($query) {
+                $query->select('id', 'name');
+            },
+            'Role' => function ($query) {
+                $query->select('id', 'name');
+            },
+        ]);
+
+        $Operator = new FiltersOperator();
+        if ($request->has('filters')) {
+            $arrayFilter = explode(',', $request->query('filters', []));
+            foreach ($arrayFilter as $filter) {
+                $query->Where($Operator->FiltersOperators(explode(':', $filter)));
+            }
+        }
+
+        if ($request->has('searchText')) {
+            $arraySearchText = ['first_name', 'email'];
+            $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
+        }
+
+        if ($request->has('sorts')) {
+            $arraySorts = explode(',', $request->query('sorts', []));
+            foreach ($arraySorts as $sort) {
+                [$field, $direction] = explode(':', $sort);
+                $query->orderBy($field, $direction);
+            }
+        }
+
+        $users =  UserListResource::collection($query->get());
+        if ($request->has('per_page')) {
+            $users = (new Collection($users))->paginate($request->query('per_page'));
+        }
+
+
         return response()->json(
-            UserListResource::collection(User::with([
-                'Department' => function ($query) {
-                    $query->select('id', 'name');
-                },
-                'Role' => function ($query) {
-                    $query->select('id', 'name');
-                },
-            ])->get())
+            [
+                'status' => 'OK',
+                'code' => 200,
+                "data" => $users
+            ],
+            200
         );
     }
 
@@ -79,7 +114,11 @@ class UserController extends Controller
         $user->password = bcrypt(request()->password);
         $user->save();
 
-        return response()->json($user, 201);
+        return response()->json([
+            'msg' => 'User found.',
+            'status' => 'OK',
+            'data' => $user
+        ], 201);
     }
 
     /**
@@ -212,10 +251,12 @@ class UserController extends Controller
             $user->active = $request->active;
             $user->save();
             DB::commit();
-            return response()->json(
-                $user,
-                200
-            );
+
+            return response()->json([
+                'msg' => 'User found.',
+                'status' => 'OK',
+                'data' => $user
+            ], 200);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([

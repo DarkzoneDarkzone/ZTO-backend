@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Department;
+use App\Support\Collection;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,12 +14,41 @@ class DepartmentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $query = Department::query();
+
+        $Operator = new FiltersOperator();
+        if ($request->has('filters')) {
+            $arrayFilter = explode(',', $request->query('filters', []));
+            foreach ($arrayFilter as $filter) {
+                $query->Where($Operator->FiltersOperators(explode(':', $filter)));
+            }
+        }
+
+        if ($request->has('searchText')) {
+            $arraySearchText = ['name', 'phone'];
+            $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
+        }
+
+        if ($request->has('sorts')) {
+            $arraySorts = explode(',', $request->query('sorts', []));
+            foreach ($arraySorts as $sort) {
+                [$field, $direction] = explode(':', $sort);
+                $query->orderBy($field, $direction);
+            }
+        }
+
+        if ($request->has('per_page') && $request->query('page')) {
+            $departments = (new Collection($query->get()))->paginate($request->query('per_page'));
+        } else {
+            $departments = clone $query->get();
+        }
+
         return response()->json([
             'status' => 'OK',
             'code' => 200,
-            "data" => Department::get()
+            "data" => $departments
         ], 200);
     }
 
