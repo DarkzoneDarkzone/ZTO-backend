@@ -67,7 +67,7 @@ Route::middleware('auth:api')->group(function () {
     // payment
     Route::post('/payment', [PaymentController::class, 'create']);
     Route::get('/payment', [PaymentController::class, 'index']);
-    Route::get('/payment/{id}', [PaymentController::class, 'getById']);
+    Route::get('/payment/{id}', [PaymentController::class, 'getByPaymentNo']);
     Route::post('/payment', [PaymentController::class, 'create']);
     Route::patch('/payment/{id}', [PaymentController::class, 'update']);
     Route::delete('/payment/{id}', [PaymentController::class, 'destroy']);
@@ -96,18 +96,18 @@ Route::middleware('auth:api')->group(function () {
     // bill
     Route::get('/bill', [BillController::class, 'index']);
     Route::get('/bill/{id}', [BillController::class, 'getById']);
-    Route::post('/bill', [BillController::class, 'create']);
+    Route::post('/bill', [BillController::class, 'createBill']);
     Route::post('/shipping', [BillController::class, 'createShipping']);
-    Route::patch('/bill/{id}', [BillController::class, 'update']);
+    Route::patch('/bill/{id}', [BillController::class, 'updateBill']);
     Route::delete('/bill/{id}', [BillController::class, 'destroy']);
 
     // income-expenses
     Route::get('/income-expenses', [IncomeExpense::class, 'index']);
     Route::get('/income-expenses/{id}', [IncomeExpense::class, 'getById']);
-    Route::post('/return', [IncomeExpense::class, 'createIncome']);
-    Route::patch('/return/{id}', [IncomeExpense::class, 'updateIncome']);
-    Route::post('/refund', [IncomeExpense::class, 'createExpense']);
-    Route::patch('/refund/{id}', [IncomeExpense::class, 'updateExpense']);
+    Route::post('/income', [IncomeExpense::class, 'createIncome']);
+    Route::patch('/income/{id}', [IncomeExpense::class, 'updateIncome']);
+    Route::post('/expense', [IncomeExpense::class, 'createExpense']);
+    Route::patch('/expense/{id}', [IncomeExpense::class, 'updateExpense']);
     Route::patch('/income-expenses/{id}', [IncomeExpense::class, 'updateStatus']);
     Route::delete('/income-expenses/{id}', [IncomeExpense::class, 'destroy']);
     

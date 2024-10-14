@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Balance;
+use App\Models\Bill;
+use App\Models\BillPayment;
 use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\IncomeExpense;
 use App\Models\Parcel;
+use App\Models\Payment;
 use App\Models\ReturnParcel;
 use Exception;
 use Illuminate\Http\Request;
@@ -30,6 +33,11 @@ class IncomeExpenseController extends Controller
                 foreach ($arrayFilter as $filter) {
                     $query->Where($Operator->FiltersOperators(explode(':', $filter)));
                 }
+            }
+
+            if ($request->has('searchText')) {
+                $arraySearchText = ['id', 'type'];
+                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
             }
 
             if ($request->has('sorts')) {
@@ -67,6 +75,26 @@ class IncomeExpenseController extends Controller
     public function getById($id)
     {
         $incomeExpense = IncomeExpense::where('id', $id)->first();
+        // $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
+        // $return_parcel->Parcel;
+        // $return_parcels = $incomeExpense->ReturnParcels;
+        // foreach ($return_parcels as $key => $return_parcel) {
+        //     $return_parcel->Parcel;
+        // }
+        $query_return_parcel = ReturnParcel::query();
+        $query_return_parcel->join('parcels', 'parcels.id', '=', 'return_parcels.parcel_id')
+            ->where('return_parcels.income_expenses_id', $incomeExpense->id);
+        /////////////
+        if ($incomeExpense->type == 'expenses') {
+            $query_return_parcel->where('parcels.status', 'success')
+            ->select('parcels.*', 'return_parcels.weight', 'return_parcels.refund_amount_lak', 'return_parcels.refund_amount_cny');
+        } else if ($incomeExpense->type == 'income') {
+            $query_return_parcel->where('parcels.status', 'ready')
+            ->select('parcels.*', 'return_parcels.car_number', 'return_parcels.driver_name', 'return_parcels.create_at ad date_return');
+        }
+        ////////////
+        $return_parcel = $query_return_parcel->get();
+        $incomeExpense->parcel = $return_parcel;
         if (!$incomeExpense) {
             return response()->json([
                 'msg' => 'income expense not found.',
@@ -94,7 +122,8 @@ class IncomeExpenseController extends Controller
             'delivery_car_no' => 'required|string',
             'delivery_person' => 'required|string',
             'sub_type' => 'required|string',
-            'description' => 'string'
+            'description' => 'string',
+            'amount_costs' => 'required|numeric',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -119,35 +148,38 @@ class IncomeExpenseController extends Controller
                     'errors' => array()
                 ], 400);
             }
-            $currency_now = Currency::orderBy('id', 'asc')->first();
+            $parcels = Parcel::whereIn(['track_no' => $request->item, 'status' => 'ready'])->get();
+            if (!$$parcels || count($parcels) == 0) {
+                return response()->json([
+                    'msg' => 'parcels not found.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
+
+            $currency_now = Currency::orderBy('id', 'desc')->first();
+
+            $costs_lak = $request->amount_costs;
+            $costs_cny = $request->amount_costs / ($currency_now->amount_cny * $currency_now->amount_lak);
 
             $incomeExpense = new IncomeExpense();
             $incomeExpense->type = 'income';
-            $incomeExpense->status = 'return';
-
-            $price_bill  = 0;
-            $parcels = Parcel::whereIn('track_no', $request->item)->get();
-            foreach ($parcels as $parcel) {
-                $price_bill += ($parcel->weight * $parcel->price);
-
-                $return_parcel = new ReturnParcel();
-                $return_parcel->created_by = $auth_id;
-                $return_parcel->car_number = $request->delivery_car_no;
-                $return_parcel->driver_name = $request->delivery_person;
-                $return_parcel->amount_cny = $parcel->price / ($currency_now->amount_cny * $currency_now->amount_lak);
-                $return_parcel->parcel_id = $parcel->id;
-                $return_parcel->save();
-
-                // $parcel->status = 'return';
-                // $parcel->save();
-            }
-
-            $incomeExpense->amount_lak = $price_bill;
-            $incomeExpense->amount_cny = $price_bill / ($currency_now->amount_cny * $currency_now->amount_lak);
+            $incomeExpense->sub_type = $request->sub_type;
+            $incomeExpense->status = 'pending';
+            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->amount_lak = $costs_lak;
+            $incomeExpense->amount_cny = $costs_cny;
             $incomeExpense->save();
 
-            // $balance = new Balance();
-            // $balance->income_id = $incomeExpense->id;
+            foreach ($parcels as $parcel) {
+                $return_parcel = new ReturnParcel();
+                $return_parcel->created_by = $auth_id;
+                $return_parcel->parcel_id = $parcel->id;
+                $return_parcel->income_expenses_id = $incomeExpense->id;
+                $return_parcel->car_number = $request->delivery_car_no;
+                $return_parcel->driver_name = $request->delivery_person;
+                $return_parcel->save();
+            }
 
             DB::commit();
             return response()->json([
@@ -166,11 +198,10 @@ class IncomeExpenseController extends Controller
     }
 
 
-
     public function createExpense(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'parcel_id' => 'required|numeric',
+            'item' => 'required|numeric',
             'weight' => 'required|numeric',
             'amount_refund' => 'required|numeric',
             'sub_type' => 'required|string',
@@ -187,34 +218,65 @@ class IncomeExpenseController extends Controller
         DB::beginTransaction();
         try {
             $auth_id = Auth::user()->id;
+            $parcel = Parcel::where(['track_no' => $request->item])->first();
+            if (!$parcel) {
+                return response()->json([
+                    'msg' => 'parcel not found.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
+            if (!$parcel->status == 'success') {
+                return response()->json([
+                    'msg' => 'parcel unsuccess.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
+            $check_payment = Bill::select('bills.bill_no', 'bills.status', 'payments.payment_no', 'payments.status', 'parcels.track_no', 'parcels.status')
+                ->join('bill_payment', 'bill_payment.bill_id', '=', 'bills.id')
+                ->join('payments', 'payments.id', '=', 'bill_payment.payment_id')
+                ->join('parcels', 'parcels.bill_id', '=', 'bills.id')
+                ->where(['parcels.track_no' => $request->item, 'parcels.status' => 'success', 'bills.status' => 'success', 'payments.status' => 'paid'])
+                ->get();
+
+            if (!$check_payment) {
+                return response()->json([
+                    'msg' => 'payment unpaid.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
+
+            $currency_now = Currency::orderBy('id', 'desc')->first();
+
+            $refund_lak = $request->amount_refund;
+            $refund_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
+
             $incomeExpense = new IncomeExpense();
             $incomeExpense->type = 'expense';
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = 'pending';
-            isset($request->description) ? ($incomeExpense->description =  $request->description) : $incomeExpense->description = 'expense';
+            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->amount_lak = $refund_lak;
+            $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            $currency_now = Currency::orderBy('id', 'asc')->first();
-
-            $parcels = Parcel::whereIn('track_no', $request->item)->where('status', 'success')->get();
-            foreach ($parcels as $parcel) {
-                $return_parcel = new ReturnParcel();
-                $return_parcel->parcel_id = $parcel->id;
-                $return_parcel->created_by = $auth_id;
-                $return_parcel->car_number = $request->delivery_car_no;
-                $return_parcel->driver_name = $request->delivery_person;
-                $return_parcel->weight = $request->weight;
-                $return_parcel->amount_lak = $request->amount_refund;
-                $return_parcel->amount_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
-                $return_parcel->save();
-            }
+            $return_parcel = new ReturnParcel();
+            $return_parcel->created_by = $auth_id;
+            $return_parcel->parcel_id = $parcel->id;
+            $return_parcel->income_expenses_id = $incomeExpense->id;
+            $return_parcel->weight = $request->weight;
+            $return_parcel->refund_amount_lak = $refund_lak;
+            $return_parcel->refund_amount_cny = $refund_cny;
+            $return_parcel->save();
 
             DB::commit();
             return response()->json([
-                'code' => 201,
+                'code' => 200,
                 'status' => 'Created',
                 'data' => array()
-            ], 201);
+            ], 200);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -251,16 +313,23 @@ class IncomeExpenseController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * 
      */
 
-    public function updateExpense(Request $request, $id)
+
+    public function updateIncome(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'weight' => 'numeric',
-            'amount_refund' => 'numeric',
-            'sub_type' => 'string',
+            'phone' => 'required|string',
+            'item' => 'required|array',
+            'item.*' => 'string',
+            'date_return' => 'required|date_format:Y-m-d H:i:s',
+            'delivery_car_no' => 'required|string',
+            'delivery_person' => 'required|string',
+            'sub_type' => 'required|string',
             'description' => 'string',
-            'status' => 'string'
+            'amount_costs' => 'required|numeric',
+            'status' => 'required|boolean'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -275,47 +344,119 @@ class IncomeExpenseController extends Controller
             $incomeExpense = IncomeExpense::find($id);
             if (!$incomeExpense) {
                 return response()->json([
-                    'message' => 'income expense not found',
+                    'message' => 'income not found',
                     'status' => 'ERROR',
                     'code' => 400,
                 ], 400);
             }
 
-            if (isset($request->weight)) {
-                $incomeExpense->weight = $request->weight;
+            if ($incomeExpense->amount_lak != $request->amount_costs) {
+                $currency_now = Currency::orderBy('id', 'desc')->first();
+                $refund_lak = $request->amount_costs;
+                $refund_cny = $request->amount_costs / ($currency_now->amount_cny * $currency_now->amount_lak);
+            } else {
+                $refund_lak = $incomeExpense->amount_lak;
+                $refund_cny = $incomeExpense->refund_cny;
             }
-            if (isset($request->amount_refund)) {
-                $incomeExpense->amount_refund = $request->amount_refund;
-            }
-            if (isset($request->sub_type)) {
-                $incomeExpense->sub_type = $request->sub_type;
-            }
+
+
+            $incomeExpense->sub_type = $request->sub_type;
+            $incomeExpense->status = $request->status == true ? 'verify' :  'pending';
             if (isset($request->description)) {
-                $incomeExpense->description = $request->description;
+                $incomeExpense->description =  $request->description;
             }
-            if (isset($request->status)) {
-                $incomeExpense->status = $request->status;
-            }
+            $incomeExpense->amount_lak = $refund_lak;
+            $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            $currency_now = Currency::orderBy('id', 'asc')->first();
+            if ($request->status == 'verify') {
+                // $return_parcels = $incomeExpense->ReturnParcels;
+                $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
+                $return_parcel->car_number = $request->delivery_car_no;
+                $return_parcel->driver_name = $request->delivery_person;
+                $return_parcel->save();
 
-            // if ($request->status == 'verify') {
-            //     $return_parcel = ReturnParcel::whereIn('income_expenses_id', $incomeExpense->id)->get();
-                
-            //     foreach ($parcels as $parcel) {
-            //         // $return_parcel = new ReturnParcel();
+                $parcel = $return_parcel->Parcel;
+                $parcel->status = 'return';
+                $parcel->save();
+            }
 
-            //         $return_parcel->created_by = $auth_id;
-            //         $return_parcel->parcel_id = $parcel->id;
-            //         $return_parcel->car_number = $request->delivery_car_no;
-            //         $return_parcel->driver_name = $request->delivery_person;
-            //         $return_parcel->weight = $request->weight;
-            //         $return_parcel->amount_lak = $request->amount_refund;
-            //         $return_parcel->amount_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
-            //         $return_parcel->save();
-            //     }
-            // }
+            DB::commit();
+            return response()->json([
+                'code' => 201,
+                'status' => 'Created',
+                'data' => array()
+            ], 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 500);
+        }
+    }
+
+
+    public function updateExpense(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'weight' => 'required|numeric',
+            'amount_refund' => 'required|numeric',
+            'sub_type' => 'required|string',
+            'description' => 'string',
+            'status' => 'required|boolean'
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'msg' => 'validator wrong.',
+                'errors' => $validator->errors()->toJson(),
+                'status' => 'Unauthorized',
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $incomeExpense = IncomeExpense::find($id);
+            if (!$incomeExpense) {
+                return response()->json([
+                    'message' => 'expense not found',
+                    'status' => 'ERROR',
+                    'code' => 400,
+                ], 400);
+            }
+
+            if ($incomeExpense->amount_lak != $request->amount_refund) {
+                $currency_now = Currency::orderBy('id', 'desc')->first();
+                $refund_lak = $request->amount_refund;
+                $refund_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
+            } else {
+                $refund_lak = $incomeExpense->amount_lak;
+                $refund_cny = $incomeExpense->refund_cny;
+            }
+
+
+            $incomeExpense->sub_type = $request->sub_type;
+            $incomeExpense->status = $request->status == true ? 'verify' :  'pending';
+            if (isset($request->description)) {
+                $incomeExpense->description =  $request->description;
+            }
+            $incomeExpense->amount_lak = $refund_lak;
+            $incomeExpense->amount_cny = $refund_cny;
+            $incomeExpense->save();
+
+            if ($request->status == 'verify') {
+                // $return_parcels = $incomeExpense->ReturnParcels;
+                $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
+                $return_parcel->weight = $request->weight;
+                $return_parcel->refund_amount_lak = $refund_lak;
+                $return_parcel->refund_amount_cny = $refund_cny;
+                $return_parcel->save();
+
+                $parcel = $return_parcel->Parcel;
+                $parcel->status = 'ready';
+                $parcel->save();
+            }
 
 
             DB::commit();
@@ -349,8 +490,61 @@ class IncomeExpenseController extends Controller
                 'status' => 'Unauthorized',
             ], 400);
         }
+        DB::beginTransaction();
+        try {
+            $incomeExpense = IncomeExpense::find($id);
+            if (!$incomeExpense) {
+                return response()->json([
+                    'message' => 'income expense not found',
+                    'status' => 'ERROR',
+                    'code' => 404,
+                ], 400);
+            }
 
+            if ($request->status == 'verify') {
+                $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
+                if ($incomeExpense->type == 'expense') {
+                    $return_parcel->weight = $incomeExpense->weight;
+                    $return_parcel->refund_amount_lak = $incomeExpense->amount_lak;
+                    $return_parcel->refund_amount_cny = $incomeExpense->amount_cny;;
+                    $return_parcel->save();
+                    if ($incomeExpense->sub_type == 'refund') {
+                        $parcel = $return_parcel->Parcel;
+                        $parcel->status = 'ready';
+                        $parcel->save();
+                    }
+                } else if ($incomeExpense->type == 'income') {
+                    $return_parcel->car_number = $request->delivery_car_no;
+                    $return_parcel->driver_name = $request->delivery_person;
+                    $return_parcel->save();
+                    if ($incomeExpense->sub_type == 'return') {
+                        $parcel = $return_parcel->Parcel;
+                        $parcel->status = 'return';
+                        $parcel->save();
+                    }
+                }
+            }
+            DB::commit();
+            return response()->json([
+                'status' => 'OK',
+                'code' => '200',
+                'data' => $incomeExpense
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 500);
+        }
+    }
 
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
         $incomeExpense = IncomeExpense::find($id);
         if (!$incomeExpense) {
             return response()->json([
@@ -359,21 +553,13 @@ class IncomeExpenseController extends Controller
                 'code' => 404,
             ], 400);
         }
-        // $incomeExpense->status = $request->status;
-        // $incomeExpense->save();
+
+        $incomeExpense->delete();
 
         return response()->json([
             'status' => 'OK',
             'code' => '200',
-            'data' => $incomeExpense
+            'data' => null
         ], 200);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(IncomeExpense $incomeExpense)
-    {
-        //
     }
 }

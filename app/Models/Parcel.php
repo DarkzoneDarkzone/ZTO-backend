@@ -20,7 +20,7 @@ class Parcel extends Model
         'active'
     ];
 
-    public function Bills()
+    public function Bill()
     {
         return $this->belongsTo(Bill::class);
     }

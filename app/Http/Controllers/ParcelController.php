@@ -31,6 +31,11 @@ class ParcelController extends Controller
                 }
             }
 
+            if ($request->has('searchText')) {
+                $arraySearchText = ['track_no', 'name', 'phone'];
+                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
+            }
+
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {

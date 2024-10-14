@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bill;
+use App\Models\BillPayment;
 use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\Parcel;
@@ -24,13 +25,16 @@ class BillController extends Controller
 
         try {
             $query = Bill::query();
-
             if ($request->has('filters')) {
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->orWhere($Operator->FiltersOperators(explode(':', $filter)));
+                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
                 }
+            }
+            if ($request->has('searchText')) {
+                $arraySearchText = ['bill_no', 'name', 'phone'];
+                $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
             if ($request->has('sorts')) {
@@ -40,17 +44,15 @@ class BillController extends Controller
                     $query->orderBy($field, $direction);
                 }
             }
-
             if ($request->has('per_page')) {
-                $customerLevel = $query->paginate($request->query('per_page'));
+                $bill = $query->paginate($request->query('per_page'));
             } else {
-                $customerLevel = $query->get();
+                $bill = $query->get();
             }
-
             return response()->json([
                 'code' => 200,
                 'status' => 'OK',
-                'data' => $customerLevel,
+                'data' => $bill,
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -62,12 +64,14 @@ class BillController extends Controller
         }
     }
 
-        /**
+    /**
      * get by id
      */
     public function getById($id)
     {
-        $bill = Bill::where('id', $id)->first();
+        $bill = Bill::find($id);
+        $bill->Parcels;
+        unset($bill->deleted_at);
         if (!$bill) {
             return response()->json([
                 'msg' => 'bill not found.',
@@ -78,7 +82,7 @@ class BillController extends Controller
         return response()->json([
             'code' => 200,
             'status' => 'OK',
-            'data' => $bill
+            'data' => $bill,
         ], 200);
     }
 
@@ -86,7 +90,7 @@ class BillController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
+    public function createBill(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
@@ -121,27 +125,35 @@ class BillController extends Controller
                 ], 400);
             }
             $rate = $customer->CustomerLevel->rate;
-            $price_bill  = 0;
+            $price_bill_lak  = 0;
             $parcels = Parcel::whereIn('track_no', $request->item)->get();
             foreach ($parcels as $parcel) {
-                $price_bill += ($parcel->weight * $rate);
+                if ($parcel->status != 'pending') {
+                    return response()->json([
+                        'msg' => 'some parcel is not pending.',
+                        'status' => 'ERROR',
+                        'data' => array()
+                    ], 400);
+                }
+                ///////// weight is kg. convert to g.
+                $parcel->weight = $parcel->weight * 100;
+                $price_bill_lak += ($parcel->weight * $rate);
             }
-            $currency_now = Currency::orderBy('id', 'asc')->first();
-            $bill->amount_lak = $price_bill;
-            $bill->amount_cny = $price_bill / ($currency_now->amount_cny * $currency_now->amount_lak);
+            $currency_now = Currency::orderBy('id', 'desc')->first();
+            $bill->amount_lak = $price_bill_lak;
+            $bill->amount_cny = $price_bill_lak / ($currency_now->amount_cny * $currency_now->amount_lak);
             $bill->name = $request->name;
             $bill->phone = $request->phone;
             $bill->address = $request->address;
             $bill->status = 'ready';
             $bill->created_by = $auth_id;
-
             $currentDate = Carbon::now()->format('ym');
             $billCount = Bill::whereYear('created_at', Carbon::now()->year)
                 ->whereMonth('created_at', Carbon::now()->month)
                 ->count() + 1;
             $bill->bill_no = $currentDate . '-' . sprintf('%04d', $billCount);
-
             $bill->save();
+
             foreach ($parcels as $parcel) {
                 $parcel->bill_id = $bill->id;
                 $parcel->status = 'ready';
@@ -200,24 +212,39 @@ class BillController extends Controller
 
         DB::beginTransaction();
         try {
-            // $auth_id = Auth::user()->id;
-
             $bills = Bill::whereIn('bill_no', $request->bill_no)->get();
+            if (count($bills) == 0) {
+                return response()->json([
+                    'msg' => 'bills not found.',
+                    'status' => 'ERROR',
+                    'data' => array()
+                ], 400);
+            }
 
+            foreach ($bills as $key => $bill) {
+                if ($bill->status != 'ready') {
+                    return response()->json([
+                        'msg' => 'some bill not ready.',
+                        'status' => 'ERROR',
+                        'data' => array()
+                    ], 400);
+                }
+            }
+            // dd($bills);
             foreach ($bills as $bill) {
-                foreach ($$bill->Parcels as $parcel) {
-                    $parcel->shipping_at = new DateTime();
+                $bill->status = 'shipped';
+                $bill->save();
+                foreach ($bill->Parcels as $parcel) {
+                    $parcel->shipping_at = Carbon::now();
                     $parcel->save();
                 }
-                $bill->status = 'shipped';
-                // $bill->created_by = 
-                $bill->save();
+                
             }
 
             DB::commit();
             return response()->json([
                 'code' => 200,
-                'status' => 'Created',
+                'status' => 'created',
                 'data' => array()
             ], 200);
         } catch (Exception $e) {
@@ -234,9 +261,96 @@ class BillController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Bill $bill)
+    public function updateBill(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'address' => 'required|string',
+            'phone' => 'required|string',
+            'item' => 'required|array',
+            'item.*' => 'string',
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'msg' => 'validator wrong.',
+                'errors' => $validator->errors()->toJson(),
+                'status' => 'Unauthorized',
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $auth_id = Auth::user()->id;
+            $bill = Bill::find($id);
+
+            if ($bill->name != $request->name) {
+                $bill->name = $request->name;
+            }
+            if ($bill->address != $request->address) {
+                $bill->address = $request->address;
+            }
+            if ($bill->phone != $request->phone) {
+                $bill->phone = $request->phone;
+            }
+
+            $have_charge_item = false;
+            foreach ($bill->Parcels as $key => $parcel) {
+                if (!in_array($parcel->track_no, $request->item)) {
+                    $parcel->status = 'pending';
+                    $parcel->bill_id = null;
+                    $parcel->save();
+                    $have_charge_item = true;
+                }
+            }
+
+            if ($have_charge_item) {
+                $customer = Customer::with([
+                    'CustomerLevel' => function ($query) {
+                        $query->select('id', 'rate');
+                    },
+                ])->where('phone',  $request->phone)->first();
+                if (!$customer) {
+                    return response()->json([
+                        'msg' => 'customer not found.',
+                        'status' => 'ERROR',
+                        'errors' => array()
+                    ], 400);
+                }
+                $rate = $customer->CustomerLevel->rate;
+
+                $price_bill_lak  = 0;
+                $parcels = Parcel::whereIn('track_no', $request->item)->get();
+                foreach ($parcels as $parcel) {
+                    $price_bill_lak += ($parcel->weight * $rate);
+                }
+                $currency_now = Currency::orderBy('id', 'desc')->first();
+                $bill->amount_lak = $price_bill_lak;
+                $bill->amount_cny = $price_bill_lak / ($currency_now->amount_cny * $currency_now->amount_lak);
+                $bill->status = 'ready';
+                $bill->created_by = $auth_id;
+
+                foreach ($parcels as $parcel) {
+                    $parcel->bill_id = $bill->id;
+                    $parcel->status = 'ready';
+                    $parcel->save();
+                }
+            }
+            $bill->save();
+
+            DB::commit();
+            return response()->json([
+                'code' => 201,
+                'status' => 'update',
+                'data' => $bill
+            ], 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 500);
+        }
     }
 
     /**

@@ -28,7 +28,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('parcel_id')->references('id')->on('parcels');
-            $table->foreign('income_expense_id')->references('id')->on('income_expenses');
+            $table->foreign('income_expenses_id')->references('id')->on('income_expenses');
 
         });
     }

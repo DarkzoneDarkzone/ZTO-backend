@@ -23,8 +23,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 100.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:39:58",
-                // "update_at" => "2024-10-03 16:39:58",
 
             ],
             [
@@ -34,8 +32,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 98.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:40:58",
-                // "update_at" => "2024-10-03 16:40:58",
             ],
             [
                 "id" => 3,
@@ -44,8 +40,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 96.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:41:58",
-                // "update_at" => "2024-10-03 16:41:58",
             ],
             [
                 "id" => 4,
@@ -54,8 +48,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 94.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:42:58",
-                // "update_at" => "2024-10-03 16:42:58",
             ],
             [
                 "id" => 5,
@@ -64,8 +56,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 92.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:43:58",
-                // "update_at" => "2024-10-03 16:43:58",
             ],
             [
                 "id" => 6,
@@ -74,8 +64,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 90.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:44:58",
-                // "update_at" => "2024-10-03 16:44:58",
             ],
             [
                 "id" => 7,
@@ -84,8 +72,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 88.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:45:58",
-                // "update_at" => "2024-10-03 16:45:58",
             ],
             [
                 "id" => 8,
@@ -94,8 +80,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 86.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:46:58",
-                // "update_at" => "2024-10-03 16:46:58",
             ],
             [
                 "id" => 9,
@@ -104,8 +88,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 84.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:47:58",
-                // "update_at" => "2024-10-03 16:47:58",
             ],
             [
                 "id" => 10,
@@ -114,8 +96,6 @@ class CustomerLevelSeeder extends Seeder
                 "rate" => 82.00,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:48:58",
-                // "update_at" => "2024-10-03 16:48:58",
             ]
 
         ]);
@@ -130,8 +110,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:39:58",
-                // "update_at" => "2024-10-03 16:39:58",
             ],
             [
                 "id" => 2,
@@ -142,8 +120,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:40:58",
-                // "update_at" => "2024-10-03 16:40:58",
             ],
             [
                 "id" => 3,
@@ -154,8 +130,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:41:58",
-                // "update_at" => "2024-10-03 16:41:58",
             ],
             [
                 "id" => 4,
@@ -166,8 +140,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:42:58",
-                // "update_at" => "2024-10-03 16:42:58",
             ],
             [
                 "id" => 5,
@@ -178,8 +150,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:43:58",
-                // "update_at" => "2024-10-03 16:43:58",
             ],
             [
                 "id" => 6,
@@ -190,8 +160,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:44:58",
-                // "update_at" => "2024-10-03 16:44:58",
             ],
             [
                 "id" => 7,
@@ -202,8 +170,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:45:58",
-                // "update_at" => "2024-10-03 16:45:58",
             ],
             [
                 "id" => 8,
@@ -214,8 +180,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:46:58",
-                // "update_at" => "2024-10-03 16:46:58",
             ],
             [
                 "id" => 9,
@@ -226,8 +190,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:47:58",
-                // "update_at" => "2024-10-03 16:47:58",
             ],
             [
                 "id" => 10,
@@ -238,8 +200,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:48:58",
-                // "update_at" => "2024-10-03 16:48:58",
             ],
             [
                 "id" => 11,
@@ -250,8 +210,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:49:58",
-                // "update_at" => "2024-10-03 16:49:58",
             ],
             [
                 "id" => 12,
@@ -262,8 +220,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:50:58",
-                // "update_at" => "2024-10-03 16:50:58",
             ],
             [
                 "id" => 13,
@@ -274,8 +230,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:51:58",
-                // "update_at" => "2024-10-03 16:51:58",
             ],
             [
                 "id" => 14,
@@ -286,8 +240,6 @@ class CustomerLevelSeeder extends Seeder
                 "active" => true,
                 "verify" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:52:58",
-                // "update_at" => "2024-10-03 16:52:58",
             ]
         ]);
 
@@ -298,8 +250,6 @@ class CustomerLevelSeeder extends Seeder
                 "amount_cny" => 1,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-03 16:44:58",
-                // "update_at" => "2024-10-03 16:44:58",
             ],
             [
                 "id" => 2,
@@ -307,8 +257,6 @@ class CustomerLevelSeeder extends Seeder
                 "amount_cny" => 1,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-04 16:44:58",
-                // "update_at" => "2024-10-04 16:44:58",
             ],
             [
                 "id" => 3,
@@ -316,8 +264,6 @@ class CustomerLevelSeeder extends Seeder
                 "amount_cny" => 1,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-05 16:44:58",
-                // "update_at" => "2024-10-05 16:44:58",
             ],
             [
                 "id" => 4,
@@ -325,83 +271,7 @@ class CustomerLevelSeeder extends Seeder
                 "amount_cny" => 1,
                 "active" => true,
                 "created_by" => 1,
-                // "create_at" => "2024-10-06 16:44:58",
-                // "update_at" => "2024-10-06 16:44:58",
             ]
-        ]);
-
-        DB::table('parcels')->insert([
-            [
-                "id" => 1,
-                "track_no" => "PC0001",
-                "name" => "cutomer no.1",
-                "phone" => "0111111111",
-                "address" => "1/10",
-                "weight" => 20.0,
-                "price" => 50,
-                "active" => true,
-                // "bill_id" => null,
-                "status" => "Pending",
-                // "receipt_at" => null,
-                // "payment_at" => null,
-                // "shipping_at" => null,
-                // "create_at" => "2024-10-03 16:44:58",
-                // "update_at" => "2024-10-03 16:44:58",
-            ],
-            [
-                "id" => 2,
-                "track_no" => "PC0002",
-                "name" => "cutomer no.1",
-                "phone" => "0111111111",
-                "address" => "1/10",
-                "weight" => 25,
-                "price" => 72.5,
-                "active" => true,
-                // "bill_id" => null,
-                "status" => "Pending",
-                // "receipt_at" => null,
-                // "payment_at" => null,
-                // "shipping_at" => null,
-                // "create_at" => "2024-10-03 16:44:58",
-                // "update_at" => "2024-10-03 16:44:58",
-
-            ],
-            [
-                "id" => 3,
-                "track_no" => "PC0003",
-                "name" => "cutomer no.2",
-                "phone" => "0222222222",
-                "address" => "2/20",
-                "weight" => 15,
-                "price" => 37.5,
-                "active" => true,
-                // "bill_id" => null,
-                "status" => "Pending",
-                // "receipt_at" => null,
-                // "payment_at" => null,
-                // "shipping_at" => null,
-                // "create_at" => "2024-10-03 16:44:58",
-                // "update_at" => "2024-10-03 16:44:58",
-
-            ],
-            [
-                "id" => 4,
-                "track_no" => "PC0004",
-                "name" => "cutomer no.1",
-                "phone" => "0111111111",
-                "address" => "2/20",
-                "weight" => 10,
-                "price" => 25,
-                "active" => true,
-                // "bill_id" => null,
-                "status" => "Pending",
-                // "receipt_at" => null,
-                // "payment_at" => null,
-                // "shipping_at" => null,
-                // "create_at" => "2024-10-03 16:44:58",
-                // "update_at" => "2024-10-03 16:44:58",
-
-            ],
         ]);
     }
 }

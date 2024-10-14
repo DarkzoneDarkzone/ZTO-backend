@@ -31,13 +31,7 @@ class CustomerController extends Controller
 
             if ($request->has('searchText')) {
                 $arraySearchText = ['name', 'phone'];
-                foreach ($arraySearchText as $index => $search) {
-                    if ($index == 0) {
-                        $query->Where($Operator->FiltersOperators([$search, 'like', $request->query('searchText')]));
-                    } else {
-                        $query->orWhere($Operator->FiltersOperators([$search, 'like', $request->query('searchText')]));
-                    }
-                }
+                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
             }
 
             if ($request->has('sorts')) {

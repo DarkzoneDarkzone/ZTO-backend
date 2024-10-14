@@ -27,6 +27,11 @@ class CustomerLevelController extends Controller
                 }
             }
 
+            if ($request->has('searchText')) {
+                $arraySearchText = ['name'];
+                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
+            }
+
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {
