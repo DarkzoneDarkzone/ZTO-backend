@@ -106,10 +106,11 @@ Route::middleware('auth:api')->group(function () {
     Route::patch('/expense/{id}', [IncomeExpense::class, 'updateExpense']);
     Route::patch('/income-expenses/{id}', [IncomeExpense::class, 'updateStatus']);
     Route::delete('/income-expenses/{id}', [IncomeExpense::class, 'destroy']);
-    
+
     // reports
     Route::get('/report/account', [ReportController::class, 'reportAccounting']);
     Route::get('/export/account', [ReportController::class, 'exportReportAccounting']);
     Route::get('/report/return-parcel', [ReportController::class, 'reportReturnParcel']);
     Route::get('/export/return-parcel', [ReportController::class, 'exportReportReturnParcel']);
+    Route::get('/report/income-expenses', [ReportController::class, 'reportIncomeExpenses']);
 });

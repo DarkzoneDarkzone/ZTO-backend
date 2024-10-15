@@ -6,6 +6,7 @@ use App\Exports\ReportAccountingExport;
 use App\Exports\ReportReturnParcelExport;
 use App\Http\Resources\ReportAccountingCollection;
 use App\Http\Resources\ReportReturnParcelCollection;
+use App\Models\Balance;
 use App\Models\Payment;
 use App\Models\ReturnParcel;
 use App\Support\Collection;
@@ -47,7 +48,7 @@ class ReportController extends Controller
                 ->where(['status' => 'paid', 'active' => 1])
                 ->whereNull('deleted_at')
                 ->whereHas('Bills', function ($query) {
-                    $query->where('bills.status', 'shipped');
+                    $query->where('bills.status', 'success');
                 });
 
             $lastQuery = Payment::select(
@@ -252,6 +253,22 @@ class ReportController extends Controller
                 'code' => 400
             ], 400);
         }
+    }
+
+    public function reportIncomeExpenses(Request $request)
+    {
+        $validator = Validator::make(request()->all(), [
+            'start_at' => 'date_format:Y-m-d',
+            'end_at' => 'date_format:Y-m-d',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        $query = Balance::join('payments', 'balances.payment_id', '=', 'payments.id')
+            ->join('income_expenses', 'balances.income_id', '=', 'income_expenses.id');
+        dd($query->get());
     }
 
     /**
