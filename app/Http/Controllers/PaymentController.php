@@ -224,15 +224,16 @@ class PaymentController extends Controller
                 ->whereMonth('created_at', Carbon::now()->month)
                 ->count() + 1;
             $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%04d', $payCount);
-            if ($payments_price_lak >= $bills_price_lak &&  round($payments_price_cny, 2) >= round($bills_price_cny, 2)) {
+            // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
+            if ($payments_price_lak >= $bills_price_lak) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
-                }
-                $parcels = Parcel::where(['phone' => $request->phone, 'status' => 'ready'])->get();
-                foreach ($parcels as $parcel) {
-                    $parcel->status = 'success';
-                    $parcel->save();
+                    foreach ($bill->Parcels as $parcel) {
+                        $parcel->payment_at = Carbon::now();
+                        $parcel->status = 'success';
+                        $parcel->save();
+                    }
                 }
 
                 foreach ($payments_save as $key => $payment) {
@@ -243,14 +244,14 @@ class PaymentController extends Controller
 
                     $balanceStack = Balance::orderBy('id', 'desc')->first();
                     $balance = new Balance();
-                    $balance->amount_lak = $payments_price_lak;
-                    $balance->amount_cny = $payments_price_cny;
+                    $balance->amount_lak = $payment->amount_lak;
+                    $balance->amount_cny = $payment->amount_cny;
                     if ($balanceStack) {
-                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payments_price_lak;
-                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payments_price_cny;
+                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payment->amount_lak;
+                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payment->amount_cny;
                     } else {
-                        $balance->balance_amount_lak = $payments_price_lak;
-                        $balance->balance_amount_cny = $payments_price_cny;
+                        $balance->balance_amount_lak = $payment->amount_lak;
+                        $balance->balance_amount_cny = $payment->amount_cny;
                     }
                     $balance->payment_id = $payment->id;
                     $balance->save();
@@ -405,13 +406,13 @@ class PaymentController extends Controller
                     }
                 }
             }
-
-            if ($payments_price_lak >= $bills_price_lak && round($payments_price_cny, 2) >= round($bills_price_cny, 2)) {
+            // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
+            if ($payments_price_lak >= $bills_price_lak) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
                 }
-                $parcels = Parcel::where(['phone' => $request->phone, 'status' => 'ready'])->get();
+                $parcels = Parcel::where(['phone' => $request->phone])->get();
                 foreach ($parcels as $parcel) {
                     $parcel->status = 'success';
                     $parcel->save();

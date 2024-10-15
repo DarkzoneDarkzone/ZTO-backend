@@ -11,10 +11,10 @@ class Balance extends Model
 {
     use HasFactory;
 
-    protected $timestamp_date = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-    ];
+    // protected $timestamp_date = [
+    //     'created_at' => 'datetime',
+    //     'updated_at' => 'datetime',
+    // ];
 
     public function getCreatedAtAttribute($value)
     {
