@@ -37,7 +37,7 @@ class IncomeExpenseController extends Controller
 
             if ($request->has('searchText')) {
                 $arraySearchText = ['id', 'type'];
-                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
+                $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
             if ($request->has('sorts')) {
@@ -87,10 +87,10 @@ class IncomeExpenseController extends Controller
         /////////////
         if ($incomeExpense->type == 'expenses') {
             $query_return_parcel->where('parcels.status', 'success')
-            ->select('parcels.*', 'return_parcels.weight', 'return_parcels.refund_amount_lak', 'return_parcels.refund_amount_cny');
+                ->select('parcels.*', 'return_parcels.weight', 'return_parcels.refund_amount_lak', 'return_parcels.refund_amount_cny');
         } else if ($incomeExpense->type == 'income') {
             $query_return_parcel->where('parcels.status', 'ready')
-            ->select('parcels.*', 'return_parcels.car_number', 'return_parcels.driver_name', 'return_parcels.create_at ad date_return');
+                ->select('parcels.*', 'return_parcels.car_number', 'return_parcels.driver_name', 'return_parcels.create_at ad date_return');
         }
         ////////////
         $return_parcel = $query_return_parcel->get();
@@ -379,6 +379,20 @@ class IncomeExpenseController extends Controller
                 $parcel = $return_parcel->Parcel;
                 $parcel->status = 'return';
                 $parcel->save();
+
+                $balanceStack = Balance::orderBy('id', 'desc')->first();
+                $balance = new Balance();
+                $balance->amount_lak = $incomeExpense->amount_lak;
+                $balance->amount_cny = $incomeExpense->amount_cny;
+                if ($balanceStack) {
+                    $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $incomeExpense->amount_cny;
+                } else {
+                    $balance->balance_amount_lak = $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = $incomeExpense->amount_cny;
+                }
+                $balance->income_id = $incomeExpense->id;
+                $balance->save();
             }
 
             DB::commit();
@@ -456,8 +470,21 @@ class IncomeExpenseController extends Controller
                 $parcel = $return_parcel->Parcel;
                 $parcel->status = 'ready';
                 $parcel->save();
-            }
 
+                $balanceStack = Balance::orderBy('id', 'desc')->first();
+                $balance = new Balance();
+                $balance->amount_lak = $incomeExpense->amount_lak;
+                $balance->amount_cny = $incomeExpense->amount_cny;
+                if ($balanceStack) {
+                    $balance->balance_amount_lak = $balanceStack->balance_amount_lak - $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = $balanceStack->balance_amount_cny - $incomeExpense->amount_cny;
+                } else {
+                    $balance->balance_amount_lak = 0-$incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = 0-$incomeExpense->amount_cny;
+                }
+                $balance->income_id = $incomeExpense->id;
+                $balance->save();
+            }
 
             DB::commit();
             return response()->json([

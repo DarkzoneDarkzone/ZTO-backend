@@ -8,6 +8,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerLevelController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\IncomeExpenseController;
 use App\Http\Controllers\ParcelController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
@@ -98,14 +99,14 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/bill/{id}', [BillController::class, 'destroy']);
 
     // income-expenses
-    Route::get('/income-expenses', [IncomeExpense::class, 'index']);
-    Route::get('/income-expenses/{id}', [IncomeExpense::class, 'getById']);
-    Route::post('/income', [IncomeExpense::class, 'createIncome']);
-    Route::patch('/income/{id}', [IncomeExpense::class, 'updateIncome']);
-    Route::post('/expense', [IncomeExpense::class, 'createExpense']);
-    Route::patch('/expense/{id}', [IncomeExpense::class, 'updateExpense']);
-    Route::patch('/income-expenses/{id}', [IncomeExpense::class, 'updateStatus']);
-    Route::delete('/income-expenses/{id}', [IncomeExpense::class, 'destroy']);
+    Route::get('/income-expenses', [IncomeExpenseController::class, 'index']);
+    Route::get('/income-expenses/{id}', [IncomeExpenseController::class, 'getById']);
+    Route::post('/income', [IncomeExpenseController::class, 'createIncome']);
+    Route::patch('/income/{id}', [IncomeExpenseController::class, 'updateIncome']);
+    Route::post('/expense', [IncomeExpenseController::class, 'createExpense']);
+    Route::patch('/expense/{id}', [IncomeExpenseController::class, 'updateExpense']);
+    Route::patch('/income-expenses/{id}', [IncomeExpenseController::class, 'updateStatus']);
+    Route::delete('/income-expenses/{id}', [IncomeExpenseController::class, 'destroy']);
 
     // reports
     Route::get('/report/account', [ReportController::class, 'reportAccounting']);
