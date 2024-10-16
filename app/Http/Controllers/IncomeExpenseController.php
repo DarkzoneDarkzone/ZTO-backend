@@ -254,7 +254,7 @@ class IncomeExpenseController extends Controller
             $refund_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
 
             $incomeExpense = new IncomeExpense();
-            $incomeExpense->type = 'expense';
+            $incomeExpense->type = 'expenses';
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = 'pending';
             isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
