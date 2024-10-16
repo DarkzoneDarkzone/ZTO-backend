@@ -445,7 +445,7 @@ class IncomeExpenseController extends Controller
                 $refund_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
             } else {
                 $refund_lak = $incomeExpense->amount_lak;
-                $refund_cny = $incomeExpense->refund_cny;
+                $refund_cny = $incomeExpense->amount_cny;
             }
 
 
