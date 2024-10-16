@@ -227,7 +227,7 @@ class PaymentController extends Controller
             } else {
                 $ex = explode('-', $payCount->payment_no);
                 $number = (int) $ex[1];
-                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number+1);
+                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1);
             }
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
 
@@ -360,17 +360,15 @@ class PaymentController extends Controller
             }
 
             //// reset bills_old
-            $bills_dld_id = array();
-            foreach ($$payments[0]->Bills as $key => $bill_old) {
-                $bill->status = 'shipped';
-                $bill->save();
-                array_push($bills_dld_id, $bill_old->id);
+            $bills_old_id = array();
+            $bills_old = $payments[0]->Bills;
+            foreach ($bills_old as $key => $bill_old) {
+                array_push($bills_old_id, $bill_old->id);
             }
-
             $payments_methods_old = array();
             foreach ($payments as $key => $pay) {
                 array_push($payments_methods_old, $pay->method);
-                $pay->Bills()->detach($bills_dld_id);
+                $pay->Bills()->detach($bills_old_id);
             }
 
             $currency_now = Currency::orderBy('id', 'desc')->first();
@@ -405,8 +403,8 @@ class PaymentController extends Controller
                     $payments_price_cny += $payment->amount_cny;
                     array_push($payments_save, $payment);
                 } else {
-                    $index_pay = array_search($payments_methods_old, $pay_type['name']);
-                    switch ($pay['currency']) {
+                    $index_pay = array_search($pay_type['name'], $payments_methods_old);
+                    switch ($pay_type['currency']) {
                         case 'lak':
                             $payments[$index_pay]->amount_lak = $pay_type['amount'];
                             $payments[$index_pay]->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
@@ -426,9 +424,9 @@ class PaymentController extends Controller
                 }
             }
 
-            /////// check diff methods
+            /////// check diff methods payment
             $result_diff = array_diff($payments_methods_old, $payment_methods_new);
-            if (count($result_diff)) {
+            if (count($result_diff) > 0) {
                 foreach ($result_diff as $key => $method) {
                     $payments[$key]->delete();
                 }
@@ -444,6 +442,16 @@ class PaymentController extends Controller
                 $bills_price_lak += $bill->amount_lak;
                 $bills_price_cny += $bill->amount_cny;
             }
+
+            /////// check diff bill
+            $bills_diff = array_diff($bills_old_id, $bills_id);
+            if (count($bills_diff) > 0) {
+                foreach ($bills_diff as $key => $method) {
+                    $bills_old[$key]->status = 'shipped';
+                    $bills_old[$key]->save();
+                }
+            }
+
 
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
             if ($payments_price_lak >= $bills_price_lak) {
@@ -488,6 +496,8 @@ class PaymentController extends Controller
                     $payment->Bills()->sync($bills_id);
                 }
             }
+
+
             DB::commit();
             return response()->json([
                 'code' => 200,

@@ -316,6 +316,13 @@ class BillController extends Controller
                         'errors' => array()
                     ], 400);
                 }
+                if (!$customer->CustomerLevel) {
+                    return response()->json([
+                        'msg' => 'customer not yet Level.',
+                        'status' => 'ERROR',
+                        'errors' => array()
+                    ], 400);
+                }
                 $rate = $customer->CustomerLevel->rate;
 
                 $price_bill_lak  = 0;
