@@ -151,7 +151,7 @@ class IncomeExpenseController extends Controller
             $parcels = Parcel::whereIn('track_no', $request->item)->where('status', 'ready')->get();
             if (count($parcels) == 0) {
                 return response()->json([
-                    'msg' => 'parcels not found.',
+                    'msg' => 'parcels not found or pended',
                     'status' => 'ERROR',
                     'errors' => array()
                 ], 400);
@@ -359,7 +359,6 @@ class IncomeExpenseController extends Controller
                 $refund_cny = $incomeExpense->refund_cny;
             }
 
-
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status == true ? 'verify' :  'pending';
             if (isset($request->description)) {
@@ -369,7 +368,7 @@ class IncomeExpenseController extends Controller
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            if ($request->status == 'verify') {
+            if ($request->status == true) {
                 // $return_parcels = $incomeExpense->ReturnParcels;
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 $return_parcel->car_number = $request->delivery_car_no;
@@ -459,7 +458,7 @@ class IncomeExpenseController extends Controller
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            if ($request->status == 'verify') {
+            if ($request->status == true) {
                 // $return_parcels = $incomeExpense->ReturnParcels;
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 $return_parcel->weight = $request->weight;
