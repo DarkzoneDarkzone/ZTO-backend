@@ -148,7 +148,7 @@ class IncomeExpenseController extends Controller
                     'errors' => array()
                 ], 400);
             }
-            $parcels = Parcel::whereIn(['track_no' => $request->item, 'status' => 'ready'])->get();
+            $parcels = Parcel::whereIn('track_no', $request->item)->where('status', 'ready')->get();
             if (!$$parcels || count($parcels) == 0) {
                 return response()->json([
                     'msg' => 'parcels not found.',
@@ -479,8 +479,8 @@ class IncomeExpenseController extends Controller
                     $balance->balance_amount_lak = $balanceStack->balance_amount_lak - $incomeExpense->amount_lak;
                     $balance->balance_amount_cny = $balanceStack->balance_amount_cny - $incomeExpense->amount_cny;
                 } else {
-                    $balance->balance_amount_lak = 0-$incomeExpense->amount_lak;
-                    $balance->balance_amount_cny = 0-$incomeExpense->amount_cny;
+                    $balance->balance_amount_lak = 0 - $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = 0 - $incomeExpense->amount_cny;
                 }
                 $balance->income_id = $incomeExpense->id;
                 $balance->save();
