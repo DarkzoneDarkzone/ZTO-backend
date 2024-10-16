@@ -37,7 +37,7 @@ class IncomeExpenseController extends Controller
 
             if ($request->has('searchText')) {
                 $arraySearchText = ['id', 'type'];
-                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
+                $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
             if ($request->has('sorts')) {
@@ -87,10 +87,10 @@ class IncomeExpenseController extends Controller
         /////////////
         if ($incomeExpense->type == 'expenses') {
             $query_return_parcel->where('parcels.status', 'success')
-            ->select('parcels.*', 'return_parcels.weight', 'return_parcels.refund_amount_lak', 'return_parcels.refund_amount_cny');
+                ->select('parcels.*', 'return_parcels.weight', 'return_parcels.refund_amount_lak', 'return_parcels.refund_amount_cny');
         } else if ($incomeExpense->type == 'income') {
             $query_return_parcel->where('parcels.status', 'ready')
-            ->select('parcels.*', 'return_parcels.car_number', 'return_parcels.driver_name', 'return_parcels.create_at ad date_return');
+                ->select('parcels.*', 'return_parcels.car_number', 'return_parcels.driver_name', 'return_parcels.create_at ad date_return');
         }
         ////////////
         $return_parcel = $query_return_parcel->get();
@@ -148,10 +148,10 @@ class IncomeExpenseController extends Controller
                     'errors' => array()
                 ], 400);
             }
-            $parcels = Parcel::whereIn(['track_no' => $request->item, 'status' => 'ready'])->get();
-            if (!$$parcels || count($parcels) == 0) {
+            $parcels = Parcel::whereIn('track_no', $request->item)->where('status', 'ready')->get();
+            if (count($parcels) == 0) {
                 return response()->json([
-                    'msg' => 'parcels not found.',
+                    'msg' => 'parcels not found or pended',
                     'status' => 'ERROR',
                     'errors' => array()
                 ], 400);
@@ -254,7 +254,7 @@ class IncomeExpenseController extends Controller
             $refund_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
 
             $incomeExpense = new IncomeExpense();
-            $incomeExpense->type = 'expense';
+            $incomeExpense->type = 'expenses';
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = 'pending';
             isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
@@ -359,7 +359,6 @@ class IncomeExpenseController extends Controller
                 $refund_cny = $incomeExpense->refund_cny;
             }
 
-
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status == true ? 'verify' :  'pending';
             if (isset($request->description)) {
@@ -369,7 +368,7 @@ class IncomeExpenseController extends Controller
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            if ($request->status == 'verify') {
+            if ($request->status == true) {
                 // $return_parcels = $incomeExpense->ReturnParcels;
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 $return_parcel->car_number = $request->delivery_car_no;
@@ -379,6 +378,20 @@ class IncomeExpenseController extends Controller
                 $parcel = $return_parcel->Parcel;
                 $parcel->status = 'return';
                 $parcel->save();
+
+                $balanceStack = Balance::orderBy('id', 'desc')->first();
+                $balance = new Balance();
+                $balance->amount_lak = $incomeExpense->amount_lak;
+                $balance->amount_cny = $incomeExpense->amount_cny;
+                if ($balanceStack) {
+                    $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $incomeExpense->amount_cny;
+                } else {
+                    $balance->balance_amount_lak = $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = $incomeExpense->amount_cny;
+                }
+                $balance->income_id = $incomeExpense->id;
+                $balance->save();
             }
 
             DB::commit();
@@ -445,7 +458,7 @@ class IncomeExpenseController extends Controller
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            if ($request->status == 'verify') {
+            if ($request->status == true) {
                 // $return_parcels = $incomeExpense->ReturnParcels;
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 $return_parcel->weight = $request->weight;
@@ -456,6 +469,20 @@ class IncomeExpenseController extends Controller
                 $parcel = $return_parcel->Parcel;
                 $parcel->status = 'ready';
                 $parcel->save();
+
+                $balanceStack = Balance::orderBy('id', 'desc')->first();
+                $balance = new Balance();
+                $balance->amount_lak = $incomeExpense->amount_lak;
+                $balance->amount_cny = $incomeExpense->amount_cny;
+                if ($balanceStack) {
+                    $balance->balance_amount_lak = $balanceStack->balance_amount_lak - $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = $balanceStack->balance_amount_cny - $incomeExpense->amount_cny;
+                } else {
+                    $balance->balance_amount_lak = 0 - $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = 0 - $incomeExpense->amount_cny;
+                }
+                $balance->income_id = $incomeExpense->id;
+                $balance->save();
             }
 
 

@@ -34,7 +34,6 @@ class PaymentController extends Controller
                 }
             }
 
-
             $query = $query->select(
                 DB::raw('ANY_VALUE(payments.id) as id'),
                 'payments.payment_no',
@@ -43,9 +42,7 @@ class PaymentController extends Controller
                 DB::raw('SUM(payments.amount_cny) as amount_cny'),
 
             );
-
             $query->groupBy('payment_no');
-            // $query->select('id', 'status', 'payment_no');
 
             $bill_payment = Bill::joinSub($query, 'pay_query', function (JoinClause $join) {
                 $join->join('bill_payment', 'bill_payment.payment_id', '=', 'pay_query.id');
@@ -58,9 +55,6 @@ class PaymentController extends Controller
                     $bill_payment->orWhereLike($value,  '%' . $request->query('searchText') . '%');
                 }
             }
-            // dd($bill_payment->get());
-
-
 
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
@@ -182,32 +176,25 @@ class PaymentController extends Controller
                 }
             }
 
-            $bills_id = array();
-            $bills_price_lak = 0;
-            $bills_price_cny = 0;
-            foreach ($bills as $bill) {
-                array_push($bills_id, $bill->id);
-                $bills_price_lak += $bill->amount_lak;
-                $bills_price_cny += $bill->amount_cny;
-            }
-
             $currency_now = Currency::orderBy('id', 'desc')->first();
+
+            /////// check payments
             $payments_save = array();
             $payments_price_lak = 0;
             $payments_price_cny = 0;
-            foreach ($request->payment_type as $key => $pay) {
+            foreach ($request->payment_type as $key => $pay_type) {
                 $payment = new Payment();
                 $payment->created_by = $auth_id;
                 $payment->active = $request->active;
-                $payment->method = $pay['name'];
-                switch ($pay['currency']) {
+                $payment->method = $pay_type['name'];
+                switch ($pay_type['currency']) {
                     case 'lak':
-                        $payment->amount_lak = $pay['amount'];
-                        $payment->amount_cny = $pay['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
+                        $payment->amount_lak = $pay_type['amount'];
+                        $payment->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
                         break;
                     case 'cny':
-                        $payment->amount_lak = $pay['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
-                        $payment->amount_cny = $pay['amount'];
+                        $payment->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
+                        $payment->amount_cny = $pay_type['amount'];
                         break;
                     default:
                         $payment->amount_lak = 0;
@@ -219,12 +206,32 @@ class PaymentController extends Controller
                 array_push($payments_save, $payment);
             }
 
+            /////// check bills
+
+            $bills_id = array();
+            $bills_price_lak = 0;
+            $bills_price_cny = 0;
+            foreach ($bills as $bill) {
+                array_push($bills_id, $bill->id);
+                $bills_price_lak += $bill->amount_lak;
+                $bills_price_cny += $bill->amount_cny;
+            }
+
+            /////// create payment_no
             $currentDate = Carbon::now()->format('ym');
             $payCount = Payment::whereYear('created_at', Carbon::now()->year)
                 ->whereMonth('created_at', Carbon::now()->month)
-                ->count() + 1;
-            $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%04d', $payCount);
+                ->orderBy('id', 'desc')->first();
+            if (!$payCount) {
+                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', 00001);
+            } else {
+                $ex = explode('-', $payCount->payment_no);
+                $number = (int) $ex[1];
+                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number+1);
+            }
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
+
+            ////// check payment >= bills = success
             if ($payments_price_lak >= $bills_price_lak) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
@@ -352,42 +359,42 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $bills_id = array();
-            $bills_price_lak = 0;
-            $bills_price_cny = 0;
-            foreach ($bills as $bill) {
-                array_push($bills_id, $bill->id);
-                $bills_price_lak += $bill->amount_lak;
-                $bills_price_cny += $bill->amount_cny;
+            //// reset bills_old
+            $bills_dld_id = array();
+            foreach ($$payments[0]->Bills as $key => $bill_old) {
+                $bill->status = 'shipped';
+                $bill->save();
+                array_push($bills_dld_id, $bill_old->id);
             }
 
-            $payments_methods = array();
+            $payments_methods_old = array();
             foreach ($payments as $key => $pay) {
-                array_push($payments_methods, $pay->method);
-                $pay->Bills()->detach($bills_id);
-                // $pay->delete();
+                array_push($payments_methods_old, $pay->method);
+                $pay->Bills()->detach($bills_dld_id);
             }
 
             $currency_now = Currency::orderBy('id', 'desc')->first();
+
+            /////// check payments
             $payments_save = array();
             $payments_price_lak = 0;
             $payments_price_cny = 0;
-
-            $have_charge_item = false;
+            $payment_methods_new = array();
             foreach ($request->payment_type as $key => $pay_type) {
-                if (!in_array($pay_type->name, $payments_methods)) {
+                array_push($payment_methods_new, $pay_type['name']);
+                if (!in_array($pay_type['name'], $payments_methods_old)) {
                     $payment = new Payment();
                     $payment->created_by = $auth_id;
                     $payment->active = $request->active;
-                    $payment->method = $pay['name'];
-                    switch ($pay['currency']) {
+                    $payment->method = $pay_type['name'];
+                    switch ($pay_type['currency']) {
                         case 'lak':
-                            $payment->amount_lak = $pay['amount'];
-                            $payment->amount_cny = $pay['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
+                            $payment->amount_lak = $pay_type['amount'];
+                            $payment->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
                             break;
                         case 'cny':
-                            $payment->amount_lak = $pay['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
-                            $payment->amount_cny = $pay['amount'];
+                            $payment->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
+                            $payment->amount_cny = $pay_type['amount'];
                             break;
                         default:
                             $payment->amount_lak = 0;
@@ -397,15 +404,47 @@ class PaymentController extends Controller
                     $payments_price_lak += $payment->amount_lak;
                     $payments_price_cny += $payment->amount_cny;
                     array_push($payments_save, $payment);
-                    $have_charge_item = true;
                 } else {
-                    // $pay_filter = array_filter($payments, function ($item) {
-                    //     return $item["method"] === $pay_type->name;
-                    // });
-                    foreach ($payments as $key => $pay) {
+                    $index_pay = array_search($payments_methods_old, $pay_type['name']);
+                    switch ($pay['currency']) {
+                        case 'lak':
+                            $payments[$index_pay]->amount_lak = $pay_type['amount'];
+                            $payments[$index_pay]->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
+                            break;
+                        case 'cny':
+                            $payments[$index_pay]->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
+                            $payments[$index_pay]->amount_cny = $pay_type['amount'];
+                            break;
+                        default:
+                            $payments[$index_pay]->amount_lak = 0;
+                            $payments[$index_pay]->amount_cny = 0;
+                            break;
                     }
+                    $payments_price_lak += $payments[$index_pay]->amount_lak;
+                    $payments_price_cny += $payments[$index_pay]->amount_cny;
+                    array_push($payments_save, $payments[$index_pay]);
                 }
             }
+
+            /////// check diff methods
+            $result_diff = array_diff($payments_methods_old, $payment_methods_new);
+            if (count($result_diff)) {
+                foreach ($result_diff as $key => $method) {
+                    $payments[$key]->delete();
+                }
+            }
+
+            /////// check bills
+            $bills_id = array();
+            $bills_price_lak = 0;
+            $bills_price_cny = 0;
+            //// bills new
+            foreach ($bills as $bill) {
+                array_push($bills_id, $bill->id);
+                $bills_price_lak += $bill->amount_lak;
+                $bills_price_cny += $bill->amount_cny;
+            }
+
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
             if ($payments_price_lak >= $bills_price_lak) {
                 foreach ($bills as $bill) {
