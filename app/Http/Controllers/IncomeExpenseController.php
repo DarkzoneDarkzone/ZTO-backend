@@ -149,7 +149,7 @@ class IncomeExpenseController extends Controller
                 ], 400);
             }
             $parcels = Parcel::whereIn('track_no', $request->item)->where('status', 'ready')->get();
-            if (!$$parcels || count($parcels) == 0) {
+            if (count($parcels) == 0) {
                 return response()->json([
                     'msg' => 'parcels not found.',
                     'status' => 'ERROR',
