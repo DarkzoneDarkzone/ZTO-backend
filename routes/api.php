@@ -113,4 +113,5 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/report/return-parcel', [ReportController::class, 'reportReturnParcel']);
     Route::get('/export/return-parcel', [ReportController::class, 'exportReportReturnParcel']);
     Route::get('/report/income-expenses', [ReportController::class, 'reportIncomeExpenses']);
+    Route::get('/export/income-expenses', [ReportController::class, 'exportReportIncomeExpenses']);
 });
