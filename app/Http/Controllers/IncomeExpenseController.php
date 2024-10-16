@@ -159,8 +159,13 @@ class IncomeExpenseController extends Controller
 
             $currency_now = Currency::orderBy('id', 'desc')->first();
 
-            $costs_lak = $request->amount_costs;
-            $costs_cny = $request->amount_costs / ($currency_now->amount_cny * $currency_now->amount_lak);
+            $price_parcel = 0;
+            foreach ($parcels as $key => $parcel) {
+                $price_parcel+= $parcel->price;
+            }
+
+            $costs_lak = $price_parcel;
+            $costs_cny = $price_parcel / ($currency_now->amount_cny * $currency_now->amount_lak);
 
             $incomeExpense = new IncomeExpense();
             $incomeExpense->type = 'income';
