@@ -519,21 +519,31 @@ class PaymentController extends Controller
      */
     public function destroy($id)
     {
-        $payment = Payment::find($id);
-        if (!$payment) {
+        // $payment = Payment::find($id);
+        try {
+            $payments = Payment::where('payment_no', $id)->get();
+            if (!$payments) {
+                return response()->json([
+                    'message' => 'payment not found',
+                    'status' => 'ERROR',
+                    'code' => 404,
+                ], 400);
+            }
+            foreach ($payments as $key => $pay) {
+                $pay->delete();
+            }
+
             return response()->json([
-                'message' => 'payment not found',
-                'status' => 'ERROR',
-                'code' => 404,
-            ], 400);
+                'status' => 'OK',
+                'code' => '200',
+                'data' => null
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => array(),
+                'status' => $e->getMessage(),
+            ], 500);
         }
-
-        $payment->delete();
-
-        return response()->json([
-            'status' => 'OK',
-            'code' => '200',
-            'data' => null
-        ], 200);
     }
 }
