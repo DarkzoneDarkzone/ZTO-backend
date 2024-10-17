@@ -130,7 +130,7 @@ class ReportController extends Controller
                 ->where(['status' => 'paid', 'active' => 1])
                 ->whereNull('deleted_at')
                 ->whereHas('Bills', function ($query) {
-                    $query->where('bills.status', 'shipped');
+                    $query->where('bills.status', 'success');
                 });
 
             $lastQuery = Payment::select(
