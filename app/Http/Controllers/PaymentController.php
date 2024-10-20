@@ -122,7 +122,7 @@ class PaymentController extends Controller
 
         $payment = Payment::where('payment_no', $payment_no)->get();
 
-        $payment_no_json = (object) array('payment_no' => $payment_no, 'bill_payment' => $bill_payment, 'paymests' => $payment);
+        $payment_no_json = (object) array('payment_no' => $payment_no, 'bill_payment' => $bill_payment, 'payments' => $payment);
         if (!$bill_payment) {
             return response()->json([
                 'msg' => 'payment not found.',
