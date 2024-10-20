@@ -458,11 +458,11 @@ class PaymentController extends Controller
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
-                }
-                $parcels = Parcel::where(['phone' => $request->phone])->get();
-                foreach ($parcels as $parcel) {
-                    $parcel->status = 'success';
-                    $parcel->save();
+                    foreach ($bill->Parcels as $parcel) {
+                        $parcel->payment_at = Carbon::now();
+                        $parcel->status = 'success';
+                        $parcel->save();
+                    }
                 }
                 foreach ($payments_save as $key => $payment) {
                     $payment->payment_no = $id;

@@ -41,11 +41,10 @@ class BillController extends Controller
 
             $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->where('status', 'ready')->groupBy('bill_id');
 
-            $query = $query->joinSub($sub_q, 'parcel_q', function  (JoinClause $join) {
+            $query = $query->joinSub($sub_q, 'parcel_q', function (JoinClause $join) {
                 $join->on('parcel_q.bill_id', '=', 'bills.id');
             });
 
-            // dd($query->get());
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {
@@ -80,6 +79,11 @@ class BillController extends Controller
     public function getById($id)
     {
         $bill = Bill::find($id);
+
+        $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->where('status', 'ready')->groupBy('bill_id');
+        $bill = $bill->joinSub($sub_q, 'parcel_q', function (JoinClause $join) {
+            $join->on('parcel_q.bill_id', '=', 'bills.id');
+        });
         $bill->Parcels;
         unset($bill->deleted_at);
         if (!$bill) {
@@ -160,8 +164,12 @@ class BillController extends Controller
             $currentDate = Carbon::now()->format('ym');
             $billCount = Bill::whereYear('created_at', Carbon::now()->year)
                 ->whereMonth('created_at', Carbon::now()->month)
-                ->count() + 1;
-            $bill->bill_no = $currentDate . '-' . sprintf('%04d', $billCount);
+                ->orderBy('id', 'desc')->first();
+            if (!$billCount) {
+                $bill->bill_no = $currentDate . '-' . sprintf('%05d', 00001);
+            } else {
+                $bill->bill_no = $currentDate . '-' . sprintf('%05d', $billCount + 1);
+            }
             $bill->save();
 
             foreach ($parcels as $parcel) {
@@ -222,25 +230,14 @@ class BillController extends Controller
 
         DB::beginTransaction();
         try {
-            $bills = Bill::whereIn('bill_no', $request->bill_no)->get();
+            $bills = Bill::whereIn('bill_no', $request->bill_no)->orderBy('id', 'desc')->where('status','ready')->get();
             if (count($bills) == 0) {
                 return response()->json([
-                    'msg' => 'bills not found.',
+                    'msg' => 'bills not found or status not ready .',
                     'status' => 'ERROR',
                     'data' => array()
                 ], 400);
             }
-
-            foreach ($bills as $key => $bill) {
-                if ($bill->status != 'ready') {
-                    return response()->json([
-                        'msg' => 'some bill not ready.',
-                        'status' => 'ERROR',
-                        'data' => array()
-                    ], 400);
-                }
-            }
-            // dd($bills);
             foreach ($bills as $bill) {
                 $bill->status = 'shipped';
                 $bill->save();
