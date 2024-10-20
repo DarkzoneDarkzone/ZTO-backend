@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Illuminate\Database\Query\JoinClause;
 
 class BillController extends Controller
 {
@@ -37,6 +38,14 @@ class BillController extends Controller
                 $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
+
+            $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->where('status', 'ready')->groupBy('bill_id');
+
+            $query = $query->joinSub($sub_q, 'parcel_q', function  (JoinClause $join) {
+                $join->on('parcel_q.bill_id', '=', 'bills.id');
+            });
+
+            // dd($query->get());
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {
@@ -44,6 +53,7 @@ class BillController extends Controller
                     $query->orderBy($field, $direction);
                 }
             }
+
             if ($request->has('per_page')) {
                 $bill = $query->paginate($request->query('per_page'));
             } else {
@@ -238,7 +248,6 @@ class BillController extends Controller
                     $parcel->shipping_at = Carbon::now();
                     $parcel->save();
                 }
-                
             }
 
             DB::commit();
