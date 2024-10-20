@@ -168,7 +168,9 @@ class BillController extends Controller
             if (!$billCount) {
                 $bill->bill_no = $currentDate . '-' . sprintf('%05d', 00001);
             } else {
-                $bill->bill_no = $currentDate . '-' . sprintf('%05d', $billCount + 1);
+                $ex = explode('-', $billCount->bill_no);
+                $number = (int) $ex[1];
+                $bill->bill_no = $currentDate . '-' . sprintf('%05d', $number + 1);
             }
             $bill->save();
 
