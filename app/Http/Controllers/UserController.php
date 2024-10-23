@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\UserListResource;
+use App\Models\Resource;
+use App\Models\Role;
+use App\Models\RoleResource;
 use App\Models\User;
 use App\Support\Collection;
 use Exception;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -146,7 +150,6 @@ class UserController extends Controller
                 'errors' => 'Unauthorized'
             ], 401);
         }
-
         return $this->respondWithToken($token);
     }
 
@@ -211,10 +214,22 @@ class UserController extends Controller
      */
     protected function respondWithToken($token)
     {
+        $user = Auth::user();
+        $role = Role::where('id', $user->role_id);
+        $role_resources = Resource::joinSub($role, 'role_query', function (JoinClause $join) {
+            $join->join('role_resources', 'role_resources.role_id', '=', 'role_query.id');
+            $join->on('role_resources.resource_id', '=', 'resources.id');
+        })->select('resources.name as resource_name', 'resources.parent_id', 
+        'resources.description', 'resources.icon', 'resources.path', 'resources.sort_group', 
+        'resources.active', 'role_resources.role_id as role_id', 'resources.id as resource_id', 'role_resources.can_view',
+        'role_resources.can_update', 'role_resources.can_create', 'role_resources.can_delete',
+        'role_resources.can_export');
+        $user->role_resources = $role_resources->get();
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'user' => Auth::user(),
+            'user' => $user,
             'expired' => Auth::factory()->getTTL()
         ]);
     }
