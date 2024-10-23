@@ -184,7 +184,7 @@ class ReportController extends Controller
         }
 
         try {
-            $returnParcel = ReturnParcel::with('Parcel');
+            $returnParcel = ReturnParcel::select('return_parcels.*', 'parcels.track_no')->with('Parcel')->join('parcels', 'parcels.id', '=', 'return_parcels.parcel_id');
             if ($request->has('start_at')) {
                 $returnParcel->where('created_at', '>=', $request->query('start_at'));
             }
@@ -233,7 +233,7 @@ class ReportController extends Controller
         }
 
         try {
-            $returnParcel = ReturnParcel::with('Parcel');
+            $returnParcel = ReturnParcel::select('return_parcels.*', 'parcels.track_no')->with('Parcel')->join('parcels', 'parcels.id', '=', 'return_parcels.parcel_id');
             if ($request->has('start_at')) {
                 $returnParcel->where('created_at', '>=', $request->query('start_at'));
             }
