@@ -366,7 +366,7 @@ class IncomeExpenseController extends Controller
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            if ($request->status == true) {
+            if ($request->status == 'verify') {
                 // $return_parcels = $incomeExpense->ReturnParcels;
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 $return_parcel->car_number = $request->delivery_car_no;
@@ -456,7 +456,7 @@ class IncomeExpenseController extends Controller
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            if ($request->status == true) {
+            if ($request->status == 'verify') {
                 // $return_parcels = $incomeExpense->ReturnParcels;
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 $return_parcel->weight = $request->weight;
