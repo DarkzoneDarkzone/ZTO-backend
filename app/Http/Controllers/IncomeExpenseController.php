@@ -90,7 +90,7 @@ class IncomeExpenseController extends Controller
                 ->select('parcels.*', 'return_parcels.weight', 'return_parcels.refund_amount_lak', 'return_parcels.refund_amount_cny');
         } else if ($incomeExpense->type == 'income') {
             $query_return_parcel->where('parcels.status', 'ready')
-                ->select('parcels.*', 'return_parcels.car_number', 'return_parcels.driver_name', 'return_parcels.created_at ad date_return');
+                ->select('parcels.*', 'return_parcels.car_number', 'return_parcels.driver_name', 'return_parcels.created_at as date_return');
         }
         ////////////
         $return_parcel = $query_return_parcel->get();
