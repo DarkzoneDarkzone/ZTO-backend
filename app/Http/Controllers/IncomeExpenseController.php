@@ -329,7 +329,7 @@ class IncomeExpenseController extends Controller
             'sub_type' => 'required|string',
             'description' => 'string',
             'amount_costs' => 'required|numeric',
-            'status' => 'required|boolean'
+            'status' => 'required|string'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -360,7 +360,7 @@ class IncomeExpenseController extends Controller
             }
 
             $incomeExpense->sub_type = $request->sub_type;
-            $incomeExpense->status = $request->status == true ? 'verify' :  'pending';
+            $incomeExpense->status = $request->status;
             if (isset($request->description)) {
                 $incomeExpense->description =  $request->description;
             }
@@ -418,7 +418,7 @@ class IncomeExpenseController extends Controller
             'amount_refund' => 'required|numeric',
             'sub_type' => 'required|string',
             'description' => 'string',
-            'status' => 'required|boolean'
+            'status' => 'required|string'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -450,7 +450,7 @@ class IncomeExpenseController extends Controller
 
 
             $incomeExpense->sub_type = $request->sub_type;
-            $incomeExpense->status = $request->status == true ? 'verify' :  'pending';
+            $incomeExpense->status = $request->status;
             if (isset($request->description)) {
                 $incomeExpense->description =  $request->description;
             }
