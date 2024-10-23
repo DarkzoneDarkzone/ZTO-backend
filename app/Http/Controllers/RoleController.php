@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\RoleResource;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,7 @@ class RoleController extends Controller
     public function getById($id)
     {
         $role = Role::find($id);
+        $role_reource = RoleResource::with('Resource')->where('role_id', $id)->get();
         if (!$role) {
             return response()->json([
                 'message' => 'User not found',
@@ -36,7 +38,10 @@ class RoleController extends Controller
         return response()->json([
             'status' => 'OK',
             'code' => '200',
-            'data' => $role
+            'data' => [
+                'role' => $role,
+                'role_resource' => $role_reource
+            ]
         ], 200);
     }
 
@@ -49,7 +54,7 @@ class RoleController extends Controller
             'name' => 'required|string',
             'description' => 'string',
             'active' => 'required|boolean',
-            "permission" => "required|array|numeric",
+            "permission" => "required|array",
         ]);
 
         if ($validator->fails()) {
@@ -63,7 +68,21 @@ class RoleController extends Controller
             $role->active = $request->active;
             $role->save();
 
-            $role->Resources()->sync($request->permission);
+            $array_role_resource = [];
+            foreach ($request->permission as $key => $value) {
+                $roleResource = [
+                    "role_id" => $role->id,
+                    "resource_id" => $value['id'],
+                    "can_view" => $value['can_view'],
+                    "can_create" => $value['can_create'],
+                    "can_update" => $value['can_update'],
+                    "can_delete" => $value['can_delete'],
+                    "can_export" => $value['can_export'],
+                ];
+                array_push($array_role_resource, $roleResource);
+            }
+            RoleResource::insert($array_role_resource);
+
             DB::commit();
             return response()->json([
                 'status' => 'Created',
@@ -135,7 +154,22 @@ class RoleController extends Controller
             $role->active = $request->active;
             $role->save();
 
-            $role->Resources()->sync($request->permission);
+            RoleResource::where('role_id', $id)->delete();
+            $array_role_resource = [];
+            foreach ($request->permission as $key => $value) {
+                $roleResource = [
+                    "role_id" => $role->id,
+                    "resource_id" => $value['id'],
+                    "can_view" => $value['can_view'],
+                    "can_create" => $value['can_create'],
+                    "can_update" => $value['can_update'],
+                    "can_delete" => $value['can_delete'],
+                    "can_export" => $value['can_export'],
+                ];
+                array_push($array_role_resource, $roleResource);
+            }
+            RoleResource::insert($array_role_resource);
+
             DB::commit();
             return response()->json([
                 'status' => 'Updated',
