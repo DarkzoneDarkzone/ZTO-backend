@@ -86,11 +86,9 @@ class IncomeExpenseController extends Controller
             ->where('return_parcels.income_expenses_id', $incomeExpense->id);
         /////////////
         if ($incomeExpense->type == 'expenses') {
-            $query_return_parcel->where('parcels.status', 'success')
-                ->select('parcels.*', 'return_parcels.weight', 'return_parcels.refund_amount_lak', 'return_parcels.refund_amount_cny');
+            $query_return_parcel->select('parcels.*', 'return_parcels.weight', 'return_parcels.refund_amount_lak', 'return_parcels.refund_amount_cny');
         } else if ($incomeExpense->type == 'income') {
-            $query_return_parcel->where('parcels.status', 'ready')
-                ->select('parcels.*', 'return_parcels.car_number', 'return_parcels.driver_name', 'return_parcels.create_at ad date_return');
+            $query_return_parcel->select('parcels.*', 'return_parcels.car_number', 'return_parcels.driver_name', 'return_parcels.created_at as date_return');
         }
         ////////////
         $return_parcel = $query_return_parcel->get();
@@ -329,7 +327,7 @@ class IncomeExpenseController extends Controller
             'sub_type' => 'required|string',
             'description' => 'string',
             'amount_costs' => 'required|numeric',
-            'status' => 'required|boolean'
+            'status' => 'required|string'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -360,7 +358,7 @@ class IncomeExpenseController extends Controller
             }
 
             $incomeExpense->sub_type = $request->sub_type;
-            $incomeExpense->status = $request->status == true ? 'verify' :  'pending';
+            $incomeExpense->status = $request->status;
             if (isset($request->description)) {
                 $incomeExpense->description =  $request->description;
             }
@@ -368,7 +366,7 @@ class IncomeExpenseController extends Controller
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            if ($request->status == true) {
+            if ($request->status == 'verify') {
                 // $return_parcels = $incomeExpense->ReturnParcels;
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 $return_parcel->car_number = $request->delivery_car_no;
@@ -418,7 +416,7 @@ class IncomeExpenseController extends Controller
             'amount_refund' => 'required|numeric',
             'sub_type' => 'required|string',
             'description' => 'string',
-            'status' => 'required|boolean'
+            'status' => 'required|string'
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -450,7 +448,7 @@ class IncomeExpenseController extends Controller
 
 
             $incomeExpense->sub_type = $request->sub_type;
-            $incomeExpense->status = $request->status == true ? 'verify' :  'pending';
+            $incomeExpense->status = $request->status;
             if (isset($request->description)) {
                 $incomeExpense->description =  $request->description;
             }
@@ -458,7 +456,7 @@ class IncomeExpenseController extends Controller
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
-            if ($request->status == true) {
+            if ($request->status == 'verify') {
                 // $return_parcels = $incomeExpense->ReturnParcels;
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 $return_parcel->weight = $request->weight;

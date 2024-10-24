@@ -103,8 +103,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/income-expenses/{id}', [IncomeExpenseController::class, 'getById']);
     Route::post('/income', [IncomeExpenseController::class, 'createIncome']);
     Route::patch('/income/{id}', [IncomeExpenseController::class, 'updateIncome']);
-    Route::post('/expense', [IncomeExpenseController::class, 'createExpense']);
-    Route::patch('/expense/{id}', [IncomeExpenseController::class, 'updateExpense']);
+    Route::post('/expenses', [IncomeExpenseController::class, 'createExpense']);
+    Route::patch('/expenses/{id}', [IncomeExpenseController::class, 'updateExpense']);
     Route::patch('/income-expenses/{id}', [IncomeExpenseController::class, 'updateStatus']);
     Route::delete('/income-expenses/{id}', [IncomeExpenseController::class, 'destroy']);
 
