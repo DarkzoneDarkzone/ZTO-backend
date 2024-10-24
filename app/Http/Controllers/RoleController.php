@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use App\Models\RoleResource;
+use App\Support\Collection;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,12 +15,34 @@ class RoleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $roles = Role::query();
+
+        $Operator = new FiltersOperator();
+        if ($request->has('filters')) {
+            $arrayFilter = explode(',', $request->query('filters', []));
+            foreach ($arrayFilter as $filter) {
+                $roles->Where($Operator->FiltersOperators(explode(':', $filter)));
+            }
+        }
+
+        if ($request->has('sorts')) {
+            $arraySorts = explode(',', $request->query('sorts', []));
+            foreach ($arraySorts as $sort) {
+                [$field, $direction] = explode(':', $sort);
+                $roles->orderBy($field, $direction);
+            }
+        }
+
+        if ($request->has('per_page')) {
+            $roles = (new Collection($roles->get()))->paginate($request->query('per_page'));
+        }
+
         return response()->json([
             'status' => 'OK',
             'code' => 200,
-            "data" => Role::get()
+            "data" => $roles
         ], 200);
     }
 
