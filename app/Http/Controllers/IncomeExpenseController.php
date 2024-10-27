@@ -569,14 +569,14 @@ class IncomeExpenseController extends Controller
             if ($request->status == 'verify') {
                 $balance_previous = Balance::orderBy('id', 'desc')->first();
                 $balance = new Balance();
-                $balance->amount_lak = $incomeExpense->amount_lak;
-                $balance->amount_cny = $incomeExpense->amount_cny;
+                $balance->amount_lak = $refund_lak;
+                $balance->amount_cny = $refund_cny;
                 if ($balance_previous) {
-                    $balance->balance_amount_lak = $balance_previous->balance_amount_lak - $incomeExpense->amount_lak;
-                    $balance->balance_amount_cny = $balance_previous->balance_amount_cny - $incomeExpense->amount_cny;
+                    $balance->balance_amount_lak = $balance_previous->balance_amount_lak - $refund_lak;
+                    $balance->balance_amount_cny = $balance_previous->balance_amount_cny - $refund_cny;
                 } else {
-                    $balance->balance_amount_lak = 0 - $incomeExpense->amount_lak;
-                    $balance->balance_amount_cny = 0 - $incomeExpense->amount_cny;
+                    $balance->balance_amount_lak = 0 - $refund_lak;
+                    $balance->balance_amount_cny = 0 - $refund_cny;
                 }
                 $balance->income_id = $incomeExpense->id;
                 $balance->save();
