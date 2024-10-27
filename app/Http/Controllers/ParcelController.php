@@ -35,7 +35,7 @@ class ParcelController extends Controller
             }
 
             if ($request->has('searchText')) {
-                $arraySearchText = ['return_parcels.track_no', 'return_parcels.name', 'return_parcels.phone'];
+                $arraySearchText = ['parcels.track_no', 'parcels.name', 'parcels.phone'];
                 $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
@@ -51,7 +51,9 @@ class ParcelController extends Controller
                 switch ($request->query('status')) {
                     case 'refund':
                         $query->leftJoin('return_parcels','parcels.id', '=', 'return_parcels.parcel_id')
-                        ->where('return_parcels.parcel_id', '=' , null)->select('parcels.*', 'return_parcels.*');
+                        ->where('return_parcels.parcel_id', '=' , null)->select('parcels.*', 'return_parcels.*')
+                        ->select('parcels.*', 'parcels.weight as weight', 
+                        'return_parcels.weight as refund_weight');
                         break;
                     case 'return':
                         $query->leftJoin('return_parcels','parcels.id', '=', 'return_parcels.parcel_id')
