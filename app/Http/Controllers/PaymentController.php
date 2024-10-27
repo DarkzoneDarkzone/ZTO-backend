@@ -123,7 +123,7 @@ class PaymentController extends Controller
             $join->on('parcel_q.bill_id', '=', 'bills.id');
         });
 
-        $bill_payment->select('bills.*', 'bill_payment.*');
+        // $bill_payment->select('bills.*', 'bill_payment.*', );
         $bill_payment = $bill_payment->get();
 
         $payment = Payment::where('payment_no', $payment_no)->get();
