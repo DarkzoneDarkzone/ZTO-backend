@@ -502,7 +502,7 @@ class IncomeExpenseController extends Controller
         DB::beginTransaction();
         try {
             $auth_id = Auth::user()->id;
-            $incomeExpense = IncomeExpense::where('id', $id)->where('status', 'pending');
+            $incomeExpense = IncomeExpense::where('id', $id)->where('status', 'pending')->first();
             if (!$incomeExpense) {
                 return response()->json([
                     'message' => 'expense not found or expense is verify',
@@ -514,7 +514,6 @@ class IncomeExpenseController extends Controller
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 $return_parcel->delete();
             }
-
             if ($incomeExpense->amount_lak != $request->amount_refund) {
                 $currency_now = Currency::orderBy('id', 'desc')->first();
                 $refund_lak = $request->amount_refund;
@@ -523,10 +522,10 @@ class IncomeExpenseController extends Controller
                 $incomeExpense->amount_cny = $refund_cny;
             } 
             // else {
-            //     $refund_lak = $incomeExpense->amount_lak;
-            //     $refund_cny = $incomeExpense->amount_cny;
-            // }
-
+                //     $refund_lak = $incomeExpense->amount_lak;
+                //     $refund_cny = $incomeExpense->amount_cny;
+                // }
+                
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status;
             isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
