@@ -117,7 +117,13 @@ class PaymentController extends Controller
             $join->join('bill_payment', 'bill_payment.payment_id', '=', 'pay_query.id');
             $join->on('bill_payment.bill_id', '=', 'bills.id');
         });
-        // $bill_payment->select('bills.name',);
+
+        $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->groupBy('bill_id');
+        $bill_payment->joinSub($sub_q, 'parcel_q', function (JoinClause $join) {
+            $join->on('parcel_q.bill_id', '=', 'bills.id');
+        });
+
+        $bill_payment->select('bills.*', 'payments.*');
         $bill_payment = $bill_payment->get();
 
         $payment = Payment::where('payment_no', $payment_no)->get();
