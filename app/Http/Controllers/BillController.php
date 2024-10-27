@@ -83,7 +83,7 @@ class BillController extends Controller
         $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->groupBy('bill_id');
         $bill = $bill->joinSub($sub_q, 'parcel_q', function (JoinClause $join) {
             $join->on('parcel_q.bill_id', '=', 'bills.id');
-        })->get();
+        })->first();
         // $bill->Parcels;
         unset($bill->deleted_at);
         if (!$bill) {
