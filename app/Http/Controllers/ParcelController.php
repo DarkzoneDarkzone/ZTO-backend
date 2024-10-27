@@ -6,8 +6,10 @@ use App\Exports\ParcelExport;
 use App\Imports\ParcelImport;
 use App\Models\Customer;
 use App\Models\Parcel;
+use App\Models\ReturnParcel;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -27,12 +29,13 @@ class ParcelController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
+                    $ex = explode(':', $filter);
+                    $query->where($Operator->FiltersOperators(['parcels.'.$ex[0], $ex[1], $ex[2]]));
                 }
             }
 
             if ($request->has('searchText')) {
-                $arraySearchText = ['track_no', 'name', 'phone'];
+                $arraySearchText = ['return_parcels.track_no', 'return_parcels.name', 'return_parcels.phone'];
                 $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
@@ -41,6 +44,26 @@ class ParcelController extends Controller
                 foreach ($arraySorts as $sort) {
                     [$field, $direction] = explode(':', $sort);
                     $query->orderBy($field, $direction);
+                }
+            }
+
+            if ($request->has('status')) {
+                switch ($request->query('status')) {
+                    case 'refund':
+                        $query->leftJoin('return_parcels','parcels.id', '=', 'return_parcels.parcel_id')
+                        ->where('return_parcels.parcel_id', '=' , null)->select('parcels.*', 'return_parcels.*');
+                        break;
+                    case 'return':
+                        $query->leftJoin('return_parcels','parcels.id', '=', 'return_parcels.parcel_id')
+                        ->leftJoin('income_expenses', 'income_expenses.id', '=', 'return_parcels.income_expenses_id')
+                        ->where('income_expenses.status', '=', 'verify')
+                        ->select('parcels.*', 'parcels.weight as weight', 
+                        'return_parcels.refund_amount_lak',
+                        'return_parcels.refund_amount_cny',  
+                        'return_parcels.weight as refund_weight');
+                        break;
+                    default:
+                        break;
                 }
             }
 
