@@ -254,7 +254,7 @@ class IncomeExpenseController extends Controller
                 $check_payment = Bill::join('bill_payment', 'bill_payment.bill_id', '=', 'bills.id')
                     ->join('payments', 'payments.id', '=', 'bill_payment.payment_id')
                     ->join('parcels', 'parcels.bill_id', '=', 'bills.id')
-                    ->where(['parcels.track_no' => $request->item, 'parcels.status' => 'success', 'bills.status' => 'success', 'payments.status' => 'paid'])
+                    ->where(['parcels.track_no' => $request->item, 'payments.status' => 'paid'])
                     ->select('bills.bill_no', 'bills.status', 'payments.payment_no', 'payments.status', 'parcels.track_no', 'parcels.status')
                     ->first();
                 if (!$check_payment) {

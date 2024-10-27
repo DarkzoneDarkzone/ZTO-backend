@@ -38,8 +38,7 @@ class BillController extends Controller
                 $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
-
-            $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->where('status', 'ready')->groupBy('bill_id');
+            $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->groupBy('bill_id');
 
             $query = $query->joinSub($sub_q, 'parcel_q', function (JoinClause $join) {
                 $join->on('parcel_q.bill_id', '=', 'bills.id');
