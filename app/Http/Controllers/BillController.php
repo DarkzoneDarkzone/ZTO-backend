@@ -84,7 +84,9 @@ class BillController extends Controller
         $bill = $bill->joinSub($sub_q, 'parcel_q', function (JoinClause $join) {
             $join->on('parcel_q.bill_id', '=', 'bills.id');
         })->first();
-        // $bill->Parcels;
+
+        $bill_parcel = Bill::find($id);
+        $bill->item = $bill_parcel->Parcels;
         unset($bill->deleted_at);
         if (!$bill) {
             return response()->json([
