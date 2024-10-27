@@ -51,7 +51,7 @@ class ParcelController extends Controller
                 switch ($request->query('status')) {
                     case 'refund':
                         $query->leftJoin('return_parcels','parcels.id', '=', 'return_parcels.parcel_id')
-                        ->where('return_parcels.parcel_id', '=' , null)->select('parcels.*', 'return_parcels.*')
+                        ->where('return_parcels.parcel_id', '=' , null)
                         ->select('parcels.*', 'parcels.weight as weight', 
                         'return_parcels.weight as refund_weight');
                         break;
