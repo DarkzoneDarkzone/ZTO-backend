@@ -117,10 +117,10 @@ class IncomeExpenseController extends Controller
     public function createIncome(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'phone' => 'required|string',
+            // 'phone' => 'required|string',
             'item' => 'array',
             'item.*' => 'string',
-            'date_return' => 'required|date_format:Y-m-d H:i:s',
+            'date_return' => 'date_format:Y-m-d H:i:s',
             'delivery_car_no' => 'string',
             'delivery_person' => 'string',
             'sub_type' => 'required|string',
@@ -352,12 +352,12 @@ class IncomeExpenseController extends Controller
     public function updateIncome(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'phone' => 'required|string',
+            // 'phone' => 'string',
             'item' => 'array',
             'item.*' => 'string',
-            'date_return' => 'required|date_format:Y-m-d H:i:s',
-            'delivery_car_no' => 'required|string',
-            'delivery_person' => 'required|string',
+            'date_return' => 'date_format:Y-m-d H:i:s',
+            'delivery_car_no' => 'string',
+            'delivery_person' => 'string',
             'sub_type' => 'required|string',
             'description' => 'string',
             'amount_return' => 'required|numeric',
@@ -391,18 +391,12 @@ class IncomeExpenseController extends Controller
 
             if ($incomeExpense->amount_lak != $request->amount_return) {
                 $currency_now = Currency::orderBy('id', 'desc')->first();
-                $refund_lak = $request->amount_return;
-                $refund_cny = $request->amount_return / ($currency_now->amount_cny * $currency_now->amount_lak);
-            } else {
-                $refund_lak = $incomeExpense->refund_lak;
-                $refund_cny = $incomeExpense->refund_cny;
+                $incomeExpense->amount_lak = $request->amount_return;;
+                $incomeExpense->amount_cny = $request->amount_return / ($currency_now->amount_cny * $currency_now->amount_lak);
             }
-
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status;
             isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
-            $incomeExpense->amount_lak = $refund_lak;
-            $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
             if ($request->sub_type == 'return') {
@@ -453,17 +447,11 @@ class IncomeExpenseController extends Controller
                 $balance = new Balance();
                 $balance->amount_lak = $incomeExpense->amount_lak;
                 $balance->amount_cny = $incomeExpense->amount_cny;
-                if ($balance_previous) {
-                    $balance->balance_amount_lak = $balance_previous->balance_amount_lak + $incomeExpense->amount_lak;
-                    $balance->balance_amount_cny = $balance_previous->balance_amount_cny + $incomeExpense->amount_cny;
-                } else {
-                    $balance->balance_amount_lak = $incomeExpense->amount_lak;
-                    $balance->balance_amount_cny = $incomeExpense->amount_cny;
-                }
+                $balance->balance_amount_lak = $balance_previous ?  ($balance_previous->balance_amount_lak - $incomeExpense->amount_lak) : (0 - $incomeExpense->amount_lak);
+                $balance->balance_amount_cny = $balance_previous ?  ($balance_previous->balance_amount_cny - $incomeExpense->amount_cny) : (0 - $incomeExpense->amount_cny);
                 $balance->income_id = $incomeExpense->id;
                 $balance->save();
             }
-
             DB::commit();
             return response()->json([
                 'code' => 201,
@@ -516,20 +504,12 @@ class IncomeExpenseController extends Controller
             }
             if ($incomeExpense->amount_lak != $request->amount_refund) {
                 $currency_now = Currency::orderBy('id', 'desc')->first();
-                $refund_lak = $request->amount_refund;
-                $refund_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
-                $incomeExpense->amount_lak = $refund_lak;
-                $incomeExpense->amount_cny = $refund_cny;
-            } 
-            // else {
-                //     $refund_lak = $incomeExpense->amount_lak;
-                //     $refund_cny = $incomeExpense->amount_cny;
-                // }
-                
+                $incomeExpense->amount_lak = $request->amount_refund;
+                $incomeExpense->amount_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
+            }
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status;
             isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
-
             $incomeExpense->save();
 
             if ($request->sub_type == 'refund') {
@@ -571,13 +551,8 @@ class IncomeExpenseController extends Controller
                 $balance = new Balance();
                 $balance->amount_lak = $incomeExpense->amount_lak;
                 $balance->amount_cny = $incomeExpense->amount_cny;;
-                if ($balance_previous) {
-                    $balance->balance_amount_lak = $balance_previous->balance_amount_lak - $incomeExpense->amount_lak;
-                    $balance->balance_amount_cny = $balance_previous->balance_amount_cny - $incomeExpense->amount_cny;;
-                } else {
-                    $balance->balance_amount_lak = 0 - $incomeExpense->amount_lak;
-                    $balance->balance_amount_cny = 0 - $incomeExpense->amount_cny;;
-                }
+                $balance->balance_amount_lak = $balance_previous ?  ($balance_previous->balance_amount_lak - $incomeExpense->amount_lak) : (0 - $incomeExpense->amount_lak);
+                $balance->balance_amount_cny = $balance_previous ?  ($balance_previous->balance_amount_cny - $incomeExpense->amount_cny) : (0 - $incomeExpense->amount_cny);
                 $balance->income_id = $incomeExpense->id;
                 $balance->save();
             }
@@ -598,70 +573,6 @@ class IncomeExpenseController extends Controller
         }
     }
 
-
-
-    public function updateStatus(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'status' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'msg' => 'validator wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
-            ], 400);
-        }
-        DB::beginTransaction();
-        try {
-            $incomeExpense = IncomeExpense::find($id);
-            if (!$incomeExpense) {
-                return response()->json([
-                    'message' => 'income expense not found',
-                    'status' => 'ERROR',
-                    'code' => 404,
-                ], 400);
-            }
-
-            if ($request->status == 'verify') {
-                $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
-                if ($incomeExpense->type == 'expense') {
-                    $return_parcel->weight = $incomeExpense->weight;
-                    $return_parcel->refund_amount_lak = $incomeExpense->amount_lak;
-                    $return_parcel->refund_amount_cny = $incomeExpense->amount_cny;;
-                    $return_parcel->save();
-                    // if ($incomeExpense->sub_type == 'refund') {
-                    //     $parcel = $return_parcel->Parcel;
-                    //     $parcel->status = 'ready';
-                    //     $parcel->save();
-                    // }
-                } else if ($incomeExpense->type == 'income') {
-                    $return_parcel->car_number = $request->delivery_car_no;
-                    $return_parcel->driver_name = $request->delivery_person;
-                    $return_parcel->save();
-                    if ($incomeExpense->sub_type == 'return') {
-                        $parcel = $return_parcel->Parcel;
-                        $parcel->status = 'return';
-                        $parcel->save();
-                    }
-                }
-            }
-            DB::commit();
-            return response()->json([
-                'status' => 'OK',
-                'code' => '200',
-                'data' => $incomeExpense
-            ], 200);
-        } catch (Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'msg' => 'Something wrong.',
-                'errors' => $e->getMessage(),
-                'status' => 'ERROR',
-            ], 500);
-        }
-    }
 
     /**
      * Remove the specified resource from storage.
