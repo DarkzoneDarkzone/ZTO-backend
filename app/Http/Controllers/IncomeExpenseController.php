@@ -374,7 +374,7 @@ class IncomeExpenseController extends Controller
         DB::beginTransaction();
         try {
             $auth_id = Auth::user()->id;
-            $incomeExpense = IncomeExpense::where('id', $id)->where('status', 'pending');
+            $incomeExpense = IncomeExpense::where('id', $id)->where('status', 'pending')->first();
             if (!$incomeExpense) {
                 return response()->json([
                     'message' => 'income not found or income is verify',
