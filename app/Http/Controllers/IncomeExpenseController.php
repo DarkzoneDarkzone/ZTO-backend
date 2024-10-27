@@ -519,25 +519,26 @@ class IncomeExpenseController extends Controller
                 $currency_now = Currency::orderBy('id', 'desc')->first();
                 $refund_lak = $request->amount_refund;
                 $refund_cny = $request->amount_refund / ($currency_now->amount_cny * $currency_now->amount_lak);
-            } else {
-                $refund_lak = $incomeExpense->amount_lak;
-                $refund_cny = $incomeExpense->amount_cny;
-            }
+                $incomeExpense->amount_lak = $refund_lak;
+                $incomeExpense->amount_cny = $refund_cny;
+            } 
+            // else {
+            //     $refund_lak = $incomeExpense->amount_lak;
+            //     $refund_cny = $incomeExpense->amount_cny;
+            // }
 
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status;
             isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
 
-            $incomeExpense->amount_lak = $refund_lak;
-            $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
 
             if ($request->sub_type == 'refund') {
                 $return_parcel = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->first();
                 if ($return_parcel) {
                     $return_parcel->weight = $request->weight;
-                    $return_parcel->refund_amount_lak = $refund_lak;
-                    $return_parcel->refund_amount_cny = $refund_cny;
+                    $return_parcel->refund_amount_lak = $incomeExpense->amount_lak;
+                    $return_parcel->refund_amount_cny = $incomeExpense->amount_cny;;
                     $return_parcel->save();
                 } else {
                     $parcel = Parcel::where(['track_no' => $request->item])->first();
@@ -560,8 +561,8 @@ class IncomeExpenseController extends Controller
                     $return_parcel->parcel_id = $parcel->id;
                     $return_parcel->income_expenses_id = $incomeExpense->id;
                     $return_parcel->weight = $request->weight;
-                    $return_parcel->refund_amount_lak = $refund_lak;
-                    $return_parcel->refund_amount_cny = $refund_cny;
+                    $return_parcel->refund_amount_lak = $incomeExpense->amount_lak;
+                    $return_parcel->refund_amount_cny = $incomeExpense->amount_cny;;
                     $return_parcel->save();
                 }
             }
@@ -569,14 +570,14 @@ class IncomeExpenseController extends Controller
             if ($request->status == 'verify') {
                 $balance_previous = Balance::orderBy('id', 'desc')->first();
                 $balance = new Balance();
-                $balance->amount_lak = $refund_lak;
-                $balance->amount_cny = $refund_cny;
+                $balance->amount_lak = $incomeExpense->amount_lak;
+                $balance->amount_cny = $incomeExpense->amount_cny;;
                 if ($balance_previous) {
-                    $balance->balance_amount_lak = $balance_previous->balance_amount_lak - $refund_lak;
-                    $balance->balance_amount_cny = $balance_previous->balance_amount_cny - $refund_cny;
+                    $balance->balance_amount_lak = $balance_previous->balance_amount_lak - $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = $balance_previous->balance_amount_cny - $incomeExpense->amount_cny;;
                 } else {
-                    $balance->balance_amount_lak = 0 - $refund_lak;
-                    $balance->balance_amount_cny = 0 - $refund_cny;
+                    $balance->balance_amount_lak = 0 - $incomeExpense->amount_lak;
+                    $balance->balance_amount_cny = 0 - $incomeExpense->amount_cny;;
                 }
                 $balance->income_id = $incomeExpense->id;
                 $balance->save();
