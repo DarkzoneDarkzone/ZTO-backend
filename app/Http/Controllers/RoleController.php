@@ -37,6 +37,8 @@ class RoleController extends Controller
 
         if ($request->has('per_page')) {
             $roles = (new Collection($roles->get()))->paginate($request->query('per_page'));
+        }else {
+            $roles = clone $roles->get();
         }
 
         return response()->json([

@@ -40,7 +40,6 @@ class PaymentController extends Controller
                 DB::raw('ANY_VALUE(payments.status) as status'),
                 DB::raw('SUM(payments.amount_lak) as amount_lak'),
                 DB::raw('SUM(payments.amount_cny) as amount_cny'),
-
             );
             $query->groupBy('payment_no');
 

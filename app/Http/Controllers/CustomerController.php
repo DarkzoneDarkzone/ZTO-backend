@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\CustomerListResource;
 use App\Models\Customer;
+use App\Models\CustomerLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use App\Support\Collection;
+use Illuminate\Database\Query\JoinClause;
 
 class CustomerController extends Controller
 {
@@ -20,20 +22,23 @@ class CustomerController extends Controller
     {
         try {
             $query = Customer::query();
-            
+
             $Operator = new FiltersOperator();
             if ($request->has('filters')) {
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
+                    $ex = explode(':', $filter);
+                    $query->where($Operator->FiltersOperators(['customers.' . $ex[0], $ex[1], $ex[2]]));
                 }
             }
-
+            // dd('dd');
             if ($request->has('searchText')) {
-                $arraySearchText = ['name', 'phone'];
-                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
+                $query->join('customer_levels', 'customer_levels.id', '=', 'customers.customer_level_id');
+                $arraySearchText = ['customers.name', 'customers.phone', 'customer_levels.name'];
+                $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
+                $query->select('customers.*', 'customer_levels.name as level_name', 'customer_levels.rate as level_rate');
             }
-
+            
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {
@@ -42,15 +47,20 @@ class CustomerController extends Controller
                 }
             }
 
-            $query->with([
-                'CustomerLevel' => function ($query) {
-                    $query->select('id', 'name', 'rate');
-                },
-            ]);
-            $customer =  CustomerListResource::collection($query->get());
             if ($request->has('per_page')) {
-                $customer = (new Collection($customer))->paginate($request->query('per_page'));
+                $customer = $query->paginate($request->query('per_page'));
+            } else {
+                $customer = $query->get();
             }
+            // $query->with([
+            //     'CustomerLevel' => function ($query) {
+            //         $query->select('id', 'name', 'rate');
+            //     },
+            // ]);
+            // $customer =  CustomerListResource::collection($query->get());
+            // if ($request->has('per_page')) {
+            //     $customer = (new Collection($customer))->paginate($request->query('per_page'));
+            // }
             return response()->json([
                 'code' => 200,
                 'status' => 'OK',

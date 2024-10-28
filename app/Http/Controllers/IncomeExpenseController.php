@@ -447,8 +447,8 @@ class IncomeExpenseController extends Controller
                 $balance = new Balance();
                 $balance->amount_lak = $incomeExpense->amount_lak;
                 $balance->amount_cny = $incomeExpense->amount_cny;
-                $balance->balance_amount_lak = $balance_previous ?  ($balance_previous->balance_amount_lak - $incomeExpense->amount_lak) : (0 - $incomeExpense->amount_lak);
-                $balance->balance_amount_cny = $balance_previous ?  ($balance_previous->balance_amount_cny - $incomeExpense->amount_cny) : (0 - $incomeExpense->amount_cny);
+                $balance->balance_amount_lak = $balance_previous ?  ($balance_previous->balance_amount_lak + $incomeExpense->amount_lak) : ($incomeExpense->amount_lak);
+                $balance->balance_amount_cny = $balance_previous ?  ($balance_previous->balance_amount_cny + $incomeExpense->amount_cny) : ($incomeExpense->amount_cny);
                 $balance->income_id = $incomeExpense->id;
                 $balance->save();
             }

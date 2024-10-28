@@ -29,7 +29,7 @@ class CustomerLevelController extends Controller
 
             if ($request->has('searchText')) {
                 $arraySearchText = ['name'];
-                $query->whereAny($arraySearchText, 'like', '%'.$request->query('searchText').'%');
+                $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
             if ($request->has('sorts')) {
@@ -66,11 +66,6 @@ class CustomerLevelController extends Controller
      */
     public function getById($id)
     {
-        // $customerLevel = CustomerLevel::with([
-        //     'Customers' => function ($query) {
-        //         $query->select('id', 'name');
-        //     },
-        // ])->where('id', $id)->first();
         $customerLevel = CustomerLevel::where('id', $id)->first();
         // $customerLevel->Customers;
         if (!$customerLevel) {
@@ -108,6 +103,15 @@ class CustomerLevelController extends Controller
             ], 400);
         }
         $auth_id = Auth::user()->id;
+
+        $check_name_duplicate = CustomerLevel::where('name', $request->name)->first();
+        if ($check_name_duplicate) {
+            return response()->json([
+                'msg' => 'This name already exists. Please input another one.',
+                'errors' => 'duplicate',
+                'status' => 'ERROR',
+            ], 400);
+        }
 
         $customerLevel = new CustomerLevel();
         $customerLevel->name = $request->name;
