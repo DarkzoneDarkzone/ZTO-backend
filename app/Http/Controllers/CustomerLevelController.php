@@ -175,6 +175,15 @@ class CustomerLevelController extends Controller
 
         DB::beginTransaction();
         try {
+            $check_name_duplicate = CustomerLevel::where('name', $request->name)->first();
+            if ($check_name_duplicate && $check_name_duplicate->id != $id) {
+                return response()->json([
+                    'msg' => 'This name already exists. Please input another one.',
+                    'errors' => 'duplicate',
+                    'status' => 'ERROR',
+                ], 400);
+            }
+            
             $customerLevel = CustomerLevel::where('id', $id)->first();
             if (!$customerLevel) {
                 return response()->json([
@@ -185,6 +194,8 @@ class CustomerLevelController extends Controller
             }
 
             $auth_id = Auth::user()->id;
+
+           
 
             $customerLevel->name = $request->name;
             $customerLevel->description = $request->description;

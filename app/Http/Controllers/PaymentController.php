@@ -45,6 +45,7 @@ class PaymentController extends Controller
 
             $bill_payment = Bill::joinSub($query, 'pay_query', function (JoinClause $join) {
                 $join->join('bill_payment', 'bill_payment.payment_id', '=', 'pay_query.id');
+                $join->where('bill_payment.deleted_at', null);
                 $join->on('bill_payment.bill_id', '=', 'bills.id');
             });
 
@@ -114,6 +115,7 @@ class PaymentController extends Controller
         $query1->where('payment_no', $payment_no)->first();
         $bill_payment = Bill::joinSub($query1, 'pay_query', function (JoinClause $join) {
             $join->join('bill_payment', 'bill_payment.payment_id', '=', 'pay_query.id');
+            $join->where('bill_payment.deleted_at', null);
             $join->on('bill_payment.bill_id', '=', 'bills.id');
         });
 

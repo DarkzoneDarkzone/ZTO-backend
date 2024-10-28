@@ -220,8 +220,10 @@ class UserController extends Controller
         $role = Role::where('id', $user->role_id);
         $role_resources = Resource::joinSub($role, 'role_query', function (JoinClause $join) {
             $join->join('role_resources', 'role_resources.role_id', '=', 'role_query.id');
+            $join->where('role_resources.deleted_at', null);
             $join->on('role_resources.resource_id', '=', 'resources.id');
-        })->select(
+        });
+        $role_resources->select(
             'resources.name as resource_name',
             'resources.parent_id',
             'resources.description',

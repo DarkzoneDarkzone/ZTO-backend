@@ -87,6 +87,15 @@ class DepartmentController extends Controller
 
         DB::beginTransaction();
         try {
+            $check_name_duplicate = Department::where('name', $request->name)->first();
+            if ($check_name_duplicate) {
+                return response()->json([
+                    'msg' => 'This name already exists. Please input another one.',
+                    'errors' => 'duplicate',
+                    'status' => 'ERROR',
+                ], 400);
+            }
+
             $department = new Department();
             $department->name = $request->name;
             $department->description = $request->description;
@@ -150,6 +159,15 @@ class DepartmentController extends Controller
 
         DB::beginTransaction();
         try {
+            $check_name_duplicate = Department::where('name', $request->name)->first();
+            if ($check_name_duplicate && $check_name_duplicate->id != $id) {
+                return response()->json([
+                    'msg' => 'This name already exists. Please input another one.',
+                    'errors' => 'duplicate',
+                    'status' => 'ERROR',
+                ], 400);
+            }
+
             $department = Department::find($id);
             if (!$department) {
                 return response()->json([
