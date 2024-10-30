@@ -87,6 +87,16 @@ class RoleController extends Controller
         }
         DB::beginTransaction();
         try {
+
+            $check_name_duplicate = Role::where('name', $request->name)->first();
+            if ($check_name_duplicate) {
+                return response()->json([
+                    'msg' => 'This name already exists. Please input another one.',
+                    'errors' => 'duplicate',
+                    'status' => 'ERROR',
+                ], 400);
+            }
+
             $role = new Role();
             $role->name = $request->name;
             $role->description = $request->description;
@@ -166,6 +176,16 @@ class RoleController extends Controller
 
         DB::beginTransaction();
         try {
+
+            $check_name_duplicate = Role::where('name', $request->name)->first();
+            if ($check_name_duplicate && $check_name_duplicate->id != $id) {
+                return response()->json([
+                    'msg' => 'This name already exists. Please input another one.',
+                    'errors' => 'duplicate',
+                    'status' => 'ERROR',
+                ], 400);
+            }
+
             $role = Role::find($id);
             if (!$role) {
                 return response()->json([

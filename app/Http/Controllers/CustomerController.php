@@ -124,6 +124,15 @@ class CustomerController extends Controller
                 ], 400);
             }
 
+            $check_phone_duplicate = Customer::where('phone', $request->name)->first();
+            if ($check_phone_duplicate) {
+                return response()->json([
+                    'msg' => 'This phone already exists. Please input another one.',
+                    'errors' => 'duplicate',
+                    'status' => 'ERROR',
+                ], 400);
+            }
+
             $auth_id = Auth::user()->id;
 
             $customer = new Customer();
@@ -197,7 +206,17 @@ class CustomerController extends Controller
         }
 
         DB::beginTransaction();
+
         try {
+            $check_phone_duplicate = CustomerLevel::where('phone', $request->name)->first();
+            if ($check_phone_duplicate && $check_phone_duplicate->id != $id) {
+                return response()->json([
+                    'msg' => 'This name already exists. Please input another one.',
+                    'errors' => 'duplicate',
+                    'status' => 'ERROR',
+                ], 400);
+            }
+
             $customer = Customer::where('id', $id)->first();
             if (!$customer) {
                 return response()->json([
@@ -207,7 +226,7 @@ class CustomerController extends Controller
                 ], 400);
             }
 
-
+        
             $customer->name = $request->name;
             $customer->phone = $request->phone;
             $customer->address = $request->address;

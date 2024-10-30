@@ -101,9 +101,10 @@ class UserController extends Controller
      */
     public function register()
     {
+
         $validator = Validator::make(request()->all(), [
             'name' => 'required',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email',
             'password' => 'required|min:8',
             'department_id' => 'required|integer',
             'role_id' => 'required|integer',
@@ -112,6 +113,14 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             return response()->json($validator->errors()->toJson(), 400);
+        }
+        $check_email_duplicate = User::where('email', request()->email)->first();
+        if ($check_email_duplicate) {
+            return response()->json([
+                'msg' => 'This email already exists. Please input another one.',
+                'errors' => 'duplicate',
+                'status' => 'ERROR',
+            ], 400);
         }
 
         $user = new User();
@@ -269,6 +278,16 @@ class UserController extends Controller
 
         DB::beginTransaction();
         try {
+
+            $check_email_duplicate = User::where('email', $request->name)->first();
+            if ($check_email_duplicate && $check_email_duplicate->id != $id) {
+                return response()->json([
+                    'msg' => 'This email already exists. Please input another one.',
+                    'errors' => 'duplicate',
+                    'status' => 'ERROR',
+                ], 400);
+            }
+
             $user = User::where('id', $id)->first();
             if (!$user) {
                 return response()->json([

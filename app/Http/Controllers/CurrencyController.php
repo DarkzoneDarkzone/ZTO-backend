@@ -17,16 +17,31 @@ class CurrencyController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Currency::query();
+            
 
-            if ($request->has('filters')) {
-                $Operator = new FiltersOperator();
-                $arrayFilter = explode(',', $request->query('filters', []));
-                foreach ($arrayFilter as $filter) {
-                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
-                }
+            $validator = Validator::make(request()->all(), [
+                'start_at' => 'date_format:Y-m-d H:i:s',
+                'end_at' => 'date_format:Y-m-d H:i:s',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json($validator->errors()->toJson(), 400);
             }
 
+            $query = Currency::query();
+            // if ($request->has('filters')) {
+            //     $Operator = new FiltersOperator();
+            //     $arrayFilter = explode(',', $request->query('filters', []));
+            //     foreach ($arrayFilter as $filter) {
+            //         $query->where($Operator->FiltersOperators(explode(':', $filter)));
+            //     }
+            // }
+            if ($request->has('start_at')) {
+                $query->where('created_at', '>=', $request->query('start_at'));
+            }
+            if ($request->has('end_at')) {
+                $query->where('created_at', '<=', $request->query('end_at'));
+            }
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {
