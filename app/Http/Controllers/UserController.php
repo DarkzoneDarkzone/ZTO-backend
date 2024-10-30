@@ -10,6 +10,8 @@ use App\Models\RoleResource;
 use App\Models\User;
 use App\Support\Collection;
 use Carbon\Carbon;
+use DateTime;
+use DateTimeZone;
 use Exception;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
@@ -145,23 +147,29 @@ class UserController extends Controller
      */
     public function login()
     {
-        $validator = Validator::make(request()->all(), [
-            'email' => 'required|email',
-            'password' => 'required|min:8',
-        ]);
+        try {
+            $validator = Validator::make(request()->all(), [
+                'email' => 'required|email',
+                'password' => 'required|min:8',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
-        }
+            if ($validator->fails()) {
+                return response()->json($validator->errors()->toJson(), 400);
+            }
 
-        $credentials = request(['email', 'password']);
+            $credentials = request(['email', 'password']);
 
-        if (! $token = Auth::attempt($credentials)) {
+            if (! $token = Auth::attempt($credentials)) {
+                return response()->json([
+                    'errors' => 'Unauthorized'
+                ], 401);
+            }
+            return $this->respondWithToken($token);
+        } catch (Exception $e) {
             return response()->json([
-                'errors' => 'Unauthorized'
-            ], 401);
+                'errors' => $e->getMessage()
+            ], 500);
         }
-        return $this->respondWithToken($token);
     }
 
     /**
@@ -250,7 +258,8 @@ class UserController extends Controller
         );
         $user->role_resources = $role_resources->get();
 
-        $currency = Currency::whereDate('created_at', '=', date('Y-m-d'))->first();
+        $date = (new DateTime("now", new DateTimeZone('Asia/Vientiane')))->format('Y-m-d');
+        $currency = Currency::whereDate('created_at', '=', $date)->first();
 
         return response()->json([
             'access_token' => $token,
