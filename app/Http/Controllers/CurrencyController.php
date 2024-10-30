@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Currency;
+use DateTime;
+use DateTimeZone;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,13 +19,13 @@ class CurrencyController extends Controller
     public function index(Request $request)
     {
         try {
-            
+
 
             $validator = Validator::make(request()->all(), [
                 'start_at' => 'date_format:Y-m-d H:i:s',
                 'end_at' => 'date_format:Y-m-d H:i:s',
             ]);
-    
+
             if ($validator->fails()) {
                 return response()->json($validator->errors()->toJson(), 400);
             }
@@ -112,12 +114,16 @@ class CurrencyController extends Controller
         }
 
         try {
+            $date = (new DateTime("now", new DateTimeZone('Asia/Vientiane')))->format('Y-m-d H:i:s');
+
             $auth_id = Auth::user()->id;
             $currency = new Currency();
             // $currency->date = $request->date;
             $currency->amount_cny = $request->exchange_cny;
             $currency->amount_lak = $request->exchange_lak;
             $currency->created_by = $auth_id;
+            $currency->created_at = $date;
+            $currency->updated_at = $date;
             $currency->save();
 
             return response()->json([
