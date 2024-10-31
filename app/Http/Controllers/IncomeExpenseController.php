@@ -124,7 +124,7 @@ class IncomeExpenseController extends Controller
             'delivery_car_no' => 'string',
             'delivery_person' => 'string',
             'sub_type' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'amount_return' => 'required|numeric',
         ]);
         if ($validator->fails()) {
@@ -221,7 +221,7 @@ class IncomeExpenseController extends Controller
             'weight' => 'numeric',
             'amount_refund' => 'required|numeric',
             'sub_type' => 'required|string',
-            'description' => 'string'
+            'description' => 'string|nullable',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -359,7 +359,7 @@ class IncomeExpenseController extends Controller
             'delivery_car_no' => 'string',
             'delivery_person' => 'string',
             'sub_type' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'amount_return' => 'required|numeric',
             'status' => 'required|string'
         ]);
@@ -476,7 +476,7 @@ class IncomeExpenseController extends Controller
             'weight' => 'numeric',
             'amount_refund' => 'numeric',
             'sub_type' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'status' => 'required|string'
         ]);
         if ($validator->fails()) {
