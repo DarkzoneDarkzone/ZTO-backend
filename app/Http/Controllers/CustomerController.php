@@ -124,7 +124,7 @@ class CustomerController extends Controller
                 ], 400);
             }
 
-            $check_phone_duplicate = Customer::where('phone', $request->name)->first();
+            $check_phone_duplicate = Customer::where('phone', $request->phone)->first();
             if ($check_phone_duplicate) {
                 return response()->json([
                     'msg' => 'This phone already exists. Please input another one.',
@@ -208,7 +208,7 @@ class CustomerController extends Controller
         DB::beginTransaction();
 
         try {
-            $check_phone_duplicate = CustomerLevel::where('phone', $request->name)->first();
+            $check_phone_duplicate = CustomerLevel::where('phone', $request->phone)->first();
             if ($check_phone_duplicate && $check_phone_duplicate->id != $id) {
                 return response()->json([
                     'msg' => 'This name already exists. Please input another one.',

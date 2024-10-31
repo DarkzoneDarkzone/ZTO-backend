@@ -279,7 +279,7 @@ class UserController extends Controller
         DB::beginTransaction();
         try {
 
-            $check_email_duplicate = User::where('email', $request->name)->first();
+            $check_email_duplicate = User::where('email', $request->email)->first();
             if ($check_email_duplicate && $check_email_duplicate->id != $id) {
                 return response()->json([
                     'msg' => 'This email already exists. Please input another one.',
