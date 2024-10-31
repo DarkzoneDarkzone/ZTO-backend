@@ -116,6 +116,15 @@ class CurrencyController extends Controller
         try {
             $date = (new DateTime("now", new DateTimeZone('Asia/Vientiane')))->format('Y-m-d H:i:s');
 
+            $currency = Currency::whereDate('created_at', '=', $date)->first();
+            if ($currency) {
+                return response()->json([
+                    'msg' => 'Currency already exists.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
+
             $auth_id = Auth::user()->id;
             $currency = new Currency();
             // $currency->date = $request->date;
