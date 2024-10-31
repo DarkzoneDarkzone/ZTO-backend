@@ -180,7 +180,8 @@ class IncomeExpenseController extends Controller
             $incomeExpense->type = 'income';
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = 'pending';
-            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->description = $request->sub_type == 'return' ? 'return' : ($request->description || '');
             $incomeExpense->amount_lak = $costs_lak;
             $incomeExpense->amount_cny = $costs_cny;
             $incomeExpense->save();
@@ -287,7 +288,8 @@ class IncomeExpenseController extends Controller
             $incomeExpense->type = 'expenses';
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = 'pending';
-            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->description = $request->sub_type == 'refund' ? 'refund' : ($request->description || '');
             $incomeExpense->amount_lak = $refund_lak;
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
@@ -396,7 +398,8 @@ class IncomeExpenseController extends Controller
             }
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status;
-            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->description = $request->sub_type == 'return' ? 'return' : ($request->description || '');
             $incomeExpense->save();
 
             if ($request->sub_type == 'return') {
@@ -509,7 +512,8 @@ class IncomeExpenseController extends Controller
             }
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status;
-            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->description = $request->sub_type == 'refund' ? 'refund' : ($request->description || '');
             $incomeExpense->save();
 
             if ($request->sub_type == 'refund') {
