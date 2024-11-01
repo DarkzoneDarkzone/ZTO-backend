@@ -30,7 +30,7 @@ class ParcelController extends Controller
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
                     $ex = explode(':', $filter);
-                    $query->where($Operator->FiltersOperators(['parcels.'.$ex[0], $ex[1], $ex[2]]));
+                    $query->where($Operator->FiltersOperators(['parcels.' . $ex[0], $ex[1], $ex[2]]));
                 }
             }
 
@@ -50,19 +50,25 @@ class ParcelController extends Controller
             if ($request->has('status')) {
                 switch ($request->query('status')) {
                     case 'refund':
-                        $query->leftJoin('return_parcels','parcels.id', '=', 'return_parcels.parcel_id')
-                        ->where('return_parcels.parcel_id', '=' , null)
-                        ->select('parcels.*', 'parcels.weight as weight', 
-                        'return_parcels.weight as refund_weight');
+                        $query->leftJoin('return_parcels', 'parcels.id', '=', 'return_parcels.parcel_id')
+                            ->where('return_parcels.parcel_id', '=', null)
+                            ->select(
+                                'parcels.*',
+                                'parcels.weight as weight',
+                                'return_parcels.weight as refund_weight'
+                            );
                         break;
                     case 'return':
-                        $query->leftJoin('return_parcels','parcels.id', '=', 'return_parcels.parcel_id')
-                        ->leftJoin('income_expenses', 'income_expenses.id', '=', 'return_parcels.income_expenses_id')
-                        ->where('income_expenses.status', '=', 'verify')
-                        ->select('parcels.*', 'parcels.weight as weight', 
-                        'return_parcels.refund_amount_lak',
-                        'return_parcels.refund_amount_cny',  
-                        'return_parcels.weight as refund_weight');
+                        $query->leftJoin('return_parcels', 'parcels.id', '=', 'return_parcels.parcel_id')
+                            ->leftJoin('income_expenses', 'income_expenses.id', '=', 'return_parcels.income_expenses_id')
+                            ->where('income_expenses.status', '=', 'verify')
+                            ->select(
+                                'parcels.*',
+                                'parcels.weight as weight',
+                                'return_parcels.refund_amount_lak',
+                                'return_parcels.refund_amount_cny',
+                                'return_parcels.weight as refund_weight'
+                            );
                         break;
                     default:
                         break;

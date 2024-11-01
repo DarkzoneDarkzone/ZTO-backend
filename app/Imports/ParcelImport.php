@@ -67,8 +67,8 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
     {
         return [
             '0' => 'required',
-            '2' => 'required',
-            '3' => 'required',
+            '2' => 'required|numeric',
+            '3' => 'required|numeric',
             '4' => 'required',
             '5' => 'required',
             '6' => 'required',
@@ -83,8 +83,8 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
     {
         return [
             '0' => 'The ZTO Track Number field is required.',
-            '2' => 'The Recording weight field is required.',
-            '3' => 'The Volume weight field is required.',
+            '2' => 'The Recording weight field is required and must be numeric.',
+            '3' => 'The Volume weight field is required and must be numeric.',
             '4' => 'The Price field is required.',
             '5' => 'The Recipient field is required.',
             '6' => 'The Phone Number field is required.',
