@@ -77,7 +77,7 @@ class DepartmentController extends Controller
     {
         $validator = Validator::make(request()->all(), [
             'name' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'active' => 'required|boolean',
         ]);
 
@@ -149,7 +149,7 @@ class DepartmentController extends Controller
     {
         $validator = Validator::make(request()->all(), [
             'name' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'active' => 'required|boolean',
         ]);
 

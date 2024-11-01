@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum('type', ['income', 'expenses']);
             $table->enum('sub_type', ['return', 'refund', 'other']);
             $table->enum('status', ['pending', 'verify']);
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->float('amount_lak')->nullable();
             $table->float('amount_cny')->nullable();
             // $table->boolean('verify')->default(false);

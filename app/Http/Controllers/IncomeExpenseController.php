@@ -124,7 +124,7 @@ class IncomeExpenseController extends Controller
             'delivery_car_no' => 'string',
             'delivery_person' => 'string',
             'sub_type' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'amount_return' => 'required|numeric',
         ]);
         if ($validator->fails()) {
@@ -180,7 +180,8 @@ class IncomeExpenseController extends Controller
             $incomeExpense->type = 'income';
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = 'pending';
-            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->description = $request->sub_type == 'return' ? 'return' : ($request->description || '');
             $incomeExpense->amount_lak = $costs_lak;
             $incomeExpense->amount_cny = $costs_cny;
             $incomeExpense->save();
@@ -221,7 +222,7 @@ class IncomeExpenseController extends Controller
             'weight' => 'numeric',
             'amount_refund' => 'required|numeric',
             'sub_type' => 'required|string',
-            'description' => 'string'
+            'description' => 'string|nullable',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -287,7 +288,8 @@ class IncomeExpenseController extends Controller
             $incomeExpense->type = 'expenses';
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = 'pending';
-            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->description = $request->sub_type == 'refund' ? 'refund' : ($request->description || '');
             $incomeExpense->amount_lak = $refund_lak;
             $incomeExpense->amount_cny = $refund_cny;
             $incomeExpense->save();
@@ -359,7 +361,7 @@ class IncomeExpenseController extends Controller
             'delivery_car_no' => 'string',
             'delivery_person' => 'string',
             'sub_type' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'amount_return' => 'required|numeric',
             'status' => 'required|string'
         ]);
@@ -396,7 +398,8 @@ class IncomeExpenseController extends Controller
             }
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status;
-            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->description = $request->sub_type == 'return' ? 'return' : ($request->description || '');
             $incomeExpense->save();
 
             if ($request->sub_type == 'return') {
@@ -476,7 +479,7 @@ class IncomeExpenseController extends Controller
             'weight' => 'numeric',
             'amount_refund' => 'numeric',
             'sub_type' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'status' => 'required|string'
         ]);
         if ($validator->fails()) {
@@ -509,7 +512,8 @@ class IncomeExpenseController extends Controller
             }
             $incomeExpense->sub_type = $request->sub_type;
             $incomeExpense->status = $request->status;
-            isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
+            $incomeExpense->description = $request->sub_type == 'refund' ? 'refund' : ($request->description || '');
             $incomeExpense->save();
 
             if ($request->sub_type == 'refund') {

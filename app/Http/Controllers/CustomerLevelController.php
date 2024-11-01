@@ -90,7 +90,7 @@ class CustomerLevelController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'active' => 'required|boolean',
             'rate' => 'required|numeric',
         ]);
@@ -160,7 +160,7 @@ class CustomerLevelController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
-            'description' => 'string',
+            'description' => 'string|nullable',
             'active' => 'required|boolean',
             'rate' => 'required|numeric',
         ]);
