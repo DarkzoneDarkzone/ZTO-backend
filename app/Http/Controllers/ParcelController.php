@@ -255,11 +255,28 @@ class ParcelController extends Controller
             }
 
             $parcelArray = $import->getArray();
+            $parcel_track_no = array_filter(array_column($parcelArray, 'track_no'));
+            $parcel_track_no = array_unique($parcel_track_no);
+
+            $parcelTrackNoCreated = Parcel::whereIn('track_no', $parcel_track_no)
+                ->where(function ($query) {
+                    $query->orWhere('status', '<>', 'return')
+                        ->orWhere('deleted_at', '==', null);
+                })
+                ->get()
+                ->pluck('track_no')
+                ->toArray();
+            $parcelTrackNoDiff = array_diff($parcel_track_no, $parcelTrackNoCreated);
+
+            $parcelArrCreate = collect($parcelArray)->whereIn('track_no', $parcelTrackNoDiff)->toArray();
+
             $customer_phone = array_filter(array_column($parcelArray, 'phone'));
             $customer_phone = array_unique($customer_phone);
 
             $customerPhoneCreated = Customer::whereIn('phone', $customer_phone)->get()->pluck('phone')->toArray();
             $customerPhoneDiff = array_diff($customer_phone, $customerPhoneCreated);
+
+
 
             $customerArr = [];
             foreach ($customerPhoneDiff as $key => $value) {
@@ -274,7 +291,7 @@ class ParcelController extends Controller
             }
 
             Customer::insert($customerArr);
-            Parcel::insert($parcelArray);
+            Parcel::insert($parcelArrCreate);
 
             DB::commit();
 
@@ -283,7 +300,7 @@ class ParcelController extends Controller
                 'message' => 'Import excel file Successfully',
                 'code' => 201,
                 'data' => [
-                    'totalParcel' => count($parcelArray),
+                    'totalParcel' => count($parcelArrCreate),
                 ]
             ], 201);
         } catch (Exception $e) {
