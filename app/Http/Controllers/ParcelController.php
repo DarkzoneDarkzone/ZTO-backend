@@ -35,7 +35,7 @@ class ParcelController extends Controller
             }
 
             if ($request->has('searchText')) {
-                $arraySearchText = ['parcels.track_no', 'parcels.name', 'parcels.phone'];
+                $arraySearchText = ['parcels.track_no', 'parcels.name', 'parcels.phone', 'parcels.zto_track_no'];
                 $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 

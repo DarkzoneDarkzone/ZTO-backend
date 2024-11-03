@@ -211,7 +211,7 @@ class CustomerController extends Controller
             $check_phone_duplicate = Customer::where('phone', $request->phone)->first();
             if ($check_phone_duplicate && $check_phone_duplicate->id != $id) {
                 return response()->json([
-                    'msg' => 'This name already exists. Please input another one.',
+                    'msg' => 'This phone already exists. Please input another one.',
                     'errors' => 'duplicate',
                     'status' => 'ERROR',
                 ], 400);
