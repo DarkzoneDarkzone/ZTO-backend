@@ -38,7 +38,8 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
             //     $phone = str_replace("85620", "", $row[6]);
             // }
             $this->data[] = [
-                'track_no' => $row[0],
+                'zto_track_no' => $row[0],
+                'track_no' => $row[1],
                 'weight' => (float)$row[2] > (float)$row[3] ? (float)$row[2] : (float)$row[3],
                 'price' => $row[4],
                 'name' => $row[5],
@@ -67,8 +68,9 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
     {
         return [
             '0' => 'required',
-            '2' => 'required',
-            '3' => 'required',
+            '1' => 'required',
+            '2' => 'required|numeric',
+            '3' => 'required|numeric',
             '4' => 'required',
             '5' => 'required',
             '6' => 'required',
@@ -83,8 +85,8 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
     {
         return [
             '0' => 'The ZTO Track Number field is required.',
-            '2' => 'The Recording weight field is required.',
-            '3' => 'The Volume weight field is required.',
+            '2' => 'The Recording weight field is required and must be numeric.',
+            '3' => 'The Volume weight field is required and must be numeric.',
             '4' => 'The Price field is required.',
             '5' => 'The Recipient field is required.',
             '6' => 'The Phone Number field is required.',

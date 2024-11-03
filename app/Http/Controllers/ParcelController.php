@@ -30,7 +30,7 @@ class ParcelController extends Controller
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
                     $ex = explode(':', $filter);
-                    $query->where($Operator->FiltersOperators(['parcels.'.$ex[0], $ex[1], $ex[2]]));
+                    $query->where($Operator->FiltersOperators(['parcels.' . $ex[0], $ex[1], $ex[2]]));
                 }
             }
 
@@ -50,19 +50,25 @@ class ParcelController extends Controller
             if ($request->has('status')) {
                 switch ($request->query('status')) {
                     case 'refund':
-                        $query->leftJoin('return_parcels','parcels.id', '=', 'return_parcels.parcel_id')
-                        ->where('return_parcels.parcel_id', '=' , null)
-                        ->select('parcels.*', 'parcels.weight as weight', 
-                        'return_parcels.weight as refund_weight');
+                        $query->leftJoin('return_parcels', 'parcels.id', '=', 'return_parcels.parcel_id')
+                            ->where('return_parcels.parcel_id', '=', null)
+                            ->select(
+                                'parcels.*',
+                                'parcels.weight as weight',
+                                'return_parcels.weight as refund_weight'
+                            );
                         break;
                     case 'return':
-                        $query->leftJoin('return_parcels','parcels.id', '=', 'return_parcels.parcel_id')
-                        ->leftJoin('income_expenses', 'income_expenses.id', '=', 'return_parcels.income_expenses_id')
-                        ->where('income_expenses.status', '=', 'verify')
-                        ->select('parcels.*', 'parcels.weight as weight', 
-                        'return_parcels.refund_amount_lak',
-                        'return_parcels.refund_amount_cny',  
-                        'return_parcels.weight as refund_weight');
+                        $query->leftJoin('return_parcels', 'parcels.id', '=', 'return_parcels.parcel_id')
+                            ->leftJoin('income_expenses', 'income_expenses.id', '=', 'return_parcels.income_expenses_id')
+                            ->where('income_expenses.status', '=', 'verify')
+                            ->select(
+                                'parcels.*',
+                                'parcels.weight as weight',
+                                'return_parcels.refund_amount_lak',
+                                'return_parcels.refund_amount_cny',
+                                'return_parcels.weight as refund_weight'
+                            );
                         break;
                     default:
                         break;
@@ -249,6 +255,21 @@ class ParcelController extends Controller
             }
 
             $parcelArray = $import->getArray();
+            $parcel_track_no = array_filter(array_column($parcelArray, 'track_no'));
+            $parcel_track_no = array_unique($parcel_track_no);
+
+            $parcelTrackNoCreated = Parcel::whereIn('track_no', $parcel_track_no)
+                ->where(function ($query) {
+                    $query->orWhere('status', '<>', 'return')
+                        ->orWhere('deleted_at', '==', null);
+                })
+                ->get()
+                ->pluck('track_no')
+                ->toArray();
+            $parcelTrackNoDiff = array_diff($parcel_track_no, $parcelTrackNoCreated);
+
+            $parcelArrCreate = collect($parcelArray)->whereIn('track_no', $parcelTrackNoDiff)->toArray();
+
             $customer_phone = array_filter(array_column($parcelArray, 'phone'));
             $customer_phone = array_unique($customer_phone);
 
@@ -268,7 +289,7 @@ class ParcelController extends Controller
             }
 
             Customer::insert($customerArr);
-            Parcel::insert($parcelArray);
+            Parcel::insert($parcelArrCreate);
 
             DB::commit();
 
@@ -277,7 +298,7 @@ class ParcelController extends Controller
                 'message' => 'Import excel file Successfully',
                 'code' => 201,
                 'data' => [
-                    'totalParcel' => count($parcelArray),
+                    'totalParcel' => count($parcelArrCreate),
                 ]
             ], 201);
         } catch (Exception $e) {
