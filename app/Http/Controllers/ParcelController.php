@@ -276,8 +276,6 @@ class ParcelController extends Controller
             $customerPhoneCreated = Customer::whereIn('phone', $customer_phone)->get()->pluck('phone')->toArray();
             $customerPhoneDiff = array_diff($customer_phone, $customerPhoneCreated);
 
-
-
             $customerArr = [];
             foreach ($customerPhoneDiff as $key => $value) {
                 $cusName = collect($parcelArray)->where('phone', $value)->pluck('name')->first();

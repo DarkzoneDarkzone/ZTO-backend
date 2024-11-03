@@ -38,7 +38,8 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
             //     $phone = str_replace("85620", "", $row[6]);
             // }
             $this->data[] = [
-                'track_no' => $row[0],
+                'zto_track_no' => $row[0],
+                'track_no' => $row[1],
                 'weight' => (float)$row[2] > (float)$row[3] ? (float)$row[2] : (float)$row[3],
                 'price' => $row[4],
                 'name' => $row[5],
@@ -67,6 +68,7 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
     {
         return [
             '0' => 'required',
+            '1' => 'required',
             '2' => 'required|numeric',
             '3' => 'required|numeric',
             '4' => 'required',

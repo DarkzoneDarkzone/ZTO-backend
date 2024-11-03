@@ -32,6 +32,7 @@ class ParcelExport implements FromCollection, WithMapping, WithHeadings, WithCol
     public function map($row): array
     {
         return [
+            $row->zto_track_no,
             $row->track_no,
             $row->phone,
             $row->weight,
@@ -47,10 +48,11 @@ class ParcelExport implements FromCollection, WithMapping, WithHeadings, WithCol
         return [
             'A' => NumberFormat::FORMAT_NUMBER,
             'B' => NumberFormat::FORMAT_NUMBER,
-            'C' => NumberFormat::FORMAT_NUMBER_0,
-            'D' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
-            'E' => NumberFormat::FORMAT_DATE_DATETIME,
+            'C' => NumberFormat::FORMAT_NUMBER,
+            'D' => NumberFormat::FORMAT_NUMBER_0,
+            'E' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
             'F' => NumberFormat::FORMAT_DATE_DATETIME,
+            'G' => NumberFormat::FORMAT_DATE_DATETIME,
         ];
     }
 
@@ -61,6 +63,6 @@ class ParcelExport implements FromCollection, WithMapping, WithHeadings, WithCol
      */
     public function headings(): array
     {
-        return ["Track No", "Phone", "Weight", "Cost Price", "Status", "Import date", "Receipt date"];
+        return ["ZTO Track No", "Track No", "Phone", "Weight", "Cost Price", "Status", "Import date", "Receipt date"];
     }
 }
