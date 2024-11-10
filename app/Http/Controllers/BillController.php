@@ -143,13 +143,13 @@ class BillController extends Controller
             $price_bill_lak  = 0;
             $parcels = Parcel::whereIn('track_no', $request->item)->get();
             foreach ($parcels as $parcel) {
-                if ($parcel->status != 'pending') {
-                    return response()->json([
-                        'msg' => 'some parcel is not pending.',
-                        'status' => 'ERROR',
-                        'data' => array()
-                    ], 400);
-                }
+                // if ($parcel->status != 'pending') {
+                //     return response()->json([
+                //         'msg' => 'some parcel is not pending.',
+                //         'status' => 'ERROR',
+                //         'data' => array()
+                //     ], 400);
+                // }
                 ///////// weight is kg. convert to g.
                 // $parcel->weight = $parcel->weight * 100;
                 $price_bill_lak += ($parcel->weight * $rate);
