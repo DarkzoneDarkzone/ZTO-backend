@@ -96,12 +96,14 @@ class CustomerLevelController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => ' went wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
+
         $auth_id = Auth::user()->id;
 
         $check_name_duplicate = CustomerLevel::where('name', $request->name)->first();
@@ -166,13 +168,13 @@ class CustomerLevelController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => 'Something went wrong.',
-                'errors' => $validator->errors()->toJson(),
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
                 'status' => 'ERROR',
             ], 400);
         }
-
         DB::beginTransaction();
         try {
             $check_name_duplicate = CustomerLevel::where('name', $request->name)->first();

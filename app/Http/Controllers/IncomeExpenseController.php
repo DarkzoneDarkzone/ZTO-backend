@@ -127,11 +127,13 @@ class IncomeExpenseController extends Controller
             'description' => 'string|nullable',
             'amount_return' => 'required|numeric',
         ]);
+
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => 'validator wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
 
@@ -225,10 +227,11 @@ class IncomeExpenseController extends Controller
             'description' => 'string|nullable',
         ]);
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => 'validator wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
 
@@ -366,10 +369,11 @@ class IncomeExpenseController extends Controller
             'status' => 'required|string'
         ]);
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => 'validator wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
 
@@ -483,13 +487,13 @@ class IncomeExpenseController extends Controller
             'status' => 'required|string'
         ]);
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => 'validator wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
-
         DB::beginTransaction();
         try {
             $auth_id = Auth::user()->id;

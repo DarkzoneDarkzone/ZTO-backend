@@ -116,10 +116,11 @@ class BillController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => 'validator wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
 
@@ -224,10 +225,11 @@ class BillController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => 'validator wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
 
@@ -280,10 +282,11 @@ class BillController extends Controller
             'item.*' => 'string',
         ]);
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => 'validator wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
 

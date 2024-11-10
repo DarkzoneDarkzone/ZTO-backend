@@ -27,7 +27,12 @@ class CurrencyController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json($validator->errors()->toJson(), 400);
+                $errors_val = $this->ValidatorErrors($validator);
+                return response()->json([
+                    'msg' => 'validator errors',
+                    'errors' => $errors_val,
+                    'status' => 'ERROR',
+                ], 400);
             }
 
             $query = Currency::query();
@@ -106,10 +111,11 @@ class CurrencyController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => ' went wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
 
@@ -186,11 +192,11 @@ class CurrencyController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => ' went wrong.',
-                'errors' => $validator->errors()->toJson(),
-                'status' => 'Unauthorized',
-                'code' => 400,
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
             ], 400);
         }
 

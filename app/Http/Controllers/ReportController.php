@@ -32,7 +32,12 @@ class ReportController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
         }
 
         try {
@@ -112,7 +117,12 @@ class ReportController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
         }
 
         try {
@@ -180,7 +190,12 @@ class ReportController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
         }
 
         try {
@@ -229,7 +244,12 @@ class ReportController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
         }
 
         try {
@@ -265,7 +285,12 @@ class ReportController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
         }
 
         try {
@@ -369,7 +394,12 @@ class ReportController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
         }
 
         try {

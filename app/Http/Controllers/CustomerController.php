@@ -118,10 +118,11 @@ class CustomerController extends Controller
             ]);
 
             if ($validator->fails()) {
+                $errors_val = $this->ValidatorErrors($validator);
                 return response()->json([
-                    'msg' => ' went wrong.',
-                    'errors' => $validator->errors()->toJson(),
-                    'status' => 'Unauthorized',
+                    'msg' => 'validator errors',
+                    'errors' => $errors_val,
+                    'status' => 'ERROR',
                 ], 400);
             }
 
@@ -199,9 +200,10 @@ class CustomerController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
             return response()->json([
-                'msg' => 'Something went wrong.',
-                'errors' => $validator->errors()->toJson(),
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
                 'status' => 'ERROR',
             ], 400);
         }

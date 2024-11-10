@@ -114,8 +114,14 @@ class UserController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
         }
+        
         $check_email_duplicate = User::where('email', request()->email)->first();
         if ($check_email_duplicate) {
             return response()->json([
@@ -154,7 +160,12 @@ class UserController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json($validator->errors()->toJson(), 400);
+                $errors_val = $this->ValidatorErrors($validator);
+                return response()->json([
+                    'msg' => 'validator errors',
+                    'errors' => $errors_val,
+                    'status' => 'ERROR',
+                ], 400);
             }
 
             $credentials = request(['email', 'password']);
@@ -280,9 +291,13 @@ class UserController extends Controller
             'role_id' => 'required|integer',
             'active' => 'required|boolean'
         ]);
-
         if ($validator->fails()) {
-            return response()->json($validator->errors()->toJson(), 400);
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
         }
 
         DB::beginTransaction();
