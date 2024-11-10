@@ -74,7 +74,7 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
             '4' => 'required',
             '5' => 'required',
             '6' => 'required',
-            '7' => 'required',
+            '7' => 'required|date_format:Y-m-d H:i:s',
         ];
     }
 
@@ -90,7 +90,7 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
             '4' => 'The Price field is required.',
             '5' => 'The Recipient field is required.',
             '6' => 'The Phone Number field is required.',
-            '7' => 'The Center dispatch time field is required.',
+            '7' => 'The Center dispatch time field is required and format must be Y-m-d H:i:s',
         ];
     }
 }
