@@ -47,6 +47,12 @@ class ParcelController extends Controller
                 }
             }
 
+            $query->with(['Bill'=>function($test) {
+                $test->select('id');
+            }, 'Bill.Payments'=>function($pay) {
+                $pay->select('Payments.id');
+            }]);
+
             if ($request->has('status')) {
                 switch ($request->query('status')) {
                     case 'refund':
