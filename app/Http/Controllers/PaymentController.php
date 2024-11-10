@@ -237,6 +237,7 @@ class PaymentController extends Controller
                 $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1);
             }
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
+            (ceil($payments_price_cny * 100) / 100) >= (ceil($bills_price_cny * 100) / 100);
 
             ////// check payment >= bills = success
             if ($payments_price_lak >= $bills_price_lak) {
