@@ -31,7 +31,8 @@ class CustomerController extends Controller
                     $query->where($Operator->FiltersOperators(['customers.' . $ex[0], $ex[1], $ex[2]]));
                 }
             }
-            $query->join('customer_levels', 'customer_levels.id', '=', 'customers.customer_level_id');
+
+            $query->LeftJoin('customer_levels', 'customer_levels.id', '=', 'customers.customer_level_id');
             $query->select('customers.*', 'customer_levels.name as level_name', 'customer_levels.rate as level_rate');
             if ($request->has('searchText')) {
                 $arraySearchText = ['customers.name', 'customers.phone', 'customer_levels.name'];
