@@ -47,12 +47,6 @@ class ParcelController extends Controller
                 }
             }
 
-            $query->with(['Bill'=>function($test) {
-                $test->select('id');
-            }, 'Bill.Payments'=>function($pay) {
-                $pay->select('Payments.id');
-            }]);
-
             if ($request->has('status')) {
                 switch ($request->query('status')) {
                     case 'refund':
@@ -79,6 +73,12 @@ class ParcelController extends Controller
                     default:
                         break;
                 }
+            } else {
+                $query->with(['Bill' => function ($bill) {
+                    $bill->select('id');
+                }, 'Bill.Payments' => function ($pay) {
+                    $pay->select('Payments.id');
+                }])->select('Parcels.*', DB::raw('DATE_ADD(shipping_at, INTERVAL 7 HOUR) AS shipping_at'), DB::raw('DATE_ADD(receipt_at, INTERVAL 7 HOUR) AS receipt_at'), DB::raw('DATE_ADD(payment_at, INTERVAL 7 HOUR) AS payment_at'));
             }
 
             if ($request->has('per_page')) {

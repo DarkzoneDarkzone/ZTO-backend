@@ -39,8 +39,8 @@ class PaymentController extends Controller
                 DB::raw('ANY_VALUE(payments.status) as status'),
                 DB::raw('SUM(payments.amount_lak) as amount_lak'),
                 DB::raw('SUM(payments.amount_cny) as amount_cny'),
-                DB::raw('ANY_VALUE(payments.created_at) as pay_created_at'),
-                DB::raw('ANY_VALUE(payments.updated_at) as pay_updated_at'),
+                DB::raw('DATE_ADD(ANY_VALUE(payments.created_at), INTERVAL 7 HOUR) as pay_created_at'),
+                DB::raw('DATE_ADD(ANY_VALUE(payments.updated_at), INTERVAL 7 HOUR) as pay_updated_at'),
             );
             $query->groupBy('payment_no');
 
@@ -239,8 +239,10 @@ class PaymentController extends Controller
             }
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
 
+            $paymenst_ceil =  (ceil($payments_price_cny * 100) / 100);
+            $bill_ceil = (ceil($bills_price_cny * 100) / 100);
             ////// check payment >= bills = success
-            if ((ceil($payments_price_cny * 100) / 100) >= (ceil($bills_price_cny * 100) / 100)) {
+            if ($paymenst_ceil >= $bill_ceil) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
@@ -462,7 +464,10 @@ class PaymentController extends Controller
 
 
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
-            if ((ceil($payments_price_cny * 100) / 100) >= (ceil($bills_price_cny * 100) / 100)) {
+            $paymenst_ceil =  (ceil($payments_price_cny * 100) / 100);
+            $bill_ceil = (ceil($bills_price_cny * 100) / 100);
+            ////// check payment >= bills = success
+            if ($paymenst_ceil >= $bill_ceil) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
