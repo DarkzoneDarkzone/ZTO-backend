@@ -33,13 +33,14 @@ class PaymentController extends Controller
                     $query->where($Operator->FiltersOperators([$ex[0], $ex[1], $ex[2]]));
                 }
             }
-
             $query = $query->select(
                 DB::raw('ANY_VALUE(payments.id) as id'),
                 'payments.payment_no',
                 DB::raw('ANY_VALUE(payments.status) as status'),
                 DB::raw('SUM(payments.amount_lak) as amount_lak'),
                 DB::raw('SUM(payments.amount_cny) as amount_cny'),
+                DB::raw('ANY_VALUE(payments.created_at) as pay_created_at'),
+                DB::raw('ANY_VALUE(payments.updated_at) as pay_updated_at'),
             );
             $query->groupBy('payment_no');
 
@@ -60,7 +61,7 @@ class PaymentController extends Controller
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {
                     [$field, $direction] = explode(':', $sort);
-                    $bill_payment->orderBy($field, $direction);
+                    $bill_payment->orderBy('pay_query.pay_'.$field, $direction);
                 }
             }
 
@@ -237,10 +238,9 @@ class PaymentController extends Controller
                 $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1);
             }
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
-            (ceil($payments_price_cny * 100) / 100) >= (ceil($bills_price_cny * 100) / 100);
 
             ////// check payment >= bills = success
-            if ($payments_price_lak >= $bills_price_lak) {
+            if ((ceil($payments_price_cny * 100) / 100) >= (ceil($bills_price_cny * 100) / 100)) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
@@ -462,7 +462,7 @@ class PaymentController extends Controller
 
 
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
-            if ($payments_price_lak >= $bills_price_lak) {
+            if ((ceil($payments_price_cny * 100) / 100) >= (ceil($bills_price_cny * 100) / 100)) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
