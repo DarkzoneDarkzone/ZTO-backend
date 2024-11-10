@@ -61,7 +61,7 @@ class PaymentController extends Controller
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {
                     [$field, $direction] = explode(':', $sort);
-                    $bill_payment->orderBy('pay_query.pay_'.$field, $direction);
+                    $bill_payment->orderBy('pay_query.pay_' . $field, $direction);
                 }
             }
 
@@ -209,6 +209,8 @@ class PaymentController extends Controller
                         $payment->amount_cny = 0;
                         break;
                 }
+                // $payment->amount_lak = ceil($payment->amount_lak * 100)/ 100;
+                // $payment->amount_cny = ceil($payment->amount_cny * 100)/ 100;
                 $payments_price_lak += $payment->amount_lak;
                 $payments_price_cny += $payment->amount_cny;
                 array_push($payments_save, $payment);
@@ -237,12 +239,14 @@ class PaymentController extends Controller
                 $number = (int) $ex[1];
                 $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1);
             }
-            // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
 
-            $paymenst_ceil =  (ceil($payments_price_cny * 100) / 100);
-            $bill_ceil = (ceil($bills_price_cny * 100) / 100);
+            // $payment_ceil_cny =  (ceil($payments_price_cny * 100) / 100);
+            // $bill_ceil_cny = (ceil($bills_price_cny * 100) / 100);
+
+            // $payment_ceil_lak =  (ceil($payments_price_lak * 100) / 100);
+            // $bill_ceil_lak = (ceil($bills_price_lak * 100) / 100);
             ////// check payment >= bills = success
-            if ($paymenst_ceil >= $bill_ceil) {
+            if ($payments_price_lak >= $bills_price_lak) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
@@ -274,16 +278,21 @@ class PaymentController extends Controller
                     $balance->save();
                 }
             } else {
-                foreach ($bills as $bill) {
-                    $bill->status = 'waiting_payment';
-                    $bill->save();
-                }
-                foreach ($payments_save as $key => $payment) {
-                    $payment->payment_no = $payment_no_defult;
-                    $payment->status = 'pending';
-                    $payment->save();
-                    $payment->Bills()->sync($bills_id);
-                }
+                // foreach ($bills as $bill) {
+                //     $bill->status = 'waiting_payment';
+                //     $bill->save();
+                // }
+                // foreach ($payments_save as $key => $payment) {
+                //     $payment->payment_no = $payment_no_defult;
+                //     $payment->status = 'pending';
+                //     $payment->save();
+                //     $payment->Bills()->sync($bills_id);
+                // }
+                return response()->json([
+                    'msg' => 'payments Not enough.',
+                    'status' => 'ERROR',
+                    'data' => array()
+                ], 400);
             }
             DB::commit();
             return response()->json([
@@ -411,6 +420,8 @@ class PaymentController extends Controller
                     }
                     $payments_price_lak += $payment->amount_lak;
                     $payments_price_cny += $payment->amount_cny;
+                    // $payment->amount_lak = ceil($payment->amount_lak * 100)/ 100;
+                    // $payment->amount_cny = ceil($payment->amount_cny * 100)/ 100;
                     array_push($payments_save, $payment);
                 } else {
                     $index_pay = array_search($pay_type['name'], $payments_methods_old);
@@ -430,6 +441,8 @@ class PaymentController extends Controller
                     }
                     $payments_price_lak += $payments[$index_pay]->amount_lak;
                     $payments_price_cny += $payments[$index_pay]->amount_cny;
+                    // $payment->amount_lak = ceil($payment->amount_lak * 100)/ 100;
+                    // $payment->amount_cny = ceil($payment->amount_cny * 100)/ 100;
                     array_push($payments_save, $payments[$index_pay]);
                 }
             }
@@ -462,12 +475,14 @@ class PaymentController extends Controller
                 }
             }
 
-
             // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
-            $paymenst_ceil =  (ceil($payments_price_cny * 100) / 100);
-            $bill_ceil = (ceil($bills_price_cny * 100) / 100);
+            // $payment_ceil_cny =  (ceil($payments_price_cny * 100) / 100);
+            // $bill_ceil_cny = (ceil($bills_price_cny * 100) / 100);
+
+            // $payment_ceil_lak =  (ceil($payments_price_lak * 100) / 100);
+            // $bill_ceil_lak = (ceil($bills_price_lak * 100) / 100);
             ////// check payment >= bills = success
-            if ($paymenst_ceil >= $bill_ceil) {
+            if ($payments_price_lak >= $bills_price_lak) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
@@ -485,29 +500,35 @@ class PaymentController extends Controller
 
                     $balanceStack = Balance::orderBy('id', 'desc')->first();
                     $balance = new Balance();
-                    $balance->amount_lak = $payments_price_lak;
-                    $balance->amount_cny = $payments_price_cny;
+                    $balance->amount_lak = $payment->amount_lak;
+                    $balance->amount_cny = $payment->amount_cny;
                     if ($balanceStack) {
-                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payments_price_lak;
-                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payments_price_cny;
+                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payment->amount_lak;
+                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payment->amount_cny;
                     } else {
-                        $balance->balance_amount_lak = $payments_price_lak;
-                        $balance->balance_amount_cny = $payments_price_cny;
+                        $balance->balance_amount_lak = $payment->amount_lak;
+                        $balance->balance_amount_cny = $payment->amount_cny;
                     }
                     $balance->payment_id = $payment->id;
                     $balance->save();
                 }
             } else {
-                foreach ($bills as $bill) {
-                    $bill->status = 'waiting_payment';
-                    $bill->save();
-                }
-                foreach ($payments_save as $key => $payment) {
-                    $payment->payment_no = $id;
-                    $payment->status = 'pending';
-                    $payment->save();
-                    $payment->Bills()->sync($bills_id);
-                }
+                // foreach ($bills as $bill) {
+                //     $bill->status = 'waiting_payment';
+                //     $bill->save();
+                // }
+                // foreach ($payments_save as $key => $payment) {
+                //     $payment->payment_no = $id;
+                //     $payment->status = 'pending';
+                //     $payment->save();
+                //     $payment->Bills()->sync($bills_id);
+                // }
+
+                return response()->json([
+                    'msg' => 'payments Not enough.',
+                    'status' => 'ERROR',
+                    'data' => array()
+                ], 400);
             }
 
 
