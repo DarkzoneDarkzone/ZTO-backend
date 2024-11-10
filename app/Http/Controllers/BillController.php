@@ -156,8 +156,10 @@ class BillController extends Controller
                 $price_bill_lak += ($parcel->weight * $rate);
             }
             $currency_now = Currency::orderBy('id', 'desc')->first();
-            $bill->amount_lak = $price_bill_lak;
-            $bill->amount_cny = $price_bill_lak / ($currency_now->amount_cny * $currency_now->amount_lak);
+
+            $amount_cny_convert = $price_bill_lak / ($currency_now->amount_cny * $currency_now->amount_lak);
+            $bill->amount_lak = ceil($price_bill_lak * 100) / 100;
+            $bill->amount_cny = ceil($amount_cny_convert * 100) / 100;
             $bill->name = $request->name;
             $bill->phone = $request->phone;
             $bill->address = $request->address;
@@ -235,7 +237,7 @@ class BillController extends Controller
 
         DB::beginTransaction();
         try {
-            $bills = Bill::whereIn('bill_no', $request->bill_no)->orderBy('id', 'desc')->where('status','ready')->get();
+            $bills = Bill::whereIn('bill_no', $request->bill_no)->orderBy('id', 'desc')->where('status', 'ready')->get();
             if (count($bills) == 0) {
                 return response()->json([
                     'msg' => 'bills not found or status not ready .',
@@ -343,8 +345,10 @@ class BillController extends Controller
                     $price_bill_lak += ($parcel->weight * $rate);
                 }
                 $currency_now = Currency::orderBy('id', 'desc')->first();
-                $bill->amount_lak = $price_bill_lak;
-                $bill->amount_cny = $price_bill_lak / ($currency_now->amount_cny * $currency_now->amount_lak);
+
+                $amount_cny_convert = $price_bill_lak / ($currency_now->amount_cny * $currency_now->amount_lak);
+                $bill->amount_lak = ceil($price_bill_lak * 100) / 100;
+                $bill->amount_cny = ceil($amount_cny_convert * 100) / 100;
                 $bill->status = 'ready';
                 $bill->created_by = $auth_id;
 
@@ -384,6 +388,14 @@ class BillController extends Controller
                 'status' => 'ERROR',
                 'code' => 404,
             ], 400);
+        }
+        // if ($bill->status != ) {
+        //     # code...
+        // }
+        foreach ($bill->Parcels as $key => $parcel) {
+            $parcel->status = 'pending';
+            $parcel->bill_id = null;
+            $parcel->save();
         }
 
         $bill->delete();

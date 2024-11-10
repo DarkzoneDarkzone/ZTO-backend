@@ -565,7 +565,22 @@ class PaymentController extends Controller
                     'code' => 404,
                 ], 400);
             }
+   
+            $bills_id = array();
             foreach ($payments as $key => $pay) {
+                if ($key == 0) {
+                    foreach ($pay->Bills() as $bill) {
+                        array_push($bills_id, $bill->id);
+                        $bill->status = 'shipped';
+                        $bill->save();
+                        foreach ($bill->Parcels as $parcel) {
+                            $parcel->payment_at = null;
+                            $parcel->status = 'ready';
+                            $parcel->save();
+                        }
+                    }
+                }
+                $pay->Bills()->detach($bills_id);
                 $pay->delete();
             }
 
