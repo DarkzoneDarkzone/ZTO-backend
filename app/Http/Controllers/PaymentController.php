@@ -553,14 +553,16 @@ class PaymentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy($payment_no)
     {
         // $payment = Payment::find($id);
         try {
-            $payments = Payment::where('payment_no', $id)->get();
-            if (!$payments) {
+            // $payments = Payment::query();
+            // $payments->where('payment_no', $payment_no)->first();
+            $payments = Payment::where('payment_no', $payment_no)->get();
+            if (count($payments) == 0) {
                 return response()->json([
-                    'message' => 'payment not found',
+                    'message' => 'payments not found',
                     'status' => 'ERROR',
                     'code' => 404,
                 ], 400);
