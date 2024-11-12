@@ -557,8 +557,6 @@ class PaymentController extends Controller
     {
         // $payment = Payment::find($id);
         try {
-            // $payments = Payment::query();
-            // $payments->where('payment_no', $payment_no)->first();
             $payments = Payment::where('payment_no', $payment_no)->get();
             if (count($payments) == 0) {
                 return response()->json([
@@ -567,11 +565,11 @@ class PaymentController extends Controller
                     'code' => 404,
                 ], 400);
             }
-   
             $bills_id = array();
             foreach ($payments as $key => $pay) {
                 if ($key == 0) {
-                    foreach ($pay->Bills() as $bill) {
+                    $bills = $pay->Bills;
+                    foreach ($bills as $bill) {
                         array_push($bills_id, $bill->id);
                         $bill->status = 'shipped';
                         $bill->save();
@@ -585,7 +583,7 @@ class PaymentController extends Controller
                 $pay->Bills()->detach($bills_id);
                 $pay->delete();
             }
-
+            
             return response()->json([
                 'status' => 'OK',
                 'code' => '200',
