@@ -111,6 +111,7 @@ class BillController extends Controller
             'name' => 'required|string',
             'address' => 'required|string',
             'phone' => 'required|string',
+            'level' => 'string',
             'item' => 'required|array',
             'item.*' => 'string',
         ]);
@@ -134,12 +135,28 @@ class BillController extends Controller
                 },
             ])->where('phone',  $request->phone)->first();
             if (!$customer) {
+                // $customerPhoneCreated = new Customer();
+                // $customerPhoneCreated->name = $request->name;
+                // $customerPhoneCreated->phone = $request->phone;
+                // $customerPhoneCreated->address = $request->address;
+                // $customerPhoneCreated->active = false;
+                // $customerPhoneCreated->save();
+
                 return response()->json([
                     'msg' => 'customer not found.',
                     'status' => 'ERROR',
                     'errors' => array()
                 ], 400);
             }
+
+            if (!$customer->CustomerLevel->rate) {
+                return response()->json([
+                    'msg' => 'customer not have level.',
+                    'status' => 'ERROR',
+                    'errors' => array()
+                ], 400);
+            }
+
             $rate = $customer->CustomerLevel->rate;
             $price_bill_lak  = 0;
             $parcels = Parcel::whereIn('track_no', $request->item)->get();
@@ -181,6 +198,10 @@ class BillController extends Controller
             foreach ($parcels as $parcel) {
                 $parcel->bill_id = $bill->id;
                 $parcel->status = 'ready';
+                if ($parcel->phone == 0) {
+                    $parcel->phone = $request->phone;
+                    // $parcel->name = $request->name;
+                }
                 $parcel->save();
             }
 
