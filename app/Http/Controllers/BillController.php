@@ -200,7 +200,7 @@ class BillController extends Controller
                 $parcel->status = 'ready';
                 if ($parcel->phone == 0) {
                     $parcel->phone = $request->phone;
-                    // $parcel->name = $request->name;
+                    $parcel->name = $request->name;
                 }
                 $parcel->save();
             }
