@@ -175,18 +175,26 @@ class PaymentController extends Controller
         try {
             $auth_id = Auth::user()->id;
             $bills = Bill::whereIn('bill_no', $request->bill)->get();
-            foreach ($bills as $key => $bill) {
-                if ($bill->status != 'shipped') {
-                    return response()->json([
-                        'msg' => 'some bill not shipped.',
-                        'status' => 'ERROR',
-                        'data' => array()
-                    ], 400);
-                }
+            // foreach ($bills as $key => $bill) {
+            //     if ($bill->status != 'shipped') {
+            //         return response()->json([
+            //             'msg' => 'some bill not shipped.',
+            //             'status' => 'ERROR',
+            //             'data' => array()
+            //         ], 400);
+            //     }
+            // }
+
+            /////// check bills
+            $bills_id = array();
+            $bills_price_lak = 0;
+            $bills_price_cny = 0;
+            foreach ($bills as $bill) {
+                array_push($bills_id, $bill->id);
+                $bills_price_lak += $bill->amount_lak;
+                $bills_price_cny += $bill->amount_cny;
             }
-
-            $currency_now = Currency::orderBy('id', 'desc')->first();
-
+            // $currency_now = Currency::orderBy('id', 'desc')->first();
             /////// check payments
             $payments_save = array();
             $payments_price_lak = 0;
@@ -198,12 +206,14 @@ class PaymentController extends Controller
                 $payment->method = $pay_type['name'];
                 switch ($pay_type['currency']) {
                     case 'lak':
-                        $payment->amount_lak = $pay_type['amount'];
-                        $payment->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
+                        $payment->amount_lak = $pay_type['amount_lak'];
+                        // $payment->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
+                        $payment->amount_cny = $pay_type['amount_cny'];
                         break;
                     case 'cny':
-                        $payment->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
-                        $payment->amount_cny = $pay_type['amount'];
+                        // $payment->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
+                        $payment->amount_lak = $pay_type['amount_lak'];
+                        $payment->amount_cny = $pay_type['amount_cny'];
                         break;
                     default:
                         $payment->amount_lak = 0;
@@ -217,16 +227,6 @@ class PaymentController extends Controller
                 array_push($payments_save, $payment);
             }
 
-            /////// check bills
-
-            $bills_id = array();
-            $bills_price_lak = 0;
-            $bills_price_cny = 0;
-            foreach ($bills as $bill) {
-                array_push($bills_id, $bill->id);
-                $bills_price_lak += $bill->amount_lak;
-                $bills_price_cny += $bill->amount_cny;
-            }
 
             /////// create payment_no
             $currentDate = Carbon::now()->format('ym');
@@ -247,7 +247,13 @@ class PaymentController extends Controller
             // $payment_ceil_lak =  (ceil($payments_price_lak * 100) / 100);
             // $bill_ceil_lak = (ceil($bills_price_lak * 100) / 100);
             ////// check payment >= bills = success
-            if ($payments_price_lak >= $bills_price_lak) {
+            $check_bills_payments = false;
+            if ($pay_type['currency'] == 'lak') {
+                $check_bills_payments = $payments_price_lak >= $bills_price_lak;
+            } else if ($pay_type['currency'] == 'cny') {
+                $check_bills_payments = $payments_price_cny >= $bills_price_cny;
+            }
+            if ($check_bills_payments) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
@@ -583,7 +589,7 @@ class PaymentController extends Controller
                 $pay->Bills()->detach($bills_id);
                 $pay->delete();
             }
-            
+
             return response()->json([
                 'status' => 'OK',
                 'code' => '200',

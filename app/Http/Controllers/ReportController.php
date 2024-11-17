@@ -49,7 +49,7 @@ class ReportController extends Controller
                 'payments.deleted_at',
                 DB::raw('(CASE WHEN payments.method = "cash" THEN payments.amount_lak ELSE 0 END) as cash'),
                 DB::raw('(CASE WHEN payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as transffer'),
-                DB::raw('(CASE WHEN payments.method = "airpay" THEN payments.amount_lak ELSE 0 END) as airpay'),
+                DB::raw('(CASE WHEN payments.method = "alipay" THEN payments.amount_lak ELSE 0 END) as alipay'),
                 DB::raw('(CASE WHEN payments.method = "wechat_pay" THEN payments.amount_lak ELSE 0 END) as wechat_pay'),
             )
                 ->where(['status' => 'paid', 'active' => 1])
@@ -63,7 +63,7 @@ class ReportController extends Controller
                 'payments.payment_no',
                 DB::raw('SUM(cash) as cash'),
                 DB::raw('SUM(transffer) as transffer'),
-                DB::raw('SUM(airpay) as airpay'),
+                DB::raw('SUM(alipay) as alipay'),
                 DB::raw('SUM(wechat_pay) as wechat_pay'),
                 DB::raw('SUM(payments.amount_lak) as amount'),
                 DB::raw('ANY_VALUE(payments.created_at) as created_at'),
@@ -134,7 +134,7 @@ class ReportController extends Controller
                 'payments.deleted_at',
                 DB::raw('(CASE WHEN payments.method = "cash" THEN payments.amount_lak ELSE 0 END) as cash'),
                 DB::raw('(CASE WHEN payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as transffer'),
-                DB::raw('(CASE WHEN payments.method = "airpay" THEN payments.amount_lak ELSE 0 END) as airpay'),
+                DB::raw('(CASE WHEN payments.method = "alipay" THEN payments.amount_lak ELSE 0 END) as alipay'),
                 DB::raw('(CASE WHEN payments.method = "wechat_pay" THEN payments.amount_lak ELSE 0 END) as wechat_pay'),
             )
                 ->where(['status' => 'paid', 'active' => 1])
@@ -148,7 +148,7 @@ class ReportController extends Controller
                 'payments.payment_no',
                 DB::raw('SUM(cash) as cash'),
                 DB::raw('SUM(transffer) as transffer'),
-                DB::raw('SUM(airpay) as airpay'),
+                DB::raw('SUM(alipay) as alipay'),
                 DB::raw('SUM(wechat_pay) as wechat_pay'),
                 DB::raw('SUM(payments.amount_lak) as amount'),
                 DB::raw('ANY_VALUE(payments.created_at) as created_at'),

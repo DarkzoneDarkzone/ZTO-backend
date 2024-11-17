@@ -39,7 +39,7 @@ class ReportAccountingExport implements FromGenerator, WithMapping, WithHeadings
             $row->amount,
             $row->cash,
             $row->transffer,
-            $row->airpay,
+            $row->alipay,
             $row->wechat_pay,
             $row->bill_reference,
         ];

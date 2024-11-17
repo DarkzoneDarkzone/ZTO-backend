@@ -19,7 +19,7 @@ class ReportAccountingCollection extends JsonResource
             'payment_no' => $this->payment_no,
             'cash' => $this->cash ? $this->cash : '-',
             'transffer' => $this->transffer ? $this->transffer : '-',
-            'airpay' => $this->airpay ? $this->airpay : '-',
+            'alipay' => $this->alipay ? $this->alipay : '-',
             'wechat_pay' => $this->wechat_pay ? $this->wechat_pay : '-',
             'amount' => $this->amount,
             'bill_reference' => $this->Bills->pluck('bill_no')->implode(','),
