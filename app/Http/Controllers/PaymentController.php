@@ -157,7 +157,8 @@ class PaymentController extends Controller
             'bill.*' => 'string',
             'payment_type' => 'required|array',
             'payment_type.*.name' => 'required|string',
-            'payment_type.*.amount' => 'required|numeric',
+            'payment_type.*.amount_lak' => 'required|numeric',
+            'payment_type.*.amount_cny' => 'required|numeric',
             'payment_type.*.currency' => 'required|string',
             'active' => 'required|boolean',
 
@@ -351,7 +352,8 @@ class PaymentController extends Controller
             'bill.*' => 'string',
             'payment_type' => 'required|array',
             'payment_type.*.name' => 'required|string',
-            'payment_type.*.amount' => 'required|numeric',
+            'payment_type.*.amount_lak' => 'required|numeric',
+            'payment_type.*.amount_cny' => 'required|numeric',
             'payment_type.*.currency' => 'required|string',
             'active' => 'required|boolean',
         ]);
@@ -414,12 +416,14 @@ class PaymentController extends Controller
                     $payment->method = $pay_type['name'];
                     switch ($pay_type['currency']) {
                         case 'lak':
-                            $payment->amount_lak = $pay_type['amount'];
-                            $payment->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
+                            $payment->amount_lak = $pay_type['amount_lak'];
+                            $payment->amount_cny = $pay_type['amount_cny'];
+                            // $payment->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
                             break;
                         case 'cny':
-                            $payment->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
-                            $payment->amount_cny = $pay_type['amount'];
+                            // $payment->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
+                            $payment->amount_lak = $pay_type['amount_lak'];
+                            $payment->amount_cny = $pay_type['amount_cny'];
                             break;
                         default:
                             $payment->amount_lak = 0;
@@ -435,12 +439,14 @@ class PaymentController extends Controller
                     $index_pay = array_search($pay_type['name'], $payments_methods_old);
                     switch ($pay_type['currency']) {
                         case 'lak':
-                            $payments[$index_pay]->amount_lak = $pay_type['amount'];
-                            $payments[$index_pay]->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
+                            $payments[$index_pay]->amount_lak = $pay_type['amount_lak'];
+                            $payments[$index_pay]->amount_cny = $pay_type['amount_cny'];
+                            // $payments[$index_pay]->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
                             break;
                         case 'cny':
-                            $payments[$index_pay]->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
-                            $payments[$index_pay]->amount_cny = $pay_type['amount'];
+                            // $payments[$index_pay]->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
+                            $payments[$index_pay]->amount_lak = $pay_type['amount_lak'];
+                            $payments[$index_pay]->amount_cny = $pay_type['amount_cny'];
                             break;
                         default:
                             $payments[$index_pay]->amount_lak = 0;
@@ -490,7 +496,13 @@ class PaymentController extends Controller
             // $payment_ceil_lak =  (ceil($payments_price_lak * 100) / 100);
             // $bill_ceil_lak = (ceil($bills_price_lak * 100) / 100);
             ////// check payment >= bills = success
-            if ($payments_price_lak >= $bills_price_lak) {
+            $check_bills_payments = false;
+            if ($pay_type['currency'] == 'lak') {
+                $check_bills_payments = $payments_price_lak >= $bills_price_lak;
+            } else if ($pay_type['currency'] == 'cny') {
+                $check_bills_payments = $payments_price_cny >= $bills_price_cny;
+            }
+            if ($check_bills_payments) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
