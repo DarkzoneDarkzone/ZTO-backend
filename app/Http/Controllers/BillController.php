@@ -135,13 +135,6 @@ class BillController extends Controller
                 },
             ])->where('phone',  $request->phone)->first();
             if (!$customer) {
-                // $customerPhoneCreated = new Customer();
-                // $customerPhoneCreated->name = $request->name;
-                // $customerPhoneCreated->phone = $request->phone;
-                // $customerPhoneCreated->address = $request->address;
-                // $customerPhoneCreated->active = false;
-                // $customerPhoneCreated->save();
-
                 return response()->json([
                     'msg' => 'customer not found.',
                     'status' => 'ERROR',
