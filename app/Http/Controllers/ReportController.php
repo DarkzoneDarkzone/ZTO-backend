@@ -59,14 +59,14 @@ class ReportController extends Controller
                 });
 
             $lastQuery = Payment::select(
-                DB::raw('ANY_VALUE(payments.id) as id'),
+                DB::raw('MAX(payments.id) as id'),
                 'payments.payment_no',
                 DB::raw('SUM(cash) as cash'),
                 DB::raw('SUM(transffer) as transffer'),
                 DB::raw('SUM(alipay) as alipay'),
                 DB::raw('SUM(wechat_pay) as wechat_pay'),
                 DB::raw('SUM(payments.amount_lak) as amount'),
-                DB::raw('ANY_VALUE(payments.created_at) as created_at'),
+                DB::raw('MAX(payments.created_at) as created_at'),
             )
                 ->with('Bills')
                 ->fromSub($subQuery, 'payments')
@@ -144,14 +144,14 @@ class ReportController extends Controller
                 });
 
             $lastQuery = Payment::select(
-                DB::raw('ANY_VALUE(payments.id) as id'),
+                DB::raw('MAX(payments.id) as id'),
                 'payments.payment_no',
                 DB::raw('SUM(cash) as cash'),
                 DB::raw('SUM(transffer) as transffer'),
                 DB::raw('SUM(alipay) as alipay'),
                 DB::raw('SUM(wechat_pay) as wechat_pay'),
                 DB::raw('SUM(payments.amount_lak) as amount'),
-                DB::raw('ANY_VALUE(payments.created_at) as created_at'),
+                DB::raw('MAX(payments.created_at) as created_at'),
             )
                 ->with('Bills')
                 ->fromSub($subQuery, 'payments')
@@ -329,12 +329,12 @@ class ReportController extends Controller
                 });
 
             $lastQuery = Balance::select(
-                DB::raw('ANY_VALUE(SubBalances.id) as id'),
-                DB::raw('ANY_VALUE(SubBalances.created_at) as created_at'),
-                DB::raw('ANY_VALUE(SubBalances.payment_no) as payment_no'),
-                DB::raw('ANY_VALUE(SubBalances.payment_id) as payment_id'),
-                DB::raw('ANY_VALUE(SubBalances.income_id) as income_id'),
-                DB::raw('ANY_VALUE(SubBalances.description) as description'),
+                DB::raw('MAX(SubBalances.id) as id'),
+                DB::raw('MAX(SubBalances.created_at) as created_at'),
+                DB::raw('MAX(SubBalances.payment_no) as payment_no'),
+                DB::raw('MAX(SubBalances.payment_id) as payment_id'),
+                DB::raw('MAX(SubBalances.income_id) as income_id'),
+                DB::raw('MAX(SubBalances.description) as description'),
                 DB::raw('SUM(SubBalances.amount_lak) as amount_lak'),
                 DB::raw('SUM(SubBalances.amount_cny) as amount_cny'),
                 DB::raw('SUM(SubBalances.balance_amount_lak) as balance_amount_lak'),
@@ -438,12 +438,12 @@ class ReportController extends Controller
                 });
 
             $lastQuery = Balance::select(
-                DB::raw('ANY_VALUE(SubBalances.id) as id'),
-                DB::raw('ANY_VALUE(SubBalances.created_at) as created_at'),
-                DB::raw('ANY_VALUE(SubBalances.payment_no) as payment_no'),
-                DB::raw('ANY_VALUE(SubBalances.payment_id) as payment_id'),
-                DB::raw('ANY_VALUE(SubBalances.income_id) as income_id'),
-                DB::raw('ANY_VALUE(SubBalances.description) as description'),
+                DB::raw('MAX(SubBalances.id) as id'),
+                DB::raw('MAX(SubBalances.created_at) as created_at'),
+                DB::raw('MAX(SubBalances.payment_no) as payment_no'),
+                DB::raw('MAX(SubBalances.payment_id) as payment_id'),
+                DB::raw('MAX(SubBalances.income_id) as income_id'),
+                DB::raw('MAX(SubBalances.description) as description'),
                 DB::raw('SUM(SubBalances.amount_lak) as amount_lak'),
                 DB::raw('SUM(SubBalances.amount_cny) as amount_cny'),
                 DB::raw('SUM(SubBalances.balance_amount_lak) as balance_amount_lak'),

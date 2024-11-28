@@ -34,6 +34,14 @@ class ParcelController extends Controller
                 }
             }
 
+            if ($request->has('start_at')) {
+                $query->where('parcels.created_at', '>=', $request->query('start_at'));
+            }
+
+            if ($request->has('end_at')) {
+                $query->where('parcels.created_at', '<=', $request->query('end_at'));
+            }
+
             if ($request->has('searchText')) {
                 $arraySearchText = ['parcels.track_no', 'parcels.name', 'parcels.phone', 'parcels.zto_track_no'];
                 $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
@@ -58,10 +66,10 @@ class ParcelController extends Controller
                                 'return_parcels.weight as refund_weight'
                             );
                         break;
+                        // ->where('income_expenses.status', '=', 'verify')
                     case 'return':
                         $query->leftJoin('return_parcels', 'parcels.id', '=', 'return_parcels.parcel_id')
                             ->leftJoin('income_expenses', 'income_expenses.id', '=', 'return_parcels.income_expenses_id')
-                            ->where('income_expenses.status', '=', 'verify')
                             ->select(
                                 'parcels.*',
                                 'parcels.weight as weight',
@@ -77,8 +85,8 @@ class ParcelController extends Controller
                 $query->with(['Bill' => function ($bill) {
                     $bill->select('id', 'status');
                 }, 'Bill.Payments' => function ($pay) {
-                    $pay->select('Payments.id');
-                }])->select('Parcels.*', DB::raw('DATE_ADD(shipping_at, INTERVAL 7 HOUR) AS shipping_at'), DB::raw('DATE_ADD(receipt_at, INTERVAL 7 HOUR) AS receipt_at'), DB::raw('DATE_ADD(payment_at, INTERVAL 7 HOUR) AS payment_at'));
+                    $pay->select('payments.id');
+                }])->select('parcels.*', DB::raw('DATE_ADD(shipping_at, INTERVAL 7 HOUR) AS shipping_at'), DB::raw('DATE_ADD(receipt_at, INTERVAL 7 HOUR) AS receipt_at'), DB::raw('DATE_ADD(payment_at, INTERVAL 7 HOUR) AS payment_at'));
             }
 
             if ($request->has('per_page')) {

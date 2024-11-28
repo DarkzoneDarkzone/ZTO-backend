@@ -16,11 +16,24 @@ use App\Http\Controllers\UserController;
 use App\Models\CustomerLevel;
 use App\Models\IncomeExpense;
 use App\Models\Parcel;
+use Database\Seeders\UserSeeder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('health_check', function () {
     return 'ok';
+});
+
+Route::get('/run-migrations', function () {
+    // return Artisan::call('migrate', array('--path' => 'app/migrations'));
+    return Artisan::call('migrate', ["--force" => true ]);
+});
+
+Route::get('/run-seeder', function () {
+    // return Artisan::call('db:seed', ["--force" => true ]);
+    return Artisan::call('db:seed');
+
 });
 
 Route::group([
