@@ -86,7 +86,7 @@ class ParcelController extends Controller
                     $bill->select('id', 'status');
                 }, 'Bill.Payments' => function ($pay) {
                     $pay->select('payments.id');
-                }])->select('parcels.*', DB::raw('DATE_ADD(shipping_at, INTERVAL 7 HOUR) AS shipping_at'), DB::raw('DATE_ADD(receipt_at, INTERVAL 7 HOUR) AS receipt_at'), DB::raw('DATE_ADD(payment_at, INTERVAL 7 HOUR) AS payment_at'));
+                }])->select('parcels.*', 'shipping_at', 'receipt_at', 'payment_at');
             }
 
             if ($request->has('per_page')) {

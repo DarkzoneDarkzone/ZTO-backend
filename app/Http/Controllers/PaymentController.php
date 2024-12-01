@@ -39,8 +39,8 @@ class PaymentController extends Controller
                 DB::raw('MAX(payments.status) as status'),
                 DB::raw('SUM(payments.amount_lak) as amount_lak'),
                 DB::raw('SUM(payments.amount_cny) as amount_cny'),
-                DB::raw('DATE_ADD(MAX(payments.created_at), INTERVAL 7 HOUR) as pay_created_at'),
-                DB::raw('DATE_ADD(MAX(payments.updated_at), INTERVAL 7 HOUR) as pay_updated_at'),
+                DB::raw('MAX(payments.created_at) as pay_created_at'),
+                DB::raw('MAX(payments.updated_at) as pay_updated_at'),
             );
             $query->groupBy('payment_no');
 

@@ -20,6 +20,7 @@ use Database\Seeders\UserSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 Route::get('health_check', function () {
     return 'ok';
@@ -34,6 +35,18 @@ Route::get('/run-seeder', function () {
     // return Artisan::call('db:seed', ["--force" => true ]);
     return Artisan::call('db:seed');
 
+});
+
+Route::get('/run-migrations-timezone7', function () {
+    try {
+        $migrationPath = database_path('migrations/2024_11_03_073401_set_timezone_all_table.php');
+        Artisan::call('migrate', [
+            '--path' => $migrationPath,
+        ]);
+        return "Migration for 'posts' table ran successfully.";
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
+    }
 });
 
 Route::group([
