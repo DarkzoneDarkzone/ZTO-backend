@@ -36,7 +36,7 @@ class IncomeExpenseController extends Controller
             }
 
             if ($request->has('searchText')) {
-                $arraySearchText = ['id', 'type'];
+                $arraySearchText = ['id', 'type', 'description'];
                 $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
@@ -374,6 +374,7 @@ class IncomeExpenseController extends Controller
                 $return_parcels = ReturnParcel::where('income_expenses_id', $incomeExpense->id)->get();
                 if (count($return_parcels) > 0) {
                     foreach ($return_parcels as $return) {
+                        $return->created_at = $request->date_return;      
                         $return->car_number = $request->delivery_car_no;
                         $return->driver_name = $request->delivery_person;
                         $return->save();
@@ -389,6 +390,7 @@ class IncomeExpenseController extends Controller
                         $return_parcel = new ReturnParcel();
                         $return_parcel->created_by = $auth_id;
                         $return_parcel->parcel_id = $parcel->id;
+                        // $return_parcel->created_at = $request->date_return;            
                         $return_parcel->income_expenses_id = $incomeExpense->id;
                         $return_parcel->car_number = $request->delivery_car_no;
                         $return_parcel->driver_name = $request->delivery_person;

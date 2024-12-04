@@ -201,11 +201,11 @@ class ReportController extends Controller
         try {
             $returnParcel = ReturnParcel::select('return_parcels.*', 'parcels.track_no')->with('Parcel')->join('parcels', 'parcels.id', '=', 'return_parcels.parcel_id');
             if ($request->has('start_at')) {
-                $returnParcel->where('created_at', '>=', $request->query('start_at'));
+                $returnParcel->where('return_parcels.created_at', '>=', $request->query('start_at'));
             }
 
             if ($request->has('end_at')) {
-                $returnParcel->where('created_at', '<=', $request->query('end_at'));
+                $returnParcel->where('return_parcels.created_at', '<=', $request->query('end_at'));
             }
 
             if ($request->has('sorts')) {
