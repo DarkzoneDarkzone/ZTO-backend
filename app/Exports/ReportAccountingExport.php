@@ -36,12 +36,12 @@ class ReportAccountingExport implements FromGenerator, WithMapping, WithHeadings
         return [
             $row->created_at,
             $row->payment_no,
+            $row->bill_reference,
             $row->amount,
             $row->cash,
             $row->transffer,
             $row->alipay,
             $row->wechat_pay,
-            $row->bill_reference,
         ];
     }
 
@@ -49,13 +49,14 @@ class ReportAccountingExport implements FromGenerator, WithMapping, WithHeadings
     {
         return [
             'A' => NumberFormat::FORMAT_DATE_DATETIME,
-            'B' => NumberFormat::FORMAT_NUMBER,
+            // 'B' => NumberFormat::FORMAT_NUMBER,
+            'B' => NumberFormat::FORMAT_TEXT,
             'C' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
             'D' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
             'E' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
             'F' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
             'G' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
-            'H' => NumberFormat::FORMAT_TEXT,
+            // 'H' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
         ];
     }
 
@@ -66,6 +67,6 @@ class ReportAccountingExport implements FromGenerator, WithMapping, WithHeadings
      */
     public function headings(): array
     {
-        return ["Date", "Payment No.", "Total amount(LAK)", "Cash", "Transfer", "Alipay", "Wechat Pay", "Reference"];
+        return ["Date", "Bill No.", "Total amount(LAK)", "Cash", "Transfer", "Alipay", "Wechat Pay"];
     }
 }

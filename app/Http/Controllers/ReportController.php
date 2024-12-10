@@ -327,7 +327,6 @@ class ReportController extends Controller
                             ->whereNull('income_expenses.deleted_at');
                     });
                 });
-
             $lastQuery = Balance::select(
                 DB::raw('MAX(SubBalances.id) as id'),
                 DB::raw('MAX(SubBalances.created_at) as created_at'),
@@ -337,6 +336,8 @@ class ReportController extends Controller
                 DB::raw('MAX(SubBalances.description) as description'),
                 DB::raw('SUM(SubBalances.amount_lak) as amount_lak'),
                 DB::raw('SUM(SubBalances.amount_cny) as amount_cny'),
+                DB::raw('MAX(SubBalances.type) as type'),
+                DB::raw('MAX(SubBalances.sub_type) as sub_type'),
                 DB::raw('SUM(SubBalances.balance_amount_lak) as balance_amount_lak'),
                 DB::raw('SUM(SubBalances.balance_amount_cny) as balance_amount_cny'),
                 DB::raw('SUM(top_up_lak) as top_up_lak'),
@@ -365,7 +366,6 @@ class ReportController extends Controller
                     $lastQuery->orderBy($field, $direction);
                 }
             }
-
             $reports = ReportIncomeExpensesCollection::collection($lastQuery->get());
             if ($request->has('per_page') && $request->query('page')) {
                 $reports = (new Collection($reports))->paginate($request->query('per_page'));

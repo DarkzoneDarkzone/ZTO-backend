@@ -113,6 +113,14 @@ class PaymentController extends Controller
     public function getByPaymentNo($payment_no)
     {
         $query1 = Payment::query();
+
+        // $bill_dd = Bill::with([
+        //     'Parcels' => function ($query) {
+        //         $query->select('parcels.id as p_id');
+        //     },
+        // ])->get();
+        // dd($bill_dd);
+
         $query1->where('payment_no', $payment_no)->first();
         $bill_payment = Bill::joinSub($query1, 'pay_query', function (JoinClause $join) {
             $join->join('bill_payment', 'bill_payment.payment_id', '=', 'pay_query.id');
@@ -120,12 +128,17 @@ class PaymentController extends Controller
             $join->on('bill_payment.bill_id', '=', 'bills.id');
         });
 
+        
         $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->groupBy('bill_id');
         $bill_payment->joinSub($sub_q, 'parcel_q', function (JoinClause $join) {
             $join->on('parcel_q.bill_id', '=', 'bills.id');
         });
-
-        // $bill_payment->select('bills.*', 'bill_payment.*', );
+        
+        $bill_payment->with([
+            'Parcels' => function ($pacel) {
+                // $pacel->select('id', 'track_no');
+            },
+        ]);
         $bill_payment = $bill_payment->get();
 
         $payment = Payment::where('payment_no', $payment_no)->get();
