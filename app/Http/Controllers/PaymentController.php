@@ -126,7 +126,7 @@ class PaymentController extends Controller
             $join->join('bill_payment', 'bill_payment.payment_id', '=', 'pay_query.id');
             $join->where('bill_payment.deleted_at', null);
             $join->on('bill_payment.bill_id', '=', 'bills.id');
-        });
+        })->select('bills.*', 'total_weight');
 
         
         $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->groupBy('bill_id');
