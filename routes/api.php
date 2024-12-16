@@ -45,6 +45,7 @@ Route::get('/run-migrations-timezone7', function () {
             '--force' => true, 
             // '--database' => 'tradings_zto_db'
         ]);
+        
         return "Migration for 'posts' table ran successfully.";
     } catch (\Exception $e) {
         return "Error: " . $e->getMessage();
