@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('parcels', function (Blueprint $table) {
             $table->string('zto_track_no')->after('id')->nullable();
+            $table->float('price_bill')->nullable()->default(0);
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('parcels', function (Blueprint $table) {
             $table->dropColumn('zto_track_no');
+            $table->dropColumn('price_bill');
         });
     }
 };

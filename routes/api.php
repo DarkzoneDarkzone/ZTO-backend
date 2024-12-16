@@ -39,9 +39,11 @@ Route::get('/run-seeder', function () {
 
 Route::get('/run-migrations-timezone7', function () {
     try {
-        $migrationPath = database_path('migrations/2024_11_03_073401_set_timezone_all_table.php');
+        $migrationPath = database_path('database/migrations/2024_11_03_073400_add_zto_track_to_parcels_table.php');
         Artisan::call('migrate', [
             '--path' => $migrationPath,
+            '--force' => true, 
+            // '--database' => 'tradings_zto_db'
         ]);
         return "Migration for 'posts' table ran successfully.";
     } catch (\Exception $e) {
