@@ -202,6 +202,7 @@ class BillController extends Controller
                     $parcel->phone = $request->phone;
                     $parcel->name = $request->name;
                 }
+                $parcel->price_bill = $parcel->weight * $rate;
                 $parcel->save();
             }
 
