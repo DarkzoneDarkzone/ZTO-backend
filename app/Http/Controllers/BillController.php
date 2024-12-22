@@ -163,19 +163,21 @@ class BillController extends Controller
                 // }
                 ///////// weight is kg. convert to g.
                 // $parcel->weight = $parcel->weight * 100;
-                $price_bill_lak += ($parcel->weight * $rate);
+                // $price_bill_lak += ($parcel->weight * $rate);
+                $price_bill_lak += ceil(floor(($parcel->weight * $rate)) / 1000) * 1000;;
             }
             $currency_now = Currency::orderBy('id', 'desc')->first();
 
             $amount_cny_convert = $price_bill_lak / ($currency_now->amount_cny * $currency_now->amount_lak);
 
-            $amount_lak_convert = 0;
+            // $amount_lak_convert = 0;
             // if ($price_bill_lak < 1000) {
             //     $amount_lak_convert = ceil($price_bill_lak / 100) * 100;
             // } else {
-            $amount_lak_convert = ceil(floor($price_bill_lak) / 1000) * 1000;
+            // $amount_lak_convert = ceil(floor($price_bill_lak) / 1000) * 1000;
+
             // }
-            $bill->amount_lak = $amount_lak_convert;
+            $bill->amount_lak = $price_bill_lak;
             $bill->amount_cny = ceil($amount_cny_convert * 100) / 100;
             $bill->name = $request->name;
             $bill->phone = $request->phone;
