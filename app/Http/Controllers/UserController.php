@@ -159,11 +159,21 @@ class UserController extends Controller
                 'password' => 'required|min:8',
             ]);
 
+            
             if ($validator->fails()) {
                 $errors_val = $this->ValidatorErrors($validator);
                 return response()->json([
                     'msg' => 'validator errors',
                     'errors' => $errors_val,
+                    'status' => 'ERROR',
+                ], 400);
+            }
+
+            $check_active = User::where(['email' => request()->email, 'active' => 1])->first();
+            if (!$check_active) {
+                return response()->json([
+                    'msg' => 'validator errors',
+                    'errors' => 'user not active',
                     'status' => 'ERROR',
                 ], 400);
             }
