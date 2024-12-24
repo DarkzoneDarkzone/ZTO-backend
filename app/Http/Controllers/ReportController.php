@@ -44,13 +44,13 @@ class ReportController extends Controller
             $subQuery = Payment::select(
                 'payments.id',
                 'payments.payment_no',
-                'payments.amount_lak',
+                DB::raw('(CASE WHEN payments.method = "alipay" OR payments.method = "wechat_pay" THEN payments.amount_cny ELSE payments.amount_lak END) as amount_lak'),
                 'payments.created_at',
                 'payments.deleted_at',
                 DB::raw('(CASE WHEN payments.method = "cash" THEN payments.amount_lak ELSE 0 END) as cash'),
                 DB::raw('(CASE WHEN payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as transffer'),
-                DB::raw('(CASE WHEN payments.method = "alipay" THEN payments.amount_lak ELSE 0 END) as alipay'),
-                DB::raw('(CASE WHEN payments.method = "wechat_pay" THEN payments.amount_lak ELSE 0 END) as wechat_pay'),
+                DB::raw('(CASE WHEN payments.method = "alipay" THEN payments.amount_cny ELSE 0 END) as alipay'),
+                DB::raw('(CASE WHEN payments.method = "wechat_pay" THEN payments.amount_cny ELSE 0 END) as wechat_pay'),
             )
                 ->where(['status' => 'paid', 'active' => 1])
                 ->whereNull('deleted_at')
@@ -129,13 +129,13 @@ class ReportController extends Controller
             $subQuery = Payment::select(
                 'payments.id',
                 'payments.payment_no',
-                'payments.amount_lak',
+                DB::raw('(CASE WHEN payments.method = "alipay" OR payments.method = "wechat_pay" THEN payments.amount_cny ELSE payments.amount_lak END) as amount_lak'),
                 'payments.created_at',
                 'payments.deleted_at',
                 DB::raw('(CASE WHEN payments.method = "cash" THEN payments.amount_lak ELSE 0 END) as cash'),
                 DB::raw('(CASE WHEN payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as transffer'),
-                DB::raw('(CASE WHEN payments.method = "alipay" THEN payments.amount_lak ELSE 0 END) as alipay'),
-                DB::raw('(CASE WHEN payments.method = "wechat_pay" THEN payments.amount_lak ELSE 0 END) as wechat_pay'),
+                DB::raw('(CASE WHEN payments.method = "alipay" THEN payments.amount_cny ELSE 0 END) as alipay'),
+                DB::raw('(CASE WHEN payments.method = "wechat_pay" THEN payments.amount_cny ELSE 0 END) as wechat_pay'),
             )
                 ->where(['status' => 'paid', 'active' => 1])
                 ->whereNull('deleted_at')
