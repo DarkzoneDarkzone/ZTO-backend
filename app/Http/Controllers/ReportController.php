@@ -367,6 +367,7 @@ class ReportController extends Controller
                     $lastQuery->orderBy($field, $direction);
                 }
             }
+            
             $reports = ReportIncomeExpensesCollection::collection($lastQuery->get());
             if ($request->has('per_page') && $request->query('page')) {
                 $reports = (new Collection($reports))->paginate($request->query('per_page'));
@@ -470,10 +471,18 @@ class ReportController extends Controller
                 $lastQuery->where('created_at', '<=', $request->query('end_at'));
             }
 
+            if ($request->has('sorts')) {
+                $arraySorts = explode(',', $request->query('sorts', []));
+                foreach ($arraySorts as $sort) {
+                    [$field, $direction] = explode(':', $sort);
+                    $lastQuery->orderBy($field, $direction);
+                }
+            }
+
             $reports = ReportIncomeExpensesCollection::collection($lastQuery->get())->toResponse($request);
 
             $reports = $reports->getData()->data;
-
+            
             return Excel::download(new ReportIncomeExpensesExport($reports), 'reports-income-expenses-' . Carbon::now()->format('Y-m-d') . '.xlsx');
         } catch (Exception $e) {
             return response()->json([
