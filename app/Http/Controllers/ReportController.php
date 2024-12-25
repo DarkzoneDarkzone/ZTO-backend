@@ -254,12 +254,13 @@ class ReportController extends Controller
 
         try {
             $returnParcel = ReturnParcel::select('return_parcels.*', 'parcels.track_no')->with('Parcel')->join('parcels', 'parcels.id', '=', 'return_parcels.parcel_id');
+
             if ($request->has('start_at')) {
-                $returnParcel->where('created_at', '>=', $request->query('start_at'));
+                $returnParcel->where('return_parcels.created_at', '>=', $request->query('start_at'));
             }
 
             if ($request->has('end_at')) {
-                $returnParcel->where('created_at', '<=', $request->query('end_at'));
+                $returnParcel->where('return_parcels.created_at', '<=', $request->query('end_at'));
             }
 
             $reports = ReportReturnParcelCollection::collection($returnParcel->get())->toResponse($request);
@@ -446,6 +447,8 @@ class ReportController extends Controller
                 DB::raw('MAX(SubBalances.description) as description'),
                 DB::raw('SUM(SubBalances.amount_lak) as amount_lak'),
                 DB::raw('SUM(SubBalances.amount_cny) as amount_cny'),
+                DB::raw('MAX(SubBalances.type) as type'),
+                DB::raw('MAX(SubBalances.sub_type) as sub_type'),
                 DB::raw('SUM(SubBalances.balance_amount_lak) as balance_amount_lak'),
                 DB::raw('SUM(SubBalances.balance_amount_cny) as balance_amount_cny'),
                 DB::raw('SUM(top_up_lak) as top_up_lak'),
