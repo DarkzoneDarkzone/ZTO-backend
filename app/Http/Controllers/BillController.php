@@ -7,6 +7,7 @@ use App\Models\BillPayment;
 use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\Parcel;
+use App\Models\Payment;
 use DateTime;
 use Exception;
 use Illuminate\Http\Request;
@@ -30,11 +31,12 @@ class BillController extends Controller
                 $Operator = new FiltersOperator();
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
-                    $query->where($Operator->FiltersOperators(explode(':', $filter)));
+                    $ex = explode(':', $filter);
+                    $query->where($Operator->FiltersOperators(['bills.'.$ex[0], $ex[1], $ex[2]]));
                 }
             }
             if ($request->has('searchText')) {
-                $arraySearchText = ['bill_no', 'name', 'phone'];
+                $arraySearchText = ['bills.bill_no', 'bills.name', 'bills.phone'];
                 $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
@@ -44,11 +46,28 @@ class BillController extends Controller
                 $join->on('parcel_q.bill_id', '=', 'bills.id');
             });
 
+            $query->with(['Parcels' => function ($query) {
+                $query->select('id', 'bill_id', 'track_no', 'weight', 'price_bill', 'status', 'phone', 'name');
+            }]);
+
+            $bill_pay_sub = Payment::query();
+            $bill_pay_sub = $bill_pay_sub->select(
+                DB::raw('MAX(payments.id) as payment_id'),
+                'payments.payment_no'
+            )->groupBy('payment_no');
+            
+            $query = $query->leftJoinSub($bill_pay_sub, 'bill_pay_q', function (JoinClause $join) {
+                $join->join('bill_payment', 'bill_payment.payment_id', '=', 'bill_pay_q.payment_id');
+                $join->on('bill_payment.bill_id', '=', 'bills.id');
+                // $join->select('bill_payment.bill_id as bill_id', 'bill_payment.payment_id', 'bill_payment.id as bill_pay_id');
+            });
+            $query->select('bills.*', 'bill_pay_q.payment_no', 'parcel_q.total_weight');
+            
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {
                     [$field, $direction] = explode(':', $sort);
-                    $query->orderBy($field, $direction);
+                    $query->orderBy('bills.'.$field, $direction);
                 }
             }
 
@@ -164,7 +183,7 @@ class BillController extends Controller
                 ///////// weight is kg. convert to g.
                 // $parcel->weight = $parcel->weight * 100;
                 // $price_bill_lak += ($parcel->weight * $rate);
-                $price_bill_lak += ceil(floor(($parcel->weight * $rate)) / 1000) * 1000;;
+                $price_bill_lak += ceil(floor(($parcel->weight * $rate)) / 1000) * 1000;
             }
             $currency_now = Currency::orderBy('id', 'desc')->first();
 

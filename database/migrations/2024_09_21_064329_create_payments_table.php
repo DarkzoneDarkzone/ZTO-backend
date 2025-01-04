@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('payment_no');
             $table->float('amount_lak');
             $table->float('amount_cny');
-            $table->enum('method', ['cash', 'transffer', 'alipay', 'wechat_pay']);
+            $table->enum('method', ['cash', 'transffer', 'alipay', 'wechat_pay'])->nullable();
             $table->enum('status', ['paid', 'pending']);
             $table->boolean('active')->default(true);
             // $table->string('name')->nullable();

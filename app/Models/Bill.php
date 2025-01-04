@@ -36,4 +36,5 @@ class Bill extends Model
     {
         return $this->hasMany(Parcel::class);
     }
+
 }

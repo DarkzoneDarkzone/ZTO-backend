@@ -120,7 +120,6 @@ class PaymentController extends Controller
         //     },
         // ])->get();
         // dd($bill_dd);
-
         $query1->where('payment_no', $payment_no)->first();
         $bill_payment = Bill::joinSub($query1, 'pay_query', function (JoinClause $join) {
             $join->join('bill_payment', 'bill_payment.payment_id', '=', 'pay_query.id');
@@ -128,12 +127,10 @@ class PaymentController extends Controller
             $join->on('bill_payment.bill_id', '=', 'bills.id');
         })->select('bills.*', 'total_weight');
 
-        
         $sub_q = Parcel::select('bill_id', DB::raw('SUM(weight) as total_weight'))->whereNotNull('bill_id')->groupBy('bill_id');
         $bill_payment->joinSub($sub_q, 'parcel_q', function (JoinClause $join) {
             $join->on('parcel_q.bill_id', '=', 'bills.id');
         });
-        
         $bill_payment->with([
             'Parcels' => function ($pacel) {
                 // $pacel->select('id', 'track_no');
@@ -169,7 +166,7 @@ class PaymentController extends Controller
             'bill' => 'required|array',
             'bill.*' => 'string',
             'payment_type' => 'required|array',
-            'payment_type.*.name' => 'required|string',
+            'payment_type.*.name' => 'string|nullable',
             'payment_type.*.amount_lak' => 'required|numeric',
             'payment_type.*.amount_cny' => 'required|numeric',
             'payment_type.*.currency' => 'required|string',
@@ -303,17 +300,17 @@ class PaymentController extends Controller
                 //     $bill->status = 'waiting_payment';
                 //     $bill->save();
                 // }
-                // foreach ($payments_save as $key => $payment) {
-                //     $payment->payment_no = $payment_no_defult;
-                //     $payment->status = 'pending';
-                //     $payment->save();
-                //     $payment->Bills()->sync($bills_id);
-                // }
-                return response()->json([
-                    'msg' => 'payments Not enough.',
-                    'status' => 'ERROR',
-                    'data' => array()
-                ], 400);
+                foreach ($payments_save as $key => $payment) {
+                    $payment->payment_no = $payment_no_defult;
+                    $payment->status = 'pending';
+                    $payment->save();
+                    $payment->Bills()->sync($bills_id);
+                }
+                // return response()->json([
+                //     'msg' => 'payments Not enough.',
+                //     'status' => 'ERROR',
+                //     'data' => array()
+                // ], 400);
             }
             DB::commit();
             return response()->json([
@@ -364,7 +361,7 @@ class PaymentController extends Controller
             'bill' => 'required|array',
             'bill.*' => 'string',
             'payment_type' => 'required|array',
-            'payment_type.*.name' => 'required|string',
+            'payment_type.*.name' => 'string|nullable',
             'payment_type.*.amount_lak' => 'required|numeric',
             'payment_type.*.amount_cny' => 'required|numeric',
             'payment_type.*.currency' => 'required|string',
@@ -413,7 +410,7 @@ class PaymentController extends Controller
                 $pay->Bills()->detach($bills_old_id);
             }
 
-            $currency_now = Currency::orderBy('id', 'desc')->first();
+            // $currency_now = Currency::orderBy('id', 'desc')->first();
 
             /////// check payments
             $payments_save = array();
@@ -550,18 +547,18 @@ class PaymentController extends Controller
                 //     $bill->status = 'waiting_payment';
                 //     $bill->save();
                 // }
-                // foreach ($payments_save as $key => $payment) {
-                //     $payment->payment_no = $id;
-                //     $payment->status = 'pending';
-                //     $payment->save();
-                //     $payment->Bills()->sync($bills_id);
-                // }
+                foreach ($payments_save as $key => $payment) {
+                    $payment->payment_no = $id;
+                    $payment->status = 'pending';
+                    $payment->save();
+                    $payment->Bills()->sync($bills_id);
+                }
 
-                return response()->json([
-                    'msg' => 'payments Not enough.',
-                    'status' => 'ERROR',
-                    'data' => array()
-                ], 400);
+                // return response()->json([
+                //     'msg' => 'payments Not enough.',
+                //     'status' => 'ERROR',
+                //     'data' => array()
+                // ], 400);
             }
 
 
