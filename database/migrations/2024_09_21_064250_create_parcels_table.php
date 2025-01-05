@@ -26,6 +26,7 @@ return new class extends Migration
             $table->timestamp('receipt_at')->nullable();
             $table->timestamp('payment_at')->nullable();
             $table->timestamp('shipping_at')->nullable();
+            $table->boolean('is_check')->default(false);
             $table->softDeletes();
 
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));

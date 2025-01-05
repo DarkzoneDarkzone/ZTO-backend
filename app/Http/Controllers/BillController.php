@@ -47,7 +47,7 @@ class BillController extends Controller
             });
 
             $query->with(['Parcels' => function ($query) {
-                $query->select('id', 'bill_id', 'track_no', 'weight', 'price_bill', 'status', 'phone', 'name');
+                $query->select('id', 'bill_id', 'track_no', 'weight', 'price_bill', 'status', 'phone', 'name', 'is_check', 'price_bill');
             }]);
 
             $bill_pay_sub = Payment::query();
