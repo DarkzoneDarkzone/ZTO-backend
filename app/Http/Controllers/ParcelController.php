@@ -346,6 +346,7 @@ class ParcelController extends Controller
             Customer::insert($customerArr);
             Parcel::insert($parcelArrCreate);
 
+            
             DB::commit();
 
             foreach ($parcel_track_no as $key => $value) {
