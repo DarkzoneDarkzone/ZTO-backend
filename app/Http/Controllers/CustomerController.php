@@ -229,10 +229,7 @@ class CustomerController extends Controller
                 ], 400);
             }
 
-            // check customer verify = false and request verify = true then create bill by request phone
-            if ($customer->verify == false && $request->verify == true) {
-                $this->CreateBillByPhone($request->phone);
-            }
+            $customer_verify_before = $customer->verify;
             
             $customer->name = $request->name;
             $customer->phone = $request->phone;
@@ -246,6 +243,11 @@ class CustomerController extends Controller
 
             $customer->save();
             DB::commit();
+
+            // check customer verify = false and request verify = true then create bill by request phone
+            if ($customer_verify_before == false && $request->verify == true) {
+                $this->CreateBillByPhone($request->phone);
+            }
             return response()->json(
                 [
                     'status' => 'OK',
