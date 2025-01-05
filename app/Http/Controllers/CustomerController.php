@@ -229,7 +229,11 @@ class CustomerController extends Controller
                 ], 400);
             }
 
-        
+            // check customer verify = false and request verify = true then create bill by request phone
+            if ($customer->verify == false && $request->verify == true) {
+                $this->CreateBillByPhone($request->phone);
+            }
+            
             $customer->name = $request->name;
             $customer->phone = $request->phone;
             $customer->address = $request->address;
