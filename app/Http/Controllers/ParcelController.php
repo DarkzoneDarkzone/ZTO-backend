@@ -320,6 +320,10 @@ class ParcelController extends Controller
 
             DB::commit();
 
+            foreach ($parcel_track_no as $key => $value) {
+                $this->create_billByPhone($value);
+            }
+
             return response()->json([
                 'status' => true,
                 'message' => 'Import excel file Successfully',
