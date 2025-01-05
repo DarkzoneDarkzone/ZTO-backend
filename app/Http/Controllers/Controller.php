@@ -22,7 +22,7 @@ abstract class Controller
         return $errors_val;
     }
 
-    public function create_billByPhone($phone)
+    public function CreateBillByPhone($phone)
     {
         // Validate phone number and not 0 and not null and not empty
         if (!is_numeric($phone) || $phone == 0 || $phone == null || $phone == '') {

@@ -320,8 +320,8 @@ class ParcelController extends Controller
 
             DB::commit();
 
-            foreach ($parcel_track_no as $key => $value) {
-                $this->create_billByPhone($value);
+            foreach ($customer_phone as $key => $value) {
+                $this->CreateBillByPhone($value);
             }
 
             return response()->json([
