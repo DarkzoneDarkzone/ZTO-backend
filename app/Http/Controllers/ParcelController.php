@@ -137,9 +137,37 @@ class ParcelController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Parcel $parcel)
+    public function update_check(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'is_check' => 'required|array',
+            'is_check.*' => 'string',
+        ]);
+        
+        DB::beginTransaction();
+        try {
+            // update parcels is_check from requests
+            $parcels = Parcel::whereIn('track_no', $request->is_check)->get();
+            foreach ($parcels as $parcel) {
+                $parcel->is_check = true;
+                $parcel->save();
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 'Updated check',
+                'code' => 200,
+                'data' => []
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something went wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+            ], 400);
+        }
+        
     }
 
     /**

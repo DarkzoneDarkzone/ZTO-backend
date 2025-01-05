@@ -118,6 +118,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/export', [ParcelController::class, 'export']);
     Route::get('/parcel', [ParcelController::class, 'index']);
     Route::put('/parcel/{id}', [ParcelController::class, 'update']);
+    Route::post('/parcel-check', [ParcelController::class, 'update_check']);
 
     // bill
     Route::get('/bill', [BillController::class, 'index']);
