@@ -140,30 +140,18 @@ class ParcelController extends Controller
     public function update_check(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'is_check' => 'numeric',
+            'is_check' => 'required|array',
+            'is_check.*' => 'numeric',
         ]);
-        if ($validator->fails()) {
-            $errors_val = $this->ValidatorErrors($validator);
-            return response()->json([
-                'msg' => 'validator errors',
-                'errors' => $errors_val,
-                'status' => 'ERROR',
-            ], 400);
-        }
-        // update parcel is_check from request
+        
         DB::beginTransaction();
         try {
-            $parcel = Parcel::find($id);
-            if (!$parcel) {
-                return response()->json([
-                    'status' => 'Not Found',
-                    'code' => 404,
-                    'msg' => 'Parcel not found',
-                ], 404);
+            // update parcels is_check from requests
+            $parcels = Parcel::whereIn('track_no', $request->is_check)->get();
+            foreach ($parcels as $parcel) {
+                $parcel->is_check = true;
+                $parcel->save();
             }
-
-            $parcel->is_check = $request->is_check;
-            $parcel->save();
 
             DB::commit();
             return response()->json([
@@ -179,7 +167,6 @@ class ParcelController extends Controller
                 'status' => 'ERROR',
             ], 400);
         }
-
         
     }
 
