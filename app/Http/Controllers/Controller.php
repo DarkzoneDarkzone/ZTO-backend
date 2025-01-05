@@ -34,7 +34,8 @@ abstract class Controller
                     'CustomerLevel' => function ($query) {
                         $query->select('id', 'rate');
                     },
-                ])->where('phone', $phone)->where('status', true)->first();
+                ])->where('phone', $phone)->where('verify', true)->first();
+
                 if (isset($customer) && isset($customer->CustomerLevel->rate)) {
                     $rate = $customer->CustomerLevel->rate;
                     $price_bill_lak  = 0;
@@ -76,15 +77,10 @@ abstract class Controller
                     }
                     DB::commit();
                 }
-                return 1;
+                return true;
             } catch (Exception $e) {
                 DB::rollBack();
-                return response()->json([
-                    'msg' => 'Something wrong.',
-                    'errors' => $e->getMessage(),
-                    'status' => 'ERROR',
-                    'code' => 500
-                ], 500);
+                return false;
             }
         }
     }
