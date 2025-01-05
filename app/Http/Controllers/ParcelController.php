@@ -137,11 +137,11 @@ class ParcelController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function update_check(Request $request, $id)
+    public function update_check(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'is_check' => 'required|array',
-            'is_check.*' => 'numeric',
+            'is_check.*' => 'string',
         ]);
         
         DB::beginTransaction();
