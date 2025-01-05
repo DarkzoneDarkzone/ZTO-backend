@@ -346,12 +346,11 @@ class ParcelController extends Controller
             Customer::insert($customerArr);
             Parcel::insert($parcelArrCreate);
 
-            
-            DB::commit();
-
             foreach ($customer_phone as $key => $value) {
                 $this->CreateBillByPhone($value);
             }
+            
+            DB::commit();
 
             return response()->json([
                 'status' => true,

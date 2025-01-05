@@ -242,12 +242,13 @@ class CustomerController extends Controller
             $customer->created_by = $auth_id;
 
             $customer->save();
-            DB::commit();
 
             // check customer verify = false and request verify = true then create bill by request phone
             if ($customer_verify_before == false && $request->verify == true) {
                 $this->CreateBillByPhone($request->phone);
             }
+
+            DB::commit();
             return response()->json(
                 [
                     'status' => 'OK',
