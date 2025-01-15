@@ -74,12 +74,12 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
         return [
             'zto_tracking_nuber' => 'required',
             'tracking_nuber' => 'required',
-            'recording_weight' => 'required|numeric',
+            // 'recording_weight' => 'required|numeric',
             'volume_weight' => 'required|numeric',
             // 'cash_on_delivery' => 'required',
-            'recipient' => 'required',
+            // 'recipient' => 'required',
             'recipients_phone_number' => 'required',
-            'center_dispatch_time' => 'required|date_format:Y-m-d H:i:s',
+            'center_dispatch_time' => 'date_format:Y-m-d H:i:s',
         ];
     }
 
@@ -90,12 +90,12 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
     {
         return [
             'zto_tracking_nuber' => 'The ZTO Track Number field is required.',
-            'recording_weight' => 'The Recording weight field is required and must be numeric.',
+            // 'recording_weight' => 'The Recording weight field is required and must be numeric.',
             'volume_weight' => 'The Volume weight field is required and must be numeric.',
             // '4' => 'The Price field is required.',
-            'recipient' => 'The Recipient field is required.',
+            // 'recipient' => 'The Recipient field is required.',
             'recipients_phone_number' => 'The Phone Number field is required.',
-            'center_dispatch_time' => 'The Center dispatch time field is required and format must be Y-m-d H:i:s',
+            // 'center_dispatch_time' => 'The Center dispatch time field is required and format must be Y-m-d H:i:s',
         ];
     }
 }
