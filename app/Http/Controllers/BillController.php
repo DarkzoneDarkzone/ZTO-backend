@@ -223,7 +223,7 @@ class BillController extends Controller
                     $parcel->phone = $request->phone;
                     $parcel->name = $request->name;
                 }
-                $parcel->price_bill = $parcel->weight * $rate;
+                $parcel->price_bill = ceil(floor(($parcel->weight * $rate)) / 1000) * 1000;
                 $parcel->save();
             }
 

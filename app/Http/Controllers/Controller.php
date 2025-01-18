@@ -70,7 +70,7 @@ abstract class Controller
                         $parcel->phone = $phone;
                         $parcel->name = $customer->name;
                     }
-                    $parcel->price_bill = $parcel->weight * $rate;
+                    $parcel->price_bill = ceil(floor(($parcel->weight * $rate)) / 1000) * 1000;
                     $parcel->save();
                 }
             }
