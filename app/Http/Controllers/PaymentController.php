@@ -171,7 +171,7 @@ class PaymentController extends Controller
             'payment_type.*.amount_cny' => 'required|numeric',
             'payment_type.*.currency' => 'required|string',
             'active' => 'required|boolean',
-
+            'draft' => 'required|boolean'
         ]);
         if ($validator->fails()) {
             $errors_val = $this->ValidatorErrors($validator);
@@ -276,24 +276,27 @@ class PaymentController extends Controller
                 }
 
                 foreach ($payments_save as $key => $payment) {
+
+                    if (!$request->draft) {
+                        $balanceStack = Balance::orderBy('id', 'desc')->first();
+                        $balance = new Balance();
+                        $balance->amount_lak = $payment->amount_lak;
+                        $balance->amount_cny = $payment->amount_cny;
+                        if ($balanceStack) {
+                            $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payment->amount_lak;
+                            $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payment->amount_cny;
+                        } else {
+                            $balance->balance_amount_lak = $payment->amount_lak;
+                            $balance->balance_amount_cny = $payment->amount_cny;
+                        }
+                        $balance->payment_id = $payment->id;
+                        $balance->save();
+
+                        $payment->status = 'paid';
+                    }
                     $payment->payment_no = $payment_no_defult;
-                    $payment->status = 'paid';
                     $payment->save();
                     $payment->Bills()->sync($bills_id);
-
-                    $balanceStack = Balance::orderBy('id', 'desc')->first();
-                    $balance = new Balance();
-                    $balance->amount_lak = $payment->amount_lak;
-                    $balance->amount_cny = $payment->amount_cny;
-                    if ($balanceStack) {
-                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payment->amount_lak;
-                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payment->amount_cny;
-                    } else {
-                        $balance->balance_amount_lak = $payment->amount_lak;
-                        $balance->balance_amount_cny = $payment->amount_cny;
-                    }
-                    $balance->payment_id = $payment->id;
-                    $balance->save();
                 }
             } else {
                 // foreach ($bills as $bill) {
@@ -366,6 +369,7 @@ class PaymentController extends Controller
             'payment_type.*.amount_cny' => 'required|numeric',
             'payment_type.*.currency' => 'required|string',
             'active' => 'required|boolean',
+            'draft' => 'required|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -380,7 +384,7 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {
             $auth_id = Auth::user()->id;
-            $payments = Payment::where('payment_no', $id)->get();
+            $payments = Payment::where('payment_no', $id)->whereNot('status', 'paid')->get();
             $bills = Bill::whereIn('bill_no', $request->bill)->get();
             if (count($payments) == 0) {
                 return response()->json([
@@ -523,24 +527,26 @@ class PaymentController extends Controller
                     }
                 }
                 foreach ($payments_save as $key => $payment) {
+                    if (!$request->draft) {
+                        $balanceStack = Balance::orderBy('id', 'desc')->first();
+                        $balance = new Balance();
+                        $balance->amount_lak = $payment->amount_lak;
+                        $balance->amount_cny = $payment->amount_cny;
+                        if ($balanceStack) {
+                            $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payment->amount_lak;
+                            $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payment->amount_cny;
+                        } else {
+                            $balance->balance_amount_lak = $payment->amount_lak;
+                            $balance->balance_amount_cny = $payment->amount_cny;
+                        }
+                        $balance->payment_id = $payment->id;
+                        $balance->save();
+
+                        $payment->status = 'paid';
+                    }
                     $payment->payment_no = $id;
-                    $payment->status = 'paid';
                     $payment->save();
                     $payment->Bills()->sync($bills_id);
-
-                    $balanceStack = Balance::orderBy('id', 'desc')->first();
-                    $balance = new Balance();
-                    $balance->amount_lak = $payment->amount_lak;
-                    $balance->amount_cny = $payment->amount_cny;
-                    if ($balanceStack) {
-                        $balance->balance_amount_lak = $balanceStack->balance_amount_lak + $payment->amount_lak;
-                        $balance->balance_amount_cny = $balanceStack->balance_amount_cny + $payment->amount_cny;
-                    } else {
-                        $balance->balance_amount_lak = $payment->amount_lak;
-                        $balance->balance_amount_cny = $payment->amount_cny;
-                    }
-                    $balance->payment_id = $payment->id;
-                    $balance->save();
                 }
             } else {
                 // foreach ($bills as $bill) {
@@ -585,7 +591,7 @@ class PaymentController extends Controller
     {
         // $payment = Payment::find($id);
         try {
-            $payments = Payment::where('payment_no', $payment_no)->whereNull('deleted_at')->get();
+            $payments = Payment::where('payment_no', $payment_no)->whereNull('deleted_at')->whereNot('status', 'paid')->get();
             if (count($payments) == 0) {
                 return response()->json([
                     'message' => 'payments not found',
