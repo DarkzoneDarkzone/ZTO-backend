@@ -79,7 +79,7 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
             // 'cash_on_delivery' => 'required',
             'recipient' => 'required',
             'recipients_phone_number' => 'required',
-            'center_dispatch_time' => 'required|date_format:Y-m-d H:i:s',
+            'center_dispatch_time' => 'date_format:Y-m-d H:i:s',
         ];
     }
 
@@ -95,7 +95,7 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
             // '4' => 'The Price field is required.',
             'recipient' => 'The Recipient field is required.',
             'recipients_phone_number' => 'The Phone Number field is required.',
-            'center_dispatch_time' => 'The Center dispatch time field is required and format must be Y-m-d H:i:s',
+            'center_dispatch_time' => 'The Center dispatch time field format must be Y-m-d H:i:s',
         ];
     }
 }

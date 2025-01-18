@@ -585,7 +585,7 @@ class PaymentController extends Controller
     {
         // $payment = Payment::find($id);
         try {
-            $payments = Payment::where('payment_no', $payment_no)->get();
+            $payments = Payment::where('payment_no', $payment_no)->whereNull('deleted_at')->get();
             if (count($payments) == 0) {
                 return response()->json([
                     'message' => 'payments not found',
