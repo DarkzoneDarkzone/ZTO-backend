@@ -304,6 +304,7 @@ class ReportController extends Controller
                 'balances.balance_amount_cny',
                 'payments.payment_no',
                 'balances.payment_id',
+                'balances.deleted_at',
                 'income_expenses.id as income_id',
                 'income_expenses.type',
                 'income_expenses.sub_type',
@@ -339,8 +340,8 @@ class ReportController extends Controller
                 DB::raw('SUM(SubBalances.amount_cny) as amount_cny'),
                 DB::raw('MAX(SubBalances.type) as type'),
                 DB::raw('MAX(SubBalances.sub_type) as sub_type'),
-                DB::raw('SUM(SubBalances.balance_amount_lak) as balance_amount_lak'),
-                DB::raw('SUM(SubBalances.balance_amount_cny) as balance_amount_cny'),
+                DB::raw('MAX(SubBalances.balance_amount_lak) as balance_amount_lak'),
+                DB::raw('MAX(SubBalances.balance_amount_cny) as balance_amount_cny'),
                 DB::raw('SUM(top_up_lak) as top_up_lak'),
                 DB::raw('SUM(top_up_cny) as top_up_cny'),
                 DB::raw('SUM(shipping_lak) as shipping_lak'),
@@ -350,6 +351,7 @@ class ReportController extends Controller
             )
                 ->with('Payment', 'Payment.Bills')
                 ->fromSub($subQuery, 'SubBalances')
+                ->whereNull('SubBalances.deleted_at')
                 ->groupBy('SubBalances.payment_no', 'SubBalances.income_id');
 
             if ($request->has('start_at')) {
