@@ -252,11 +252,26 @@ class ParcelController extends Controller
         try {
             $query = Parcel::query();
 
-            if ($request->has('start_at')) {
-                $query->where('created_at', '>=', $request->query('start_at'));
+            if ($request->has('filters')) {
+                $Operator = new FiltersOperator();
+                $arrayFilter = explode(',', $request->query('filters', []));
+                foreach ($arrayFilter as $filter) {
+                    $ex = explode(':', $filter);
+                    $query->where($Operator->FiltersOperators(['parcels.' . $ex[0], $ex[1], $ex[2]]));
+                }
             }
+
+            if ($request->has('start_at')) {
+                $query->where('parcels.created_at', '>=', $request->query('start_at'));
+            }
+
             if ($request->has('end_at')) {
-                $query->where('created_at', '<=', $request->query('end_at'));
+                $query->where('parcels.created_at', '<=', $request->query('end_at'));
+            }
+
+            if ($request->has('searchText')) {
+                $arraySearchText = ['parcels.track_no', 'parcels.name', 'parcels.phone', 'parcels.zto_track_no'];
+                $query->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
             }
 
             if ($request->has('sorts')) {
