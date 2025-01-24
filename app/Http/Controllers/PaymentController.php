@@ -113,7 +113,6 @@ class PaymentController extends Controller
     public function getByPaymentNo($payment_no)
     {
         $query1 = Payment::query();
-
         // $bill_dd = Bill::with([
         //     'Parcels' => function ($query) {
         //         $query->select('parcels.id as p_id');
@@ -252,19 +251,13 @@ class PaymentController extends Controller
                 $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1);
             }
 
-            // $payment_ceil_cny =  (ceil($payments_price_cny * 100) / 100);
-            // $bill_ceil_cny = (ceil($bills_price_cny * 100) / 100);
-
-            // $payment_ceil_lak =  (ceil($payments_price_lak * 100) / 100);
-            // $bill_ceil_lak = (ceil($bills_price_lak * 100) / 100);
-            ////// check payment >= bills = success
             $check_bills_payments = false;
             if ($pay_type['currency'] == 'lak') {
                 $check_bills_payments = $payments_price_lak >= $bills_price_lak;
             } else if ($pay_type['currency'] == 'cny') {
                 $check_bills_payments = $payments_price_cny >= $bills_price_cny;
             }
-            if ($check_bills_payments) {
+            if ($check_bills_payments && $request->draft == false) {
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
@@ -274,10 +267,8 @@ class PaymentController extends Controller
                         $parcel->save();
                     }
                 }
-
                 foreach ($payments_save as $key => $payment) {
-
-                    if (!$request->draft) {
+                    if ($request->draft == false) {
                         $balanceStack = Balance::orderBy('id', 'desc')->first();
                         $balance = new Balance();
                         $balance->amount_lak = $payment->amount_lak;
@@ -291,7 +282,6 @@ class PaymentController extends Controller
                         }
                         $balance->payment_id = $payment->id;
                         $balance->save();
-
                         $payment->status = 'paid';
                     }
                     $payment->payment_no = $payment_no_defult;
@@ -423,42 +413,14 @@ class PaymentController extends Controller
             $payment_methods_new = array();
             foreach ($request->payment_type as $key => $pay_type) {
                 array_push($payment_methods_new, $pay_type['name']);
-                if (!in_array($pay_type['name'], $payments_methods_old)) {
-                    $payment = new Payment();
-                    $payment->created_by = $auth_id;
-                    $payment->active = $request->active;
-                    $payment->method = $pay_type['name'];
-                    switch ($pay_type['currency']) {
-                        case 'lak':
-                            $payment->amount_lak = $pay_type['amount_lak'];
-                            $payment->amount_cny = $pay_type['amount_cny'];
-                            // $payment->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
-                            break;
-                        case 'cny':
-                            // $payment->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
-                            $payment->amount_lak = $pay_type['amount_lak'];
-                            $payment->amount_cny = $pay_type['amount_cny'];
-                            break;
-                        default:
-                            $payment->amount_lak = 0;
-                            $payment->amount_cny = 0;
-                            break;
-                    }
-                    $payments_price_lak += $payment->amount_lak;
-                    $payments_price_cny += $payment->amount_cny;
-                    // $payment->amount_lak = ceil($payment->amount_lak * 100)/ 100;
-                    // $payment->amount_cny = ceil($payment->amount_cny * 100)/ 100;
-                    array_push($payments_save, $payment);
-                } else {
+                if (in_array($pay_type['name'], $payments_methods_old)) {
                     $index_pay = array_search($pay_type['name'], $payments_methods_old);
                     switch ($pay_type['currency']) {
                         case 'lak':
                             $payments[$index_pay]->amount_lak = $pay_type['amount_lak'];
                             $payments[$index_pay]->amount_cny = $pay_type['amount_cny'];
-                            // $payments[$index_pay]->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
                             break;
                         case 'cny':
-                            // $payments[$index_pay]->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
                             $payments[$index_pay]->amount_lak = $pay_type['amount_lak'];
                             $payments[$index_pay]->amount_cny = $pay_type['amount_cny'];
                             break;
@@ -469,9 +431,29 @@ class PaymentController extends Controller
                     }
                     $payments_price_lak += $payments[$index_pay]->amount_lak;
                     $payments_price_cny += $payments[$index_pay]->amount_cny;
-                    // $payment->amount_lak = ceil($payment->amount_lak * 100)/ 100;
-                    // $payment->amount_cny = ceil($payment->amount_cny * 100)/ 100;
                     array_push($payments_save, $payments[$index_pay]);
+                } else {
+                    $payment = new Payment();
+                    $payment->created_by = $auth_id;
+                    $payment->active = $request->active;
+                    $payment->method = $pay_type['name'];
+                    switch ($pay_type['currency']) {
+                        case 'lak':
+                            $payment->amount_lak = $pay_type['amount_lak'];
+                            $payment->amount_cny = $pay_type['amount_cny'];
+                            break;
+                        case 'cny':
+                            $payment->amount_lak = $pay_type['amount_lak'];
+                            $payment->amount_cny = $pay_type['amount_cny'];
+                            break;
+                        default:
+                            $payment->amount_lak = 0;
+                            $payment->amount_cny = 0;
+                            break;
+                    }
+                    $payments_price_lak += $payment->amount_lak;
+                    $payments_price_cny += $payment->amount_cny;
+                    array_push($payments_save, $payment);
                 }
             }
 
@@ -503,20 +485,14 @@ class PaymentController extends Controller
                 }
             }
 
-            // round($payments_price_cny, 2) >= round($bills_price_cny, 2)
-            // $payment_ceil_cny =  (ceil($payments_price_cny * 100) / 100);
-            // $bill_ceil_cny = (ceil($bills_price_cny * 100) / 100);
-
-            // $payment_ceil_lak =  (ceil($payments_price_lak * 100) / 100);
-            // $bill_ceil_lak = (ceil($bills_price_lak * 100) / 100);
-            ////// check payment >= bills = success
             $check_bills_payments = false;
             if ($pay_type['currency'] == 'lak') {
                 $check_bills_payments = $payments_price_lak >= $bills_price_lak;
             } else if ($pay_type['currency'] == 'cny') {
                 $check_bills_payments = $payments_price_cny >= $bills_price_cny;
             }
-            if ($check_bills_payments) {
+            if ($check_bills_payments && $request->draft == false) {
+                // dd($request->draft);
                 foreach ($bills as $bill) {
                     $bill->status = 'success';
                     $bill->save();
@@ -527,7 +503,7 @@ class PaymentController extends Controller
                     }
                 }
                 foreach ($payments_save as $key => $payment) {
-                    if (!$request->draft) {
+                    if ($request->draft == false) {
                         $balanceStack = Balance::orderBy('id', 'desc')->first();
                         $balance = new Balance();
                         $balance->amount_lak = $payment->amount_lak;
