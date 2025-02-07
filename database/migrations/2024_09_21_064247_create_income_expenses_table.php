@@ -15,7 +15,8 @@ return new class extends Migration
         Schema::create('income_expenses', function (Blueprint $table) {
             $table->id();
             $table->enum('type', ['income', 'expenses']);
-            $table->enum('sub_type', ['return', 'refund', 'other']);
+            $table->enum('sub_type', ['return', 'refund', 'other', 'top_up']);
+            $table->enum('pay_type', ['cash', 'transffer']);
             $table->enum('status', ['pending', 'verify']);
             $table->string('description')->nullable();
             $table->float('amount_lak')->nullable();
