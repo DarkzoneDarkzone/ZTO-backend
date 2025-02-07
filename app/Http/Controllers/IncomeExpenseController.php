@@ -124,7 +124,11 @@ class IncomeExpenseController extends Controller
             'delivery_car_no' => 'string',
             'delivery_person' => 'string',
             'sub_type' => 'required|string',
-            'pay_type' => 'required|string',
+            // 'pay_type' => 'required|string',
+            'pay_cash' => 'numeric|nullable',
+            'pay_transfer' => 'numeric|nullable',
+            'pay_alipay' => 'numeric|nullable',
+            'pay_wechat' => 'numeric|nullable',
             'description' => 'string|nullable',
             'amount_return' => 'required|numeric',
         ]);
@@ -150,6 +154,12 @@ class IncomeExpenseController extends Controller
             $incomeExpense = new IncomeExpense();
             $incomeExpense->type = 'income';
             $incomeExpense->sub_type = $request->sub_type;
+            // $incomeExpense->pay_type = $request->pay_type;
+            $incomeExpense->pay_cash = isset($request->pay_cash) ? $request->pay_cash : null;
+            $incomeExpense->pay_transfer = isset($request->pay_transfer) ? $request->pay_transfer : null;
+            $incomeExpense->pay_alipay = isset($request->pay_alipay) ? $request->pay_alipay : null;
+            $incomeExpense->pay_wechat = isset($request->pay_wechat) ? $request->pay_wechat : null;
+
             $incomeExpense->status = 'pending';
             // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
             $incomeExpense->description = isset($request->description) ?  $request->description : $request->sub_type;
@@ -201,7 +211,11 @@ class IncomeExpenseController extends Controller
             'weight' => 'numeric',
             'amount_refund' => 'required|numeric',
             'sub_type' => 'required|string',
-            'pay_type' => 'required|string',
+            // 'pay_type' => 'required|string',
+            'pay_cash' => 'numeric|nullable',
+            'pay_transfer' => 'numeric|nullable',
+            'pay_alipay' => 'numeric|nullable',
+            'pay_wechat' => 'numeric|nullable',
             'description' => 'string|nullable',
         ]);
         if ($validator->fails()) {
@@ -225,6 +239,12 @@ class IncomeExpenseController extends Controller
             $incomeExpense = new IncomeExpense();
             $incomeExpense->type = 'expenses';
             $incomeExpense->sub_type = $request->sub_type;
+            // $incomeExpense->pay_type = $request->pay_type;
+            $incomeExpense->pay_cash = isset($request->pay_cash) ? $request->pay_cash : null;
+            $incomeExpense->pay_transfer = isset($request->pay_transfer) ? $request->pay_transfer : null;
+            $incomeExpense->pay_alipay = isset($request->pay_alipay) ? $request->pay_alipay : null;
+            $incomeExpense->pay_wechat = isset($request->pay_wechat) ? $request->pay_wechat : null;
+
             $incomeExpense->status = 'pending';
             // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
             $incomeExpense->description = isset($request->description) ?  $request->description : $request->sub_type;
@@ -329,7 +349,11 @@ class IncomeExpenseController extends Controller
             'delivery_car_no' => 'string',
             'delivery_person' => 'string',
             'sub_type' => 'required|string',
-            'pay_type' => 'required|string',
+            // 'pay_type' => 'required|string',
+            'pay_cash' => 'numeric|nullable',
+            'pay_transfer' => 'numeric|nullable',
+            'pay_alipay' => 'numeric|nullable',
+            'pay_wechat' => 'numeric|nullable',
             'description' => 'string|nullable',
             'amount_return' => 'required|numeric',
             'status' => 'required|string'
@@ -368,6 +392,12 @@ class IncomeExpenseController extends Controller
                 $incomeExpense->amount_cny = round($amount_cny * 100) / 100;
             }
             $incomeExpense->sub_type = $request->sub_type;
+            // $incomeExpense->pay_type = $request->pay_type;
+            $incomeExpense->pay_cash = isset($request->pay_cash) ? $request->pay_cash : null;
+            $incomeExpense->pay_transfer = isset($request->pay_transfer) ? $request->pay_transfer : null;
+            $incomeExpense->pay_alipay = isset($request->pay_alipay) ? $request->pay_alipay : null;
+            $incomeExpense->pay_wechat = isset($request->pay_wechat) ? $request->pay_wechat : null;
+
             $incomeExpense->status = $request->status;
             // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
             $incomeExpense->description = isset($request->description) ?  $request->description : $request->sub_type;
@@ -440,7 +470,11 @@ class IncomeExpenseController extends Controller
             'weight' => 'numeric',
             'amount_refund' => 'numeric',
             'sub_type' => 'required|string',
-            'pay_type' => 'required|string',
+            // 'pay_type' => 'required|string',
+            'pay_cash' => 'numeric|nullable',
+            'pay_transfer' => 'numeric|nullable',
+            'pay_alipay' => 'numeric|nullable',
+            'pay_wechat' => 'numeric|nullable',
             'description' => 'string|nullable',
             'status' => 'required|string'
         ]);
@@ -474,6 +508,12 @@ class IncomeExpenseController extends Controller
                 $incomeExpense->amount_cny = round($amount_cny * 100) / 100;
             }
             $incomeExpense->sub_type = $request->sub_type;
+            // $incomeExpense->pay_type = $request->pay_type;
+            $incomeExpense->pay_cash = isset($request->pay_cash) ? $request->pay_cash : null;
+            $incomeExpense->pay_transfer = isset($request->pay_transfer) ? $request->pay_transfer : null;
+            $incomeExpense->pay_alipay = isset($request->pay_alipay) ? $request->pay_alipay : null;
+            $incomeExpense->pay_wechat = isset($request->pay_wechat) ? $request->pay_wechat : null;
+            
             $incomeExpense->status = $request->status;
             // isset($request->description) ? ($incomeExpense->description =  $request->description) : ($incomeExpense->description = '');
             $incomeExpense->description = isset($request->description) ?  $request->description : $request->sub_type;

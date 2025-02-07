@@ -16,8 +16,13 @@ return new class extends Migration
             $table->id();
             $table->enum('type', ['income', 'expenses']);
             $table->enum('sub_type', ['return', 'refund', 'other', 'top_up']);
-            $table->enum('pay_type', ['cash', 'transffer']);
+            // $table->enum('pay_type', ['cash', 'transffer']);
             $table->enum('status', ['pending', 'verify']);
+            $table->float('pay_cash');
+            $table->float('pay_transfer');
+            $table->float('pay_alipay');
+            $table->float('pay_wechat');
+
             $table->string('description')->nullable();
             $table->float('amount_lak')->nullable();
             $table->float('amount_cny')->nullable();
