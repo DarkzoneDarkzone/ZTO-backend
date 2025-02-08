@@ -242,11 +242,11 @@ class PaymentController extends Controller
             $currentDate = Carbon::now()->format('ym');
             $payCount = Payment::whereYear('created_at', Carbon::now()->year)
                 ->whereMonth('created_at', Carbon::now()->month)
-                ->orderBy('id', 'desc')->first();
-            if (!$payCount) {
+                ->max('payment_no');
+            if (isset($payCount)) {
                 $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', 00001);
             } else {
-                $ex = explode('-', $payCount->payment_no);
+                $ex = explode('-', $payCount);
                 $number = (int) $ex[1];
                 $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1);
             }

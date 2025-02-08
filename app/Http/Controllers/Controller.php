@@ -53,11 +53,11 @@ abstract class Controller
                 $currentDate = Carbon::now()->format('ym');
                 $billCount = Bill::whereYear('created_at', Carbon::now()->year)
                     ->whereMonth('created_at', Carbon::now()->month)
-                    ->orderBy('id', 'desc')->first();
-                if (!$billCount) {
+                    ->max('bill_no');
+                if (isset($billCount)) {
                     $bill->bill_no = $currentDate . '-' . sprintf('%05d', 00001);
                 } else {
-                    $ex = explode('-', $billCount->bill_no);
+                    $ex = explode('-', $bill_no);
                     $number = (int) $ex[1];
                     $bill->bill_no = $currentDate . '-' . sprintf('%05d', $number + 1);
                 }
