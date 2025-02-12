@@ -244,11 +244,11 @@ class PaymentController extends Controller
                 ->whereMonth('created_at', Carbon::now()->month)
                 ->max('payment_no');
             if (isset($payCount)) {
-                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', 00001);
-            } else {
                 $ex = explode('-', $payCount);
                 $number = (int) $ex[1];
                 $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1);
+            } else {
+                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', 00001);
             }
 
             $check_bills_payments = false;

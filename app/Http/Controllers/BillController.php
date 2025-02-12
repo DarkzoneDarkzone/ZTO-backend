@@ -208,12 +208,13 @@ class BillController extends Controller
                 ->whereMonth('created_at', Carbon::now()->month)
                 ->max('bill_no');
             if (isset($billCount)) {
-                $bill->bill_no = $currentDate . '-' . sprintf('%05d', 00001);
-            } else {
-                $ex = explode('-', $bill_no);
+                $ex = explode('-', $billCount);
                 $number = (int) $ex[1];
                 $bill->bill_no = $currentDate . '-' . sprintf('%05d', $number + 1);
+            } else {
+                $bill->bill_no = $currentDate . '-' . sprintf('%05d', 00001);
             }
+            
             $bill->save();
 
             foreach ($parcels as $parcel) {
