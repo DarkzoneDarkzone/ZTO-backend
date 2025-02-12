@@ -50,7 +50,7 @@ class ParcelImport implements ToArray, WithValidation, WithStartRow, SkipsOnErro
                 'name' => $row['recipient'],
                 'phone' => $phone,
                 'address' => null,
-                'receipt_at' => $row['center_dispatch_time'],
+                'receipt_at' => $row['center_dispatch_time'] ? $row['center_dispatch_time'] : null,
                 'active' => true,
                 'status' => 'pending',
                 'created_at' => Carbon::now(),
