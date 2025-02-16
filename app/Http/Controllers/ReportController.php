@@ -9,6 +9,8 @@ use App\Http\Resources\ReportAccountingCollection;
 use App\Http\Resources\ReportIncomeExpensesCollection;
 use App\Http\Resources\ReportReturnParcelCollection;
 use App\Models\Balance;
+use App\Models\IncomeExpense;
+use App\Models\Parcel;
 use App\Models\Payment;
 use App\Models\ReturnParcel;
 use App\Support\Collection;
@@ -496,51 +498,271 @@ class ReportController extends Controller
         }
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function reportDailyReport(Request $request)
     {
-        //
-    }
+        $validator = Validator::make(request()->all(), [
+            'start_at' => 'date_format:Y-m-d H:i:s',
+            'end_at' => 'date_format:Y-m-d H:i:s',
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        try {
+            $responseData = [];
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+            if($request->start_at && $request->end_at) {
+                $parcelImportQuery = Parcel::select(
+                    DB::raw('COUNT(parcels.id) as qty_actual'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN 1 ELSE 0 END) as qty_create_bill'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as weight_create_bill'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN bills.amount_lak ELSE 0 END) as total_lak'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN bills.amount_lak ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as price_per_weight'),
+                    DB::raw('DATE(parcels.created_at) as date'),
+                )
+                    ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
+                    ->whereNull('parcels.deleted_at')
+                    ->whereBetween('parcels.created_at', [$request->start_at, $request->end_at])
+                    ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+                $responseData['import_parcels'] = [
+                    'start_date' => $parcelImportQuery->count() > 0 ? $parcelImportQuery->min('date') : null,
+                    'end_date' => $parcelImportQuery->count() > 0 ? $parcelImportQuery->max('date') : null,
+                    'group' => 'Import Parcels',
+                    'description' => "Import parcels",
+                    'import_actual' => $parcelImportQuery->sum('qty_actual'),
+                    'qty_create_bill' => $parcelImportQuery->sum('qty_create_bill'),
+                    'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill'), 2),
+                    'total_lak' => number_format($parcelImportQuery->sum('total_lak'), 2),
+                    'price_per_weight' => number_format($parcelImportQuery->avg('price_per_weight'), 2),
+                    'payment_total_lak' => null,
+                    'payment_total_cny' => null,
+                    'payment_cash' => null,
+                    'payment_transfer' => null,
+                    'payment_alipay' => null,
+                    'payment_wechatpay' => null,
+                ];
+            } else {
+                $parcelImportQuery = Parcel::select(
+                    DB::raw('COUNT(parcels.id) as qty_actual'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN 1 ELSE 0 END) as qty_create_bill'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as weight_create_bill'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN bills.amount_lak ELSE 0 END) as total_lak'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN bills.amount_lak ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as price_per_weight'),
+                    DB::raw('DATE(parcels.created_at) as date'),
+                )
+                    ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
+                    ->whereNull('parcels.deleted_at')
+                    ->whereDate('parcels.created_at', Carbon::now())
+                    ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+                $responseData['import_parcels'] = [
+                    'start_date' => Carbon::now()->format('Y-m-d'),
+                    'end_date' => Carbon::now()->format('Y-m-d'),
+                    'group' => 'Import Parcels',
+                    'description' => "Import parcels",
+                    'import_actual' => $parcelImportQuery->sum('qty_actual'),
+                    'qty_create_bill' => $parcelImportQuery->sum('qty_create_bill'),
+                    'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill'), 2),
+                    'total_lak' => number_format($parcelImportQuery->sum('total_lak'), 2),
+                    'price_per_weight' => number_format($parcelImportQuery->avg('price_per_weight'), 2),
+                    'payment_total_lak' => null,
+                    'payment_total_cny' => null,
+                    'payment_cash' => null,
+                    'payment_transfer' => null,
+                    'payment_alipay' => null,
+                    'payment_wechatpay' => null,
+                ];
+            }
+
+            // mock data
+            $responseData['parcel_shipped_success'] = [
+                'start_date' => Carbon::now()->format('Y-m-d'),
+                'end_date' => Carbon::now()->format('Y-m-d'),
+                'group' => 'Shipped (Success)',
+                'description' => 'Shipped (Success)',
+                'import_actual' => null,
+                'qty_create_bill' => '-400',
+                'weight_create_bill' => '-200',
+                'total_lak' => number_format(400000.457, 2),
+                'price_per_weight' => number_format(250, 2),
+                'payment_total_lak' => number_format(400000.457, 2),
+                'payment_total_cny' => number_format(4000.45, 2),
+                'payment_cash' => number_format(4000, 2),
+                'payment_transfer' => number_format(4000, 2),
+                'payment_alipay' => number_format(4000, 2),
+                'payment_wechatpay' => number_format(4000, 2),
+            ];
+
+            // mock data
+            $responseData['in_stock'] = [
+                'start_date' => Carbon::now()->format('Y-m-d'),
+                'end_date' => Carbon::now()->format('Y-m-d'),
+                'group' => '',
+                'description' => 'In Stock',
+                'import_actual' => null,
+                'qty_create_bill' => '400',
+                'weight_create_bill' => '200',
+                'total_lak' => number_format(400000.457, 2),
+                'price_per_weight' => null,
+                'payment_total_lak' => null,
+                'payment_total_cny' => null,
+                'payment_cash' => null,
+                'payment_transfer' => null,
+                'payment_alipay' => null,
+                'payment_wechatpay' => null,
+            ];
+            
+            $responseData['import_parcels_forsale'] = [
+                'start_date' => $responseData['import_parcels']['start_date'],
+                'end_date' => $responseData['import_parcels']['end_date'],
+                'group' => 'Import Parcels - Forsale',
+                'description' => '',
+                'import_actual' => $responseData['import_parcels']['import_actual'],
+                'qty_create_bill' => $responseData['import_parcels']['qty_create_bill'],
+                'weight_create_bill' => $responseData['import_parcels']['weight_create_bill'],
+                'total_lak' => $responseData['import_parcels']['total_lak'],
+                'price_per_weight' => $responseData['import_parcels']['price_per_weight'],
+                'payment_total_lak' => null,
+                'payment_total_cny' => null,
+                'payment_cash' => null,
+                'payment_transfer' => null,
+                'payment_alipay' => null,
+                'payment_wechatpay' => null,
+            ];
+
+            // forbuy
+            if($request->start_at && $request->end_at) {
+                $parcelForbuyQuery = Parcel::select(
+                    DB::raw('COUNT(parcels.id) as qty_actual'),
+                    DB::raw('SUM(parcels.id) as qty_create_bill'),
+                    DB::raw('SUM(weight) as weight_create_bill'),
+                    DB::raw('SUM(price) as total_lak'),
+                    DB::raw('SUM(price) / SUM(weight) as price_per_weight'),
+                    DB::raw('DATE(parcels.created_at) as date'),
+                )
+                    ->whereNull('parcels.deleted_at')
+                    ->whereBetween('parcels.created_at', [$request->start_at, $request->end_at])
+                    ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
+
+                $responseData['import_parcels_forbuy'] = [
+                    'start_date' => $parcelForbuyQuery->count() > 0 ? $parcelForbuyQuery->min('date') : null,
+                    'end_date' => $parcelForbuyQuery->count() > 0 ? $parcelForbuyQuery->max('date') : null,
+                    'group' => 'Import Parcels - ForBuy',
+                    'description' => "",
+                    'import_actual' => $parcelForbuyQuery->sum('qty_actual'),
+                    'qty_create_bill' => $parcelForbuyQuery->sum('qty_create_bill'),
+                    'weight_create_bill' => number_format($parcelForbuyQuery->sum('weight_create_bill'), 2),
+                    'total_lak' => number_format($parcelForbuyQuery->sum('total_lak'), 2),
+                    'price_per_weight' => number_format($parcelForbuyQuery->avg('price_per_weight'), 2),
+                    'payment_total_lak' => null,
+                    'payment_total_cny' => null,
+                    'payment_cash' => null,
+                    'payment_transfer' => null,
+                    'payment_alipay' => null,
+                    'payment_wechatpay' => null,
+                ];
+            } else {
+                $parcelForbuyQuery = Parcel::select(
+                    DB::raw('COUNT(parcels.id) as qty_actual'),
+                    DB::raw('SUM(parcels.id) as qty_create_bill'),
+                    DB::raw('SUM(weight) as weight_create_bill'),
+                    DB::raw('SUM(price) as total_lak'),
+                    DB::raw('SUM(price) / SUM(weight) as price_per_weight'),
+                    DB::raw('DATE(parcels.created_at) as date'),
+                )
+                    ->whereNull('parcels.deleted_at')
+                    ->whereDate('parcels.created_at', Carbon::now())
+                    ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
+    
+                $responseData['import_parcels_forbuy'] = [
+                    'start_date' => Carbon::now()->format('Y-m-d'),
+                    'end_date' => Carbon::now()->format('Y-m-d'),
+                    'group' => 'Import Parcels - ForBuy',
+                    'description' => "",
+                    'import_actual' => $parcelForbuyQuery->sum('qty_actual'),
+                    'qty_create_bill' => $parcelForbuyQuery->sum('qty_create_bill'),
+                    'weight_create_bill' => number_format($parcelForbuyQuery->sum('weight_create_bill'), 2),
+                    'total_lak' => number_format($parcelForbuyQuery->sum('total_lak'), 2),
+                    'price_per_weight' => number_format($parcelForbuyQuery->avg('price_per_weight'), 2),
+                    'payment_total_lak' => null,
+                    'payment_total_cny' => null,
+                    'payment_cash' => null,
+                    'payment_transfer' => null,
+                    'payment_alipay' => null,
+                    'payment_wechatpay' => null,
+                ];
+            }
+
+            if($request->query('start_at') && $request->query('end_at')) {
+                $responseData['income_other'] = IncomeExpense::where('type', 'income')
+                    ->where('sub_type', 'other')
+                    ->whereNull('deleted_at')
+                    ->where('status', 'verify')
+                    ->where('created_at', '>=', $request->query('start_at'))
+                    ->where('created_at', '<=', $request->query('end_at'))
+                    ->get();
+    
+                $responseData['expenses_other'] = IncomeExpense::where('type', 'expenses')
+                    ->where('sub_type', 'other')
+                    ->whereNull('deleted_at')
+                    ->where('status', 'verify')
+                    ->where('created_at', '>=', $request->query('start_at'))
+                    ->where('created_at', '<=', $request->query('end_at'))
+                    ->get();
+    
+                $responseData['income_top_up'] = IncomeExpense::where('type', 'income')
+                    ->where('sub_type', 'top_up')
+                    ->whereNull('deleted_at')
+                    ->where('status', 'verify')
+                    ->where('created_at', '>=', $request->query('start_at'))
+                    ->where('created_at', '<=', $request->query('end_at'))
+                    ->get();
+            } else {
+                $responseData['income_other'] = IncomeExpense::
+                    // where('type', 'income')
+                    // ->where('sub_type', 'other')
+                    whereNull('deleted_at')
+                    // ->where('status', 'verify')
+                    // ->where('created_at', '>=', Carbon::now()->format('Y-m-d'))
+                    // ->where('created_at', '<=', Carbon::now()->format('Y-m-d'))
+                    ->get();
+    
+                $responseData['expenses_other'] = IncomeExpense::where('type', 'expenses')
+                    ->where('sub_type', 'other')
+                    ->whereNull('deleted_at')
+                    ->where('status', 'verify')
+                    ->where('created_at', '>=', Carbon::now()->format('Y-m-d'))
+                    ->where('created_at', '<=', Carbon::now()->format('Y-m-d'))
+                    ->get();
+    
+                $responseData['income_top_up'] = IncomeExpense::where('type', 'income')
+                    ->where('sub_type', 'top_up')
+                    ->whereNull('deleted_at')
+                    ->where('status', 'verify')
+                    ->where('created_at', '>=', Carbon::now()->format('Y-m-d'))
+                    ->where('created_at', '<=', Carbon::now()->format('Y-m-d'))
+                    ->get();
+            }
+
+            return response()->json([
+                'code' => 200,
+                'status' => 'OK',
+                'data' => $responseData,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => $e->getMessage(),
+                'status' => 'ERROR',
+                'error' => array(),
+                'code' => 400
+            ], 400);
+        }
     }
 }
