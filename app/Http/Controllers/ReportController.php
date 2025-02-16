@@ -9,6 +9,7 @@ use App\Http\Resources\ReportAccountingCollection;
 use App\Http\Resources\ReportIncomeExpensesCollection;
 use App\Http\Resources\ReportReturnParcelCollection;
 use App\Models\Balance;
+use App\Models\Bill;
 use App\Models\IncomeExpense;
 use App\Models\Parcel;
 use App\Models\Payment;
@@ -16,6 +17,7 @@ use App\Models\ReturnParcel;
 use App\Support\Collection;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -371,7 +373,7 @@ class ReportController extends Controller
                     $lastQuery->orderBy($field, $direction);
                 }
             }
-            
+
             $reports = ReportIncomeExpensesCollection::collection($lastQuery->get());
             if ($request->has('per_page') && $request->query('page')) {
                 $reports = (new Collection($reports))->paginate($request->query('per_page'));
@@ -486,7 +488,7 @@ class ReportController extends Controller
             $reports = ReportIncomeExpensesCollection::collection($lastQuery->get())->toResponse($request);
 
             $reports = $reports->getData()->data;
-            
+
             return Excel::download(new ReportIncomeExpensesExport($reports), 'reports-income-expenses-' . Carbon::now()->format('Y-m-d') . '.xlsx');
         } catch (Exception $e) {
             return response()->json([
@@ -517,13 +519,13 @@ class ReportController extends Controller
         try {
             $responseData = [];
 
-            if($request->start_at && $request->end_at) {
+            if ($request->start_at && $request->end_at) {
                 $parcelImportQuery = Parcel::select(
                     DB::raw('COUNT(parcels.id) as qty_actual'),
                     DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN 1 ELSE 0 END) as qty_create_bill'),
                     DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as weight_create_bill'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN bills.amount_lak ELSE 0 END) as total_lak'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN bills.amount_lak ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as price_per_weight'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) as total_lak'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as price_per_weight'),
                     DB::raw('DATE(parcels.created_at) as date'),
                 )
                     ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
@@ -553,8 +555,8 @@ class ReportController extends Controller
                     DB::raw('COUNT(parcels.id) as qty_actual'),
                     DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN 1 ELSE 0 END) as qty_create_bill'),
                     DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as weight_create_bill'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN bills.amount_lak ELSE 0 END) as total_lak'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN bills.amount_lak ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as price_per_weight'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) as total_lak'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as price_per_weight'),
                     DB::raw('DATE(parcels.created_at) as date'),
                 )
                     ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
@@ -581,44 +583,143 @@ class ReportController extends Controller
                 ];
             }
 
-            // mock data
-            $responseData['parcel_shipped_success'] = [
-                'start_date' => Carbon::now()->format('Y-m-d'),
-                'end_date' => Carbon::now()->format('Y-m-d'),
-                'group' => 'Shipped (Success)',
-                'description' => 'Shipped (Success)',
-                'import_actual' => null,
-                'qty_create_bill' => '-400',
-                'weight_create_bill' => '-200',
-                'total_lak' => number_format(400000.457, 2),
-                'price_per_weight' => number_format(250, 2),
-                'payment_total_lak' => number_format(400000.457, 2),
-                'payment_total_cny' => number_format(4000.45, 2),
-                'payment_cash' => number_format(4000, 2),
-                'payment_transfer' => number_format(4000, 2),
-                'payment_alipay' => number_format(4000, 2),
-                'payment_wechatpay' => number_format(4000, 2),
-            ];
 
-            // mock data
-            $responseData['in_stock'] = [
-                'start_date' => Carbon::now()->format('Y-m-d'),
-                'end_date' => Carbon::now()->format('Y-m-d'),
-                'group' => '',
-                'description' => 'In Stock',
-                'import_actual' => null,
-                'qty_create_bill' => '400',
-                'weight_create_bill' => '200',
-                'total_lak' => number_format(400000.457, 2),
-                'price_per_weight' => null,
-                'payment_total_lak' => null,
-                'payment_total_cny' => null,
-                'payment_cash' => null,
-                'payment_transfer' => null,
-                'payment_alipay' => null,
-                'payment_wechatpay' => null,
-            ];
-            
+            if ($request->start_at && $request->end_at) {
+                $parcelShippedSuccess = Parcel::select(
+                    DB::raw('COUNT(parcels.id) as qty_create_bill'),
+                    DB::raw('SUM(parcels.price_bill) as total_lak'),
+                    DB::raw('SUM(parcels.weight) as weight_create_bill'),
+                    DB::raw('DATE(parcels.created_at) as date'),
+                )
+                    ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
+                    ->whereNull('parcels.deleted_at')
+                    ->where('parcels.status', 'success')
+                    ->whereBetween('parcels.created_at', [$request->start_at, $request->end_at])
+                    ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
+
+                $paymentPaid = Payment::select(
+                    DB::raw('SUM(payments.amount_lak) as amount_lak'),
+                    DB::raw('SUM(payments.amount_cny) as amount_cny'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "cash" THEN payments.amount_lak ELSE 0 END) as amount_cash'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as amount_transfer'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "alipay" THEN payments.amount_cny ELSE 0 END) as amount_alipay'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "wechat_pay" THEN payments.amount_cny ELSE 0 END) as amount_wechat_pay'),
+                    DB::raw('payments.method as method'),
+                )
+                    ->leftJoin('bill_payment', 'bill_payment.payment_id', '=', 'payments.id')
+                    ->leftJoin('bills', 'bill_payment.bill_id', '=', 'bills.id')
+                    ->leftJoin('parcels', 'parcels.bill_id', '=', 'bills.id')
+                    ->where('payments.status', 'paid')
+                    ->whereNull('payments.deleted_at')
+                    ->whereNull('parcels.deleted_at')
+                    ->where('parcels.status', 'success')
+                    ->whereBetween('parcels.created_at', [$request->start_at, $request->end_at])
+                    ->groupBy('method')->get();
+
+                $responseData['parcel_shipped_success'] = [
+                    'start_date' => $parcelShippedSuccess->count() > 0 ? $parcelShippedSuccess->min('date') : null,
+                    'end_date' => $parcelShippedSuccess->count() > 0 ? $parcelShippedSuccess->max('date') : null,
+                    'group' => 'Shipped (Success)',
+                    'description' => 'Shipped (Success)',
+                    'import_actual' => null,
+                    'qty_create_bill' => $parcelShippedSuccess->sum('qty_create_bill') * -1,
+                    'weight_create_bill' => number_format($parcelShippedSuccess->sum('weight_create_bill')* -1, 2) ,
+                    'total_lak' => number_format($parcelShippedSuccess->sum('total_lak'), 2),
+                    'price_per_weight' => number_format($parcelShippedSuccess->sum('total_lak') / $parcelShippedSuccess->sum('weight_create_bill'), 2),
+                    'payment_total_lak' => number_format($paymentPaid->sum('amount_lak'), 2),
+                    'payment_total_cny' => number_format($paymentPaid->sum('amount_cny'), 2),
+                    'payment_cash' => number_format($paymentPaid->sum('amount_cash'), 2),
+                    'payment_transfer' => number_format($paymentPaid->sum('amount_transfer'), 2),
+                    'payment_alipay' => number_format($paymentPaid->sum('amount_alipay'), 2),
+                    'payment_wechatpay' => number_format($paymentPaid->sum('amount_wechat_pay'), 2),
+                ];
+
+                $responseData['in_stock'] = [
+                    'start_date' => $parcelShippedSuccess->count() > 0 ? $parcelShippedSuccess->min('date') : null,
+                    'end_date' => $parcelShippedSuccess->count() > 0 ? $parcelShippedSuccess->max('date') : null,
+                    'group' => '',
+                    'description' => 'In Stock',
+                    'import_actual' => null,
+                    'qty_create_bill' => $parcelImportQuery->sum('qty_create_bill') - $parcelShippedSuccess->sum('qty_create_bill'),
+                    'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill') - $parcelShippedSuccess->sum('weight_create_bill'), 2),
+                    'total_lak' => number_format($parcelImportQuery->sum('total_lak') - $parcelShippedSuccess->sum('total_lak'), 2),
+                    'price_per_weight' => null,
+                    'payment_total_lak' => null,
+                    'payment_total_cny' => null,
+                    'payment_cash' => null,
+                    'payment_transfer' => null,
+                    'payment_alipay' => null,
+                    'payment_wechatpay' => null,
+                ];
+            } else {
+                $parcelShippedSuccess = Parcel::select(
+                    DB::raw('COUNT(parcels.id) as qty_create_bill'),
+                    DB::raw('SUM(parcels.price_bill) as total_lak'),
+                    DB::raw('SUM(parcels.weight) as weight_create_bill'),
+                    DB::raw('DATE(parcels.created_at) as date'),
+                )
+                    ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
+                    ->whereNull('parcels.deleted_at')
+                    ->where('parcels.status', 'success')
+                    ->whereDate('parcels.created_at', Carbon::now())
+                    ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
+
+                $paymentPaid = Payment::select(
+                    DB::raw('SUM(payments.amount_lak) as amount_lak'),
+                    DB::raw('SUM(payments.amount_cny) as amount_cny'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "cash" THEN payments.amount_lak ELSE 0 END) as amount_cash'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as amount_transfer'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "alipay" THEN payments.amount_cny ELSE 0 END) as amount_alipay'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "wechat_pay" THEN payments.amount_cny ELSE 0 END) as amount_wechat_pay'),
+                    DB::raw('payments.method as method'),
+                )
+                    ->leftJoin('bill_payment', 'bill_payment.payment_id', '=', 'payments.id')
+                    ->leftJoin('bills', 'bill_payment.bill_id', '=', 'bills.id')
+                    ->leftJoin('parcels', 'parcels.bill_id', '=', 'bills.id')
+                    ->where('payments.status', 'paid')
+                    ->whereNull('payments.deleted_at')
+                    ->whereNull('parcels.deleted_at')
+                    ->where('parcels.status', 'success')
+                    ->whereDate('parcels.created_at', Carbon::now())
+                    ->groupBy('method')->get();
+
+                $responseData['parcel_shipped_success'] = [
+                    'start_date' => Carbon::now()->format('Y-m-d'),
+                    'end_date' => Carbon::now()->format('Y-m-d'),
+                    'group' => 'Shipped (Success)',
+                    'description' => 'Shipped (Success)',
+                    'import_actual' => null,
+                    'qty_create_bill' => $parcelShippedSuccess->sum('qty_create_bill') * -1,
+                    'weight_create_bill' => number_format($parcelShippedSuccess->sum('weight_create_bill') * -1, 2),
+                    'total_lak' => number_format($parcelShippedSuccess->sum('total_lak'), 2),
+                    'price_per_weight' => number_format($parcelShippedSuccess->sum('total_lak') / $parcelShippedSuccess->sum('weight_create_bill'), 2),
+                    'payment_total_lak' => number_format($paymentPaid->sum('amount_lak'), 2),
+                    'payment_total_cny' => number_format($paymentPaid->sum('amount_cny'), 2),
+                    'payment_cash' => number_format($paymentPaid->sum('amount_cash'), 2),
+                    'payment_transfer' => number_format($paymentPaid->sum('amount_transfer'), 2),
+                    'payment_alipay' => number_format($paymentPaid->sum('amount_alipay'), 2),
+                    'payment_wechatpay' => number_format($paymentPaid->sum('amount_wechat_pay'), 2),
+                ];
+
+                $responseData['in_stock'] = [
+                    'start_date' => Carbon::now()->format('Y-m-d'),
+                    'end_date' => Carbon::now()->format('Y-m-d'),
+                    'group' => '',
+                    'description' => 'In Stock',
+                    'import_actual' => null,
+                    'qty_create_bill' => $parcelImportQuery->sum('qty_create_bill') - $parcelShippedSuccess->sum('qty_create_bill'),
+                    'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill') - $parcelShippedSuccess->sum('weight_create_bill'), 2),
+                    'total_lak' => number_format($parcelImportQuery->sum('total_lak') - $parcelShippedSuccess->sum('total_lak'), 2),
+                    'price_per_weight' => null,
+                    'payment_total_lak' => null,
+                    'payment_total_cny' => null,
+                    'payment_cash' => null,
+                    'payment_transfer' => null,
+                    'payment_alipay' => null,
+                    'payment_wechatpay' => null,
+                ];
+            }
+
             $responseData['import_parcels_forsale'] = [
                 'start_date' => $responseData['import_parcels']['start_date'],
                 'end_date' => $responseData['import_parcels']['end_date'],
@@ -638,7 +739,7 @@ class ReportController extends Controller
             ];
 
             // forbuy
-            if($request->start_at && $request->end_at) {
+            if ($request->start_at && $request->end_at) {
                 $parcelForbuyQuery = Parcel::select(
                     DB::raw('COUNT(parcels.id) as qty_actual'),
                     DB::raw('SUM(parcels.id) as qty_create_bill'),
@@ -680,7 +781,7 @@ class ReportController extends Controller
                     ->whereNull('parcels.deleted_at')
                     ->whereDate('parcels.created_at', Carbon::now())
                     ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
-    
+
                 $responseData['import_parcels_forbuy'] = [
                     'start_date' => Carbon::now()->format('Y-m-d'),
                     'end_date' => Carbon::now()->format('Y-m-d'),
@@ -700,7 +801,7 @@ class ReportController extends Controller
                 ];
             }
 
-            if($request->query('start_at') && $request->query('end_at')) {
+            if ($request->query('start_at') && $request->query('end_at')) {
                 $responseData['income_other'] = IncomeExpense::where('type', 'income')
                     ->where('sub_type', 'other')
                     ->whereNull('deleted_at')
@@ -708,7 +809,7 @@ class ReportController extends Controller
                     ->where('created_at', '>=', $request->query('start_at'))
                     ->where('created_at', '<=', $request->query('end_at'))
                     ->get();
-    
+
                 $responseData['expenses_other'] = IncomeExpense::where('type', 'expenses')
                     ->where('sub_type', 'other')
                     ->whereNull('deleted_at')
@@ -716,7 +817,7 @@ class ReportController extends Controller
                     ->where('created_at', '>=', $request->query('start_at'))
                     ->where('created_at', '<=', $request->query('end_at'))
                     ->get();
-    
+
                 $responseData['income_top_up'] = IncomeExpense::where('type', 'income')
                     ->where('sub_type', 'top_up')
                     ->whereNull('deleted_at')
@@ -733,7 +834,7 @@ class ReportController extends Controller
                     // ->where('created_at', '>=', Carbon::now()->format('Y-m-d'))
                     // ->where('created_at', '<=', Carbon::now()->format('Y-m-d'))
                     ->get();
-    
+
                 $responseData['expenses_other'] = IncomeExpense::where('type', 'expenses')
                     ->where('sub_type', 'other')
                     ->whereNull('deleted_at')
@@ -741,7 +842,7 @@ class ReportController extends Controller
                     ->where('created_at', '>=', Carbon::now()->format('Y-m-d'))
                     ->where('created_at', '<=', Carbon::now()->format('Y-m-d'))
                     ->get();
-    
+
                 $responseData['income_top_up'] = IncomeExpense::where('type', 'income')
                     ->where('sub_type', 'top_up')
                     ->whereNull('deleted_at')
