@@ -309,7 +309,7 @@ class PaymentController extends Controller
             return response()->json([
                 'code' => 201,
                 'status' => 'Created',
-                'data' => array()
+                'data' => $payment->payment_no
             ], 201);
         } catch (Exception $e) {
             DB::rollBack();
@@ -548,7 +548,7 @@ class PaymentController extends Controller
             return response()->json([
                 'code' => 200,
                 'status' => 'OK',
-                'data' => array()
+                'data' => $payment->payment_no
             ], 200);
         } catch (Exception $e) {
             DB::rollBack();
