@@ -72,6 +72,7 @@ abstract class Controller
                         $parcel->name = $customer->name;
                     }
                     $parcel->price_bill = ceil(floor(($parcel->weight * $rate)) / 1000) * 1000;
+                    $parcel->price_bill_cny = ceil(($parcel->price_bill / ($currency_now->amount_cny * $currency_now->amount_lak)) * 100) / 100;
                     $parcel->save();
                 }
             }

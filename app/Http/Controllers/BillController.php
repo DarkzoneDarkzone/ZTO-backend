@@ -47,7 +47,7 @@ class BillController extends Controller
             });
 
             $query->with(['Parcels' => function ($query) {
-                $query->select('id', 'bill_id', 'track_no', 'weight', 'price_bill', 'status', 'phone', 'name', 'is_check', 'price_bill');
+                $query->select('id', 'bill_id', 'track_no', 'weight', 'price_bill', 'price_bill_cny', 'status', 'phone', 'name', 'is_check');
             }]);
 
             $bill_pay_sub = Payment::query();
@@ -225,6 +225,7 @@ class BillController extends Controller
                     $parcel->name = $request->name;
                 }
                 $parcel->price_bill = ceil(floor(($parcel->weight * $rate)) / 1000) * 1000;
+                $parcel->price_bill_cny = ceil(($parcel->price_bill / ($currency_now->amount_cny * $currency_now->amount_lak)) * 100) / 100;
                 $parcel->save();
             }
 

@@ -542,6 +542,7 @@ class ReportController extends Controller
                     'qty_create_bill' => number_format($parcelImportQuery->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill'), 2),
                     'total_lak' => number_format($parcelImportQuery->sum('total_lak'), 2),
+                    'total_cny' => null,
                     'price_per_weight' => number_format($parcelImportQuery->avg('price_per_weight'), 2),
                     'payment_total_lak' => null,
                     'payment_total_cny' => null,
@@ -573,6 +574,7 @@ class ReportController extends Controller
                     'qty_create_bill' => number_format($parcelImportQuery->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill'), 2),
                     'total_lak' => number_format($parcelImportQuery->sum('total_lak'), 2),
+                    'total_cny' => null,
                     'price_per_weight' => number_format($parcelImportQuery->avg('price_per_weight'), 2),
                     'payment_total_lak' => null,
                     'payment_total_cny' => null,
@@ -590,12 +592,19 @@ class ReportController extends Controller
                     DB::raw('SUM(parcels.price_bill) as total_lak'),
                     DB::raw('SUM(parcels.weight) as weight_create_bill'),
                     DB::raw('DATE(parcels.created_at) as date'),
+                    DB::raw('MAX(CASE WHEN bill_id IS NOT NULL THEN currencies.amount_cny ELSE 0 END) as currencies_cny'),
+                    DB::raw('MAX(CASE WHEN bill_id IS NOT NULL THEN currencies.amount_lak ELSE 0 END) as currencies_lak'),
                 )
                     ->join('bills', 'parcels.bill_id', '=', 'bills.id')
+                    ->leftJoin('currencies', DB::raw('DATE(currencies.created_at)'), '=', DB::raw('DATE(parcels.created_at)'))
                     ->whereNull('parcels.deleted_at')
                     ->where('parcels.status', 'success')
                     ->whereBetween('parcels.created_at', [$request->start_at, $request->end_at])
                     ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
+
+                foreach ($parcelShippedSuccess as $ShippedSuccess) {
+                    $ShippedSuccess->total_cny = $ShippedSuccess->total_lak / ($ShippedSuccess->currencies_cny * $ShippedSuccess->currencies_lak);
+                }
 
                 $paymentPaid = Payment::select(
                     DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "cash" OR payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as amount_lak'),
@@ -617,6 +626,10 @@ class ReportController extends Controller
                     ->whereBetween('parcels.created_at', [$request->start_at, $request->end_at])
                     ->groupBy('method')->get();
 
+                foreach ($parcelShippedSuccess as $ShippedSuccess) {
+                    $ShippedSuccess->total_cny = ceil(($ShippedSuccess->total_lak / ($ShippedSuccess->currencies_cny * $ShippedSuccess->currencies_lak)) * 100) / 100;
+                }
+
                 $responseData['parcel_shipped_success'] = [
                     'start_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->start_at)->format('Y-m-d'),
                     'end_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->end_at)->format('Y-m-d'),
@@ -626,6 +639,7 @@ class ReportController extends Controller
                     'qty_create_bill' => number_format($parcelShippedSuccess->sum('qty_create_bill') * -1),
                     'weight_create_bill' => number_format($parcelShippedSuccess->sum('weight_create_bill') * -1, 2),
                     'total_lak' => number_format($parcelShippedSuccess->sum('total_lak'), 2),
+                    'total_cny' => number_format($parcelShippedSuccess->sum('total_cny'), 2),
                     'price_per_weight' => number_format(($parcelShippedSuccess->sum('total_lak') / ($parcelShippedSuccess->sum('weight_create_bill') == 0 ? 1 : $parcelShippedSuccess->sum('weight_create_bill'))) * -1, 2),
                     'payment_total_lak' => number_format($paymentPaid->sum('amount_lak'), 2),
                     'payment_total_cny' => number_format($paymentPaid->sum('amount_cny'), 2),
@@ -644,6 +658,7 @@ class ReportController extends Controller
                     'qty_create_bill' => number_format($parcelImportQuery->sum('qty_create_bill') - $parcelShippedSuccess->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill') - $parcelShippedSuccess->sum('weight_create_bill'), 2),
                     'total_lak' => number_format(($parcelImportQuery->sum('total_lak') - $parcelShippedSuccess->sum('total_lak')) * -1, 2),
+                    'total_cny' => null,
                     'price_per_weight' => null,
                     'payment_total_lak' => null,
                     'payment_total_cny' => null,
@@ -658,13 +673,20 @@ class ReportController extends Controller
                     DB::raw('SUM(parcels.price_bill) as total_lak'),
                     DB::raw('SUM(parcels.weight) as weight_create_bill'),
                     DB::raw('DATE(parcels.created_at) as date'),
+                    // DB::raw('MAX(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill / currencies.amount_cny * currencies.amount_lak ELSE 0 END) as total_cny'),
+                    DB::raw('MAX(CASE WHEN bill_id IS NOT NULL THEN currencies.amount_cny ELSE 0 END) as total_cny_origin'),
+                    DB::raw('MAX(CASE WHEN bill_id IS NOT NULL THEN currencies.amount_lak ELSE 0 END) as total_lak_origin'),
                 )
                     ->join('bills', 'parcels.bill_id', '=', 'bills.id')
+                    ->leftJoin('currencies', DB::raw('DATE(currencies.created_at)'), '=', DB::raw('DATE(parcels.created_at)'))
                     ->whereNull('parcels.deleted_at')
                     ->where('parcels.status', 'success')
                     ->whereDate('parcels.created_at', Carbon::now())
                     ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
 
+                foreach ($parcelShippedSuccess as $ShippedSuccess) {
+                    $ShippedSuccess->total_cny = ceil(($ShippedSuccess->total_lak / ($ShippedSuccess->currencies_cny * $ShippedSuccess->currencies_lak)) * 100) / 100;
+                }
                 $paymentPaid = Payment::select(
                     DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "cash" OR payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as amount_lak'),
                     DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "alipay" OR payments.method = "wechat_pay" THEN payments.amount_cny ELSE 0 END) as amount_cny'),
@@ -694,6 +716,7 @@ class ReportController extends Controller
                     'qty_create_bill' => number_format($parcelShippedSuccess->sum('qty_create_bill') * -1),
                     'weight_create_bill' => number_format($parcelShippedSuccess->sum('weight_create_bill') * -1, 2),
                     'total_lak' => number_format($parcelShippedSuccess->sum('total_lak'), 2),
+                    'total_cny' => number_format($parcelShippedSuccess->sum('total_cny'), 2),
                     'price_per_weight' => number_format(($parcelShippedSuccess->sum('total_lak') / ($parcelShippedSuccess->sum('weight_create_bill') == 0 ? 1 : $parcelShippedSuccess->sum('weight_create_bill'))) * -1, 2),
                     'payment_total_lak' => number_format($paymentPaid->sum('amount_lak'), 2),
                     'payment_total_cny' => number_format($paymentPaid->sum('amount_cny'), 2),
@@ -712,6 +735,7 @@ class ReportController extends Controller
                     'qty_create_bill' => number_format($parcelImportQuery->sum('qty_create_bill') - $parcelShippedSuccess->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill') - $parcelShippedSuccess->sum('weight_create_bill'), 2),
                     'total_lak' => number_format(($parcelImportQuery->sum('total_lak') - $parcelShippedSuccess->sum('total_lak')) * -1, 2),
+                    'total_cny' => null,
                     'price_per_weight' => null,
                     'payment_total_lak' => null,
                     'payment_total_cny' => null,
@@ -749,11 +773,17 @@ class ReportController extends Controller
                     DB::raw('SUM(price) as total_lak'),
                     DB::raw('SUM(price) / SUM(weight) as price_per_weight'),
                     DB::raw('DATE(parcels.created_at) as date'),
+                    DB::raw('MAX(CASE WHEN bill_id IS NOT NULL THEN currencies.amount_cny ELSE 0 END) as currencies_cny'),
+                    DB::raw('MAX(CASE WHEN bill_id IS NOT NULL THEN currencies.amount_lak ELSE 0 END) as currencies_lak'),
                 )
+                    ->leftJoin('currencies', DB::raw('DATE(currencies.created_at)'), '=', DB::raw('DATE(parcels.created_at)'))
                     ->whereNull('parcels.deleted_at')
                     ->whereBetween('parcels.created_at', [$request->start_at, $request->end_at])
                     ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
 
+                foreach ($parcelForbuyQuery as $ForbuyQuery) {
+                    $ForbuyQuery->total_cny = ceil(($ForbuyQuery->total_lak / ($ForbuyQuery->currencies_cny * $ForbuyQuery->currencies_lak)) * 100) / 100;
+                }
                 $responseData['import_parcels_forbuy'] = [
                     'start_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->start_at)->format('Y-m-d'),
                     'end_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->end_at)->format('Y-m-d'),
@@ -763,6 +793,7 @@ class ReportController extends Controller
                     'qty_create_bill' => number_format($parcelForbuyQuery->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelForbuyQuery->sum('weight_create_bill'), 2),
                     'total_lak' => number_format($parcelForbuyQuery->sum('total_lak'), 2),
+                    'total_cny' => number_format($parcelForbuyQuery->sum('total_cny'), 2),
                     'price_per_weight' => number_format($parcelForbuyQuery->avg('price_per_weight'), 2),
                     'payment_total_lak' => null,
                     'payment_total_cny' => null,
@@ -779,11 +810,18 @@ class ReportController extends Controller
                     DB::raw('SUM(price) as total_lak'),
                     DB::raw('SUM(price) / SUM(weight) as price_per_weight'),
                     DB::raw('DATE(parcels.created_at) as date'),
+                    DB::raw('MAX(CASE WHEN bill_id IS NOT NULL THEN currencies.amount_cny ELSE 0 END) as currencies_cny'),
+                    DB::raw('MAX(CASE WHEN bill_id IS NOT NULL THEN currencies.amount_lak ELSE 0 END) as currencies_lak'),
                 )
+                    ->leftJoin('currencies', DB::raw('DATE(currencies.created_at)'), '=', DB::raw('DATE(parcels.created_at)'))
                     ->whereNull('parcels.deleted_at')
                     ->whereDate('parcels.created_at', Carbon::now())
                     ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
 
+                foreach ($parcelForbuyQuery as $ForbuyQuery) {
+                    $ForbuyQuery->total_cny = ceil(($ForbuyQuery->total_lak / ($ForbuyQuery->currencies_cny * $ForbuyQuery->currencies_lak)) * 100) / 100;
+                }
+                
                 $responseData['import_parcels_forbuy'] = [
                     'start_date' => Carbon::now()->format('Y-m-d'),
                     'end_date' => Carbon::now()->format('Y-m-d'),
@@ -793,6 +831,7 @@ class ReportController extends Controller
                     'qty_create_bill' => number_format($parcelForbuyQuery->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelForbuyQuery->sum('weight_create_bill'), 2),
                     'total_lak' => number_format($parcelForbuyQuery->sum('total_lak'), 2),
+                    'total_cny' => number_format($parcelForbuyQuery->sum('total_cny'), 2),
                     'price_per_weight' => number_format($parcelForbuyQuery->avg('price_per_weight'), 2),
                     'payment_total_lak' => null,
                     'payment_total_cny' => null,
@@ -829,7 +868,7 @@ class ReportController extends Controller
                     ->get();
             } else {
                 $responseData['income_other'] = IncomeExpense::
-                // where('type', 'income')
+                    // where('type', 'income')
                     // ->where('sub_type', 'other')
                     whereNull('deleted_at')
                     // ->where('status', 'verify')
