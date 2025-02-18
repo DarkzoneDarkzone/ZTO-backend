@@ -522,10 +522,10 @@ class ReportController extends Controller
             if ($request->start_at && $request->end_at) {
                 $parcelImportQuery = Parcel::select(
                     DB::raw('COUNT(parcels.id) as qty_actual'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN 1 ELSE 0 END) as qty_create_bill'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as weight_create_bill'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "pending" THEN 1 ELSE 0 END) as qty_create_bill'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "pending" THEN weight ELSE 0 END) as weight_create_bill'),
                     DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) as total_lak'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as price_per_weight'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "pending" THEN weight ELSE 0 END) as price_per_weight'),
                     DB::raw('DATE(parcels.created_at) as date'),
                 )
                     ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
@@ -534,12 +534,12 @@ class ReportController extends Controller
                     ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
 
                 $responseData['import_parcels'] = [
-                    'start_date' => $parcelImportQuery->count() > 0 ? $parcelImportQuery->min('date') : null,
-                    'end_date' => $parcelImportQuery->count() > 0 ? $parcelImportQuery->max('date') : null,
+                    'start_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->start_at)->format('Y-m-d'),
+                    'end_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->end_at)->format('Y-m-d'),
                     'group' => 'Import Parcels',
                     'description' => "Import parcels",
-                    'import_actual' => $parcelImportQuery->sum('qty_actual'),
-                    'qty_create_bill' => $parcelImportQuery->sum('qty_create_bill'),
+                    'import_actual' => number_format($parcelImportQuery->sum('qty_actual')),
+                    'qty_create_bill' => number_format($parcelImportQuery->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill'), 2),
                     'total_lak' => number_format($parcelImportQuery->sum('total_lak'), 2),
                     'price_per_weight' => number_format($parcelImportQuery->avg('price_per_weight'), 2),
@@ -553,10 +553,10 @@ class ReportController extends Controller
             } else {
                 $parcelImportQuery = Parcel::select(
                     DB::raw('COUNT(parcels.id) as qty_actual'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN 1 ELSE 0 END) as qty_create_bill'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as weight_create_bill'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "pending" THEN 1 ELSE 0 END) as qty_create_bill'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "pending" THEN weight ELSE 0 END) as weight_create_bill'),
                     DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) as total_lak'),
-                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "success" THEN weight ELSE 0 END) as price_per_weight'),
+                    DB::raw('SUM(CASE WHEN bill_id IS NOT NULL THEN parcels.price_bill ELSE 0 END) / SUM(CASE WHEN bill_id IS NOT NULL AND parcels.status <> "pending" THEN weight ELSE 0 END) as price_per_weight'),
                     DB::raw('DATE(parcels.created_at) as date'),
                 )
                     ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
@@ -569,8 +569,8 @@ class ReportController extends Controller
                     'end_date' => Carbon::now()->format('Y-m-d'),
                     'group' => 'Import Parcels',
                     'description' => "Import parcels",
-                    'import_actual' => $parcelImportQuery->sum('qty_actual'),
-                    'qty_create_bill' => $parcelImportQuery->sum('qty_create_bill'),
+                    'import_actual' => number_format($parcelImportQuery->sum('qty_actual')),
+                    'qty_create_bill' => number_format($parcelImportQuery->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill'), 2),
                     'total_lak' => number_format($parcelImportQuery->sum('total_lak'), 2),
                     'price_per_weight' => number_format($parcelImportQuery->avg('price_per_weight'), 2),
@@ -591,15 +591,16 @@ class ReportController extends Controller
                     DB::raw('SUM(parcels.weight) as weight_create_bill'),
                     DB::raw('DATE(parcels.created_at) as date'),
                 )
-                    ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
+                    ->join('bills', 'parcels.bill_id', '=', 'bills.id')
                     ->whereNull('parcels.deleted_at')
                     ->where('parcels.status', 'success')
                     ->whereBetween('parcels.created_at', [$request->start_at, $request->end_at])
                     ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
 
                 $paymentPaid = Payment::select(
-                    DB::raw('SUM(payments.amount_lak) as amount_lak'),
-                    DB::raw('SUM(payments.amount_cny) as amount_cny'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "cash" OR payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as amount_lak'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "alipay" OR payments.method = "wechat_pay" THEN payments.amount_cny ELSE 0 END) as amount_cny'),
+
                     DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "cash" THEN payments.amount_lak ELSE 0 END) as amount_cash'),
                     DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as amount_transfer'),
                     DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "alipay" THEN payments.amount_cny ELSE 0 END) as amount_alipay'),
@@ -617,15 +618,15 @@ class ReportController extends Controller
                     ->groupBy('method')->get();
 
                 $responseData['parcel_shipped_success'] = [
-                    'start_date' => $parcelShippedSuccess->count() > 0 ? $parcelShippedSuccess->min('date') : null,
-                    'end_date' => $parcelShippedSuccess->count() > 0 ? $parcelShippedSuccess->max('date') : null,
+                    'start_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->start_at)->format('Y-m-d'),
+                    'end_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->end_at)->format('Y-m-d'),
                     'group' => 'Shipped (Success)',
                     'description' => 'Shipped (Success)',
                     'import_actual' => null,
-                    'qty_create_bill' => $parcelShippedSuccess->sum('qty_create_bill') * -1,
-                    'weight_create_bill' => number_format($parcelShippedSuccess->sum('weight_create_bill')* -1, 2) ,
+                    'qty_create_bill' => number_format($parcelShippedSuccess->sum('qty_create_bill') * -1),
+                    'weight_create_bill' => number_format($parcelShippedSuccess->sum('weight_create_bill') * -1, 2),
                     'total_lak' => number_format($parcelShippedSuccess->sum('total_lak'), 2),
-                    'price_per_weight' => number_format($parcelShippedSuccess->sum('total_lak') / $parcelShippedSuccess->sum('weight_create_bill'), 2),
+                    'price_per_weight' => number_format(($parcelShippedSuccess->sum('total_lak') / ($parcelShippedSuccess->sum('weight_create_bill') == 0 ? 1 : $parcelShippedSuccess->sum('weight_create_bill'))) * -1, 2),
                     'payment_total_lak' => number_format($paymentPaid->sum('amount_lak'), 2),
                     'payment_total_cny' => number_format($paymentPaid->sum('amount_cny'), 2),
                     'payment_cash' => number_format($paymentPaid->sum('amount_cash'), 2),
@@ -635,14 +636,14 @@ class ReportController extends Controller
                 ];
 
                 $responseData['in_stock'] = [
-                    'start_date' => $parcelShippedSuccess->count() > 0 ? $parcelShippedSuccess->min('date') : null,
-                    'end_date' => $parcelShippedSuccess->count() > 0 ? $parcelShippedSuccess->max('date') : null,
+                    'start_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->start_at)->format('Y-m-d'),
+                    'end_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->end_at)->format('Y-m-d'),
                     'group' => '',
                     'description' => 'In Stock',
                     'import_actual' => null,
-                    'qty_create_bill' => $parcelImportQuery->sum('qty_create_bill') - $parcelShippedSuccess->sum('qty_create_bill'),
+                    'qty_create_bill' => number_format($parcelImportQuery->sum('qty_create_bill') - $parcelShippedSuccess->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill') - $parcelShippedSuccess->sum('weight_create_bill'), 2),
-                    'total_lak' => number_format($parcelImportQuery->sum('total_lak') - $parcelShippedSuccess->sum('total_lak'), 2),
+                    'total_lak' => number_format(($parcelImportQuery->sum('total_lak') - $parcelShippedSuccess->sum('total_lak')) * -1, 2),
                     'price_per_weight' => null,
                     'payment_total_lak' => null,
                     'payment_total_cny' => null,
@@ -658,15 +659,16 @@ class ReportController extends Controller
                     DB::raw('SUM(parcels.weight) as weight_create_bill'),
                     DB::raw('DATE(parcels.created_at) as date'),
                 )
-                    ->leftJoin('bills', 'parcels.bill_id', '=', 'bills.id')
+                    ->join('bills', 'parcels.bill_id', '=', 'bills.id')
                     ->whereNull('parcels.deleted_at')
                     ->where('parcels.status', 'success')
                     ->whereDate('parcels.created_at', Carbon::now())
                     ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
 
                 $paymentPaid = Payment::select(
-                    DB::raw('SUM(payments.amount_lak) as amount_lak'),
-                    DB::raw('SUM(payments.amount_cny) as amount_cny'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "cash" OR payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as amount_lak'),
+                    DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "alipay" OR payments.method = "wechat_pay" THEN payments.amount_cny ELSE 0 END) as amount_cny'),
+
                     DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "cash" THEN payments.amount_lak ELSE 0 END) as amount_cash'),
                     DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "transffer" THEN payments.amount_lak ELSE 0 END) as amount_transfer'),
                     DB::raw('SUM(CASE WHEN payments.method IS NOT NULL AND payments.method = "alipay" THEN payments.amount_cny ELSE 0 END) as amount_alipay'),
@@ -689,10 +691,10 @@ class ReportController extends Controller
                     'group' => 'Shipped (Success)',
                     'description' => 'Shipped (Success)',
                     'import_actual' => null,
-                    'qty_create_bill' => $parcelShippedSuccess->sum('qty_create_bill') * -1,
+                    'qty_create_bill' => number_format($parcelShippedSuccess->sum('qty_create_bill') * -1),
                     'weight_create_bill' => number_format($parcelShippedSuccess->sum('weight_create_bill') * -1, 2),
                     'total_lak' => number_format($parcelShippedSuccess->sum('total_lak'), 2),
-                    'price_per_weight' => number_format($parcelShippedSuccess->sum('total_lak') / $parcelShippedSuccess->sum('weight_create_bill'), 2),
+                    'price_per_weight' => number_format(($parcelShippedSuccess->sum('total_lak') / ($parcelShippedSuccess->sum('weight_create_bill') == 0 ? 1 : $parcelShippedSuccess->sum('weight_create_bill'))) * -1, 2),
                     'payment_total_lak' => number_format($paymentPaid->sum('amount_lak'), 2),
                     'payment_total_cny' => number_format($paymentPaid->sum('amount_cny'), 2),
                     'payment_cash' => number_format($paymentPaid->sum('amount_cash'), 2),
@@ -707,9 +709,9 @@ class ReportController extends Controller
                     'group' => '',
                     'description' => 'In Stock',
                     'import_actual' => null,
-                    'qty_create_bill' => $parcelImportQuery->sum('qty_create_bill') - $parcelShippedSuccess->sum('qty_create_bill'),
+                    'qty_create_bill' => number_format($parcelImportQuery->sum('qty_create_bill') - $parcelShippedSuccess->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelImportQuery->sum('weight_create_bill') - $parcelShippedSuccess->sum('weight_create_bill'), 2),
-                    'total_lak' => number_format($parcelImportQuery->sum('total_lak') - $parcelShippedSuccess->sum('total_lak'), 2),
+                    'total_lak' => number_format(($parcelImportQuery->sum('total_lak') - $parcelShippedSuccess->sum('total_lak')) * -1, 2),
                     'price_per_weight' => null,
                     'payment_total_lak' => null,
                     'payment_total_cny' => null,
@@ -742,7 +744,7 @@ class ReportController extends Controller
             if ($request->start_at && $request->end_at) {
                 $parcelForbuyQuery = Parcel::select(
                     DB::raw('COUNT(parcels.id) as qty_actual'),
-                    DB::raw('SUM(parcels.id) as qty_create_bill'),
+                    DB::raw('COUNT(parcels.id) as qty_create_bill'),
                     DB::raw('SUM(weight) as weight_create_bill'),
                     DB::raw('SUM(price) as total_lak'),
                     DB::raw('SUM(price) / SUM(weight) as price_per_weight'),
@@ -753,12 +755,12 @@ class ReportController extends Controller
                     ->groupBy(DB::raw('DATE(parcels.created_at)'))->get();
 
                 $responseData['import_parcels_forbuy'] = [
-                    'start_date' => $parcelForbuyQuery->count() > 0 ? $parcelForbuyQuery->min('date') : null,
-                    'end_date' => $parcelForbuyQuery->count() > 0 ? $parcelForbuyQuery->max('date') : null,
+                    'start_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->start_at)->format('Y-m-d'),
+                    'end_date' => Carbon::createFromFormat('Y-m-d H:i:s',  $request->end_at)->format('Y-m-d'),
                     'group' => 'Import Parcels - ForBuy',
                     'description' => "",
-                    'import_actual' => $parcelForbuyQuery->sum('qty_actual'),
-                    'qty_create_bill' => $parcelForbuyQuery->sum('qty_create_bill'),
+                    'import_actual' => number_format($parcelForbuyQuery->sum('qty_actual')),
+                    'qty_create_bill' => number_format($parcelForbuyQuery->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelForbuyQuery->sum('weight_create_bill'), 2),
                     'total_lak' => number_format($parcelForbuyQuery->sum('total_lak'), 2),
                     'price_per_weight' => number_format($parcelForbuyQuery->avg('price_per_weight'), 2),
@@ -772,7 +774,7 @@ class ReportController extends Controller
             } else {
                 $parcelForbuyQuery = Parcel::select(
                     DB::raw('COUNT(parcels.id) as qty_actual'),
-                    DB::raw('SUM(parcels.id) as qty_create_bill'),
+                    DB::raw('COUNT(parcels.id) as qty_create_bill'),
                     DB::raw('SUM(weight) as weight_create_bill'),
                     DB::raw('SUM(price) as total_lak'),
                     DB::raw('SUM(price) / SUM(weight) as price_per_weight'),
@@ -787,8 +789,8 @@ class ReportController extends Controller
                     'end_date' => Carbon::now()->format('Y-m-d'),
                     'group' => 'Import Parcels - ForBuy',
                     'description' => "",
-                    'import_actual' => $parcelForbuyQuery->sum('qty_actual'),
-                    'qty_create_bill' => $parcelForbuyQuery->sum('qty_create_bill'),
+                    'import_actual' => number_format($parcelForbuyQuery->sum('qty_actual')),
+                    'qty_create_bill' => number_format($parcelForbuyQuery->sum('qty_create_bill')),
                     'weight_create_bill' => number_format($parcelForbuyQuery->sum('weight_create_bill'), 2),
                     'total_lak' => number_format($parcelForbuyQuery->sum('total_lak'), 2),
                     'price_per_weight' => number_format($parcelForbuyQuery->avg('price_per_weight'), 2),
@@ -827,7 +829,7 @@ class ReportController extends Controller
                     ->get();
             } else {
                 $responseData['income_other'] = IncomeExpense::
-                    // where('type', 'income')
+                // where('type', 'income')
                     // ->where('sub_type', 'other')
                     whereNull('deleted_at')
                     // ->where('status', 'verify')
