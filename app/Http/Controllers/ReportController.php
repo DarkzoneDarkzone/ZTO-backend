@@ -821,7 +821,7 @@ class ReportController extends Controller
                 foreach ($parcelForbuyQuery as $ForbuyQuery) {
                     $ForbuyQuery->total_cny = ceil(($ForbuyQuery->total_lak / ($ForbuyQuery->currencies_cny * $ForbuyQuery->currencies_lak)) * 100) / 100;
                 }
-                
+
                 $responseData['import_parcels_forbuy'] = [
                     'start_date' => Carbon::now()->format('Y-m-d'),
                     'end_date' => Carbon::now()->format('Y-m-d'),
@@ -847,49 +847,42 @@ class ReportController extends Controller
                     ->where('sub_type', 'other')
                     ->whereNull('deleted_at')
                     ->where('status', 'verify')
-                    ->where('created_at', '>=', $request->query('start_at'))
-                    ->where('created_at', '<=', $request->query('end_at'))
+                    ->whereBetween('created_at', [$request->start_at, $request->end_at])
                     ->get();
 
                 $responseData['expenses_other'] = IncomeExpense::where('type', 'expenses')
                     ->where('sub_type', 'other')
                     ->whereNull('deleted_at')
                     ->where('status', 'verify')
-                    ->where('created_at', '>=', $request->query('start_at'))
-                    ->where('created_at', '<=', $request->query('end_at'))
+                    ->whereBetween('created_at', [$request->start_at, $request->end_at])
                     ->get();
 
                 $responseData['income_top_up'] = IncomeExpense::where('type', 'income')
                     ->where('sub_type', 'top_up')
                     ->whereNull('deleted_at')
                     ->where('status', 'verify')
-                    ->where('created_at', '>=', $request->query('start_at'))
-                    ->where('created_at', '<=', $request->query('end_at'))
+                    ->whereBetween('created_at', [$request->start_at, $request->end_at])
                     ->get();
             } else {
-                $responseData['income_other'] = IncomeExpense::
-                    // where('type', 'income')
-                    // ->where('sub_type', 'other')
-                    whereNull('deleted_at')
-                    // ->where('status', 'verify')
-                    // ->where('created_at', '>=', Carbon::now()->format('Y-m-d'))
-                    // ->where('created_at', '<=', Carbon::now()->format('Y-m-d'))
+                $responseData['income_other'] = IncomeExpense::where('type', 'income')
+                    ->where('sub_type', 'other')
+                    ->whereNull('deleted_at')
+                    ->where('status', 'verify')
+                    ->whereDate('created_at', Carbon::now())
                     ->get();
 
                 $responseData['expenses_other'] = IncomeExpense::where('type', 'expenses')
                     ->where('sub_type', 'other')
                     ->whereNull('deleted_at')
                     ->where('status', 'verify')
-                    ->where('created_at', '>=', Carbon::now()->format('Y-m-d'))
-                    ->where('created_at', '<=', Carbon::now()->format('Y-m-d'))
+                    ->whereDate('created_at', Carbon::now())
                     ->get();
 
                 $responseData['income_top_up'] = IncomeExpense::where('type', 'income')
                     ->where('sub_type', 'top_up')
                     ->whereNull('deleted_at')
                     ->where('status', 'verify')
-                    ->where('created_at', '>=', Carbon::now()->format('Y-m-d'))
-                    ->where('created_at', '<=', Carbon::now()->format('Y-m-d'))
+                    ->whereDate('created_at', Carbon::now())
                     ->get();
             }
 

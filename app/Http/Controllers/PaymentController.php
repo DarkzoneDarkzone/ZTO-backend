@@ -184,16 +184,7 @@ class PaymentController extends Controller
         DB::beginTransaction();
         try {
             $auth_id = Auth::user()->id;
-            $bills = Bill::whereIn('bill_no', $request->bill)->get();
-            // foreach ($bills as $key => $bill) {
-            //     if ($bill->status != 'shipped') {
-            //         return response()->json([
-            //             'msg' => 'some bill not shipped.',
-            //             'status' => 'ERROR',
-            //             'data' => array()
-            //         ], 400);
-            //     }
-            // }
+            $bills = Bill::whereIn('bill_no', $request->bill)->where('status', 'shipped')->get();
 
             /////// check bills
             $bills_id = array();
@@ -204,40 +195,42 @@ class PaymentController extends Controller
                 $bills_price_lak += $bill->amount_lak;
                 $bills_price_cny += $bill->amount_cny;
             }
-            // $currency_now = Currency::orderBy('id', 'desc')->first();
             /////// check payments
             $payments_save = array();
             $payments_price_lak = 0;
             $payments_price_cny = 0;
+            $payment_methods_check = array();
             foreach ($request->payment_type as $key => $pay_type) {
-                $payment = new Payment();
-                $payment->created_by = $auth_id;
-                $payment->active = $request->active;
-                $payment->method = $pay_type['name'];
-                switch ($pay_type['currency']) {
-                    case 'lak':
-                        $payment->amount_lak = $pay_type['amount_lak'];
-                        // $payment->amount_cny = $pay_type['amount'] / ($currency_now->amount_cny * $currency_now->amount_lak);
-                        $payment->amount_cny = $pay_type['amount_cny'];
-                        break;
-                    case 'cny':
-                        // $payment->amount_lak = $pay_type['amount'] * ($currency_now->amount_lak / $currency_now->amount_cny);
-                        $payment->amount_lak = $pay_type['amount_lak'];
-                        $payment->amount_cny = $pay_type['amount_cny'];
-                        break;
-                    default:
-                        $payment->amount_lak = 0;
-                        $payment->amount_cny = 0;
-                        break;
+                if (in_array($pay_type['name'], $payment_methods_check)) {
+                } else {
+                    array_push($payment_methods_check, $pay_type['name']);
+                    $payment = new Payment();
+                    $payment->created_by = $auth_id;
+                    $payment->active = $request->active;
+                    $payment->method = $pay_type['name'];
+                    switch ($pay_type['currency']) {
+                        case 'lak':
+                            $payment->amount_lak = $pay_type['amount_lak'];
+                            $payment->amount_cny = $pay_type['amount_cny'];
+                            break;
+                        case 'cny':
+                            $payment->amount_lak = $pay_type['amount_lak'];
+                            $payment->amount_cny = $pay_type['amount_cny'];
+                            break;
+                        default:
+                            $payment->amount_lak = 0;
+                            $payment->amount_cny = 0;
+                            break;
+                    }
+                    $payments_price_lak += $payment->amount_lak;
+                    $payments_price_cny += $payment->amount_cny;
+                    array_push($payments_save, $payment);
                 }
-                // $payment->amount_lak = ceil($payment->amount_lak * 100)/ 100;
-                // $payment->amount_cny = ceil($payment->amount_cny * 100)/ 100;
-                $payments_price_lak += $payment->amount_lak;
-                $payments_price_cny += $payment->amount_cny;
-                array_push($payments_save, $payment);
             }
 
+            $randomNumber = rand(10, 99);
 
+            // sleep(2);
             /////// create payment_no
             $currentDate = Carbon::now()->format('ym');
             $payCount = Payment::whereYear('created_at', Carbon::now()->year)
@@ -246,10 +239,12 @@ class PaymentController extends Controller
             if (isset($payCount)) {
                 $ex = explode('-', $payCount);
                 $number = (int) $ex[1];
-                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1);
+                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1) . '-' . $randomNumber;
             } else {
-                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', 00001);
+                $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', 00001) . '-' . $randomNumber;
             }
+
+            // $payment_no_defult = Carbon::now()->getTimestampMs() . $randomNumber;
 
             $check_bills_payments = false;
             if ($pay_type['currency'] == 'lak') {
@@ -289,21 +284,14 @@ class PaymentController extends Controller
                     $payment->Bills()->sync($bills_id);
                 }
             } else {
-                // foreach ($bills as $bill) {
-                //     $bill->status = 'waiting_payment';
-                //     $bill->save();
-                // }
+
                 foreach ($payments_save as $key => $payment) {
                     $payment->payment_no = $payment_no_defult;
                     $payment->status = 'pending';
                     $payment->save();
+                    // DB::commit();
                     $payment->Bills()->sync($bills_id);
                 }
-                // return response()->json([
-                //     'msg' => 'payments Not enough.',
-                //     'status' => 'ERROR',
-                //     'data' => array()
-                // ], 400);
             }
             DB::commit();
             return response()->json([
