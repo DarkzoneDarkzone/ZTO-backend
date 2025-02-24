@@ -62,7 +62,7 @@ class PaymentController extends Controller
                 foreach ($arraySorts as $sort) {
                     [$field, $direction] = explode(':', $sort);
                     $pay_query = 'pay_query.';
-                    if ($field == 'created_at' || $field == 'updated_at' || $field == 'pay_created_at' || $field == 'pay_updated_at') {
+                    if ($field == 'created_at' || $field == 'updated_at') {
                         $pay_query = $pay_query.'pay_';
                     }
                     $bill_payment->orderBy($pay_query. $field, $direction);
