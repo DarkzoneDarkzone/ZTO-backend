@@ -37,20 +37,20 @@ Route::get('/run-seeder', function () {
 
 });
 
-Route::get('/run-migrations-timezone7', function () {
-    try {
-        $migrationPath = database_path('database/migrations/2024_11_03_073400_add_zto_track_to_parcels_table.php');
-        Artisan::call('migrate', [
-            '--path' => $migrationPath,
-            '--force' => true, 
-            // '--database' => 'tradings_zto_db'
-        ]);
+// Route::get('/run-migrations-timezone7', function () {
+//     try {
+//         $migrationPath = database_path('database/migrations/2024_11_03_073400_add_zto_track_to_parcels_table.php');
+//         Artisan::call('migrate', [
+//             '--path' => $migrationPath,
+//             '--force' => true, 
+//             // '--database' => 'tradings_zto_db'
+//         ]);
         
-        return "Migration for 'posts' table ran successfully.";
-    } catch (\Exception $e) {
-        return "Error: " . $e->getMessage();
-    }
-});
+//         return "Migration for 'posts' table ran successfully.";
+//     } catch (\Exception $e) {
+//         return "Error: " . $e->getMessage();
+//     }
+// });
 
 Route::group([
     'middleware' => 'api',
@@ -125,6 +125,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/bill/{id}', [BillController::class, 'getById']);
     Route::post('/bill', [BillController::class, 'createBill']);
     Route::post('/shipping', [BillController::class, 'createShipping']);
+    Route::post('/shipping-payment', [BillController::class, 'createShippingPayment']);
     Route::patch('/bill/{id}', [BillController::class, 'updateBill']);
     Route::delete('/bill/{id}', [BillController::class, 'destroy']);
 

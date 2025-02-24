@@ -6,6 +6,7 @@ use App\Models\Bill;
 use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\Parcel;
+use App\Models\Payment;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
@@ -77,5 +78,36 @@ abstract class Controller
                 }
             }
         }
+    }
+
+
+    public function CreatePaymentDraft($biils_id, $auth_id)
+    {
+        // create payment
+        $payment = new Payment();
+        $payment->created_by = $auth_id;
+        $payment->active = true;
+        $payment->method = null;
+        $payment->amount_lak = 0;
+        $payment->amount_cny = 0;
+        $payment->status = 'pending';
+
+        /// create payment_no
+        $currentDate = Carbon::now()->format('ym');
+        $payCount = Payment::whereYear('created_at', Carbon::now()->year)
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->max('payment_no');
+        $randomNumber = rand(10, 99);
+        if (isset($payCount)) {
+            $ex = explode('-', $payCount);
+            $number = (int) $ex[1];
+            $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', $number + 1) . '-' . $randomNumber;
+        } else {
+            $payment_no_defult = 'SK' . $currentDate . '-' . sprintf('%05d', 00001) . '-' . $randomNumber;
+        }
+
+        $payment->payment_no = $payment_no_defult;
+        $payment->save();
+        $payment->Bills()->sync($biils_id);
     }
 }

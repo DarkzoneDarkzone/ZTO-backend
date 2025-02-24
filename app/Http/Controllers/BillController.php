@@ -32,7 +32,7 @@ class BillController extends Controller
                 $arrayFilter = explode(',', $request->query('filters', []));
                 foreach ($arrayFilter as $filter) {
                     $ex = explode(':', $filter);
-                    $query->where($Operator->FiltersOperators(['bills.'.$ex[0], $ex[1], $ex[2]]));
+                    $query->where($Operator->FiltersOperators(['bills.' . $ex[0], $ex[1], $ex[2]]));
                 }
             }
             if ($request->has('searchText')) {
@@ -55,19 +55,19 @@ class BillController extends Controller
                 DB::raw('MAX(payments.id) as payment_id'),
                 'payments.payment_no'
             )->groupBy('payment_no');
-            
+
             $query = $query->leftJoinSub($bill_pay_sub, 'bill_pay_q', function (JoinClause $join) {
                 $join->join('bill_payment', 'bill_payment.payment_id', '=', 'bill_pay_q.payment_id');
                 $join->on('bill_payment.bill_id', '=', 'bills.id');
                 // $join->select('bill_payment.bill_id as bill_id', 'bill_payment.payment_id', 'bill_payment.id as bill_pay_id');
             });
             $query->select('bills.*', 'bill_pay_q.payment_no', 'parcel_q.total_weight');
-            
+
             if ($request->has('sorts')) {
                 $arraySorts = explode(',', $request->query('sorts', []));
                 foreach ($arraySorts as $sort) {
                     [$field, $direction] = explode(':', $sort);
-                    $query->orderBy('bills.'.$field, $direction);
+                    $query->orderBy('bills.' . $field, $direction);
                 }
             }
 
@@ -214,7 +214,7 @@ class BillController extends Controller
             } else {
                 $bill->bill_no = $currentDate . '-' . sprintf('%05d', 00001);
             }
-            
+
             $bill->save();
 
             foreach ($parcels as $parcel) {
@@ -299,6 +299,71 @@ class BillController extends Controller
                 }
             }
 
+            DB::commit();
+            return response()->json([
+                'code' => 200,
+                'status' => 'created',
+                'data' => array()
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'msg' => 'Something wrong.',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+                'code' => 500
+            ], 500);
+        }
+    }
+
+
+
+
+    public function createShippingPayment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'bill_no' => 'required|array',
+            'bill_no.*' => 'string',
+        ]);
+
+        if ($validator->fails()) {
+            $errors_val = $this->ValidatorErrors($validator);
+            return response()->json([
+                'msg' => 'validator errors',
+                'errors' => $errors_val,
+                'status' => 'ERROR',
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            $auth_id = Auth::user()->id;
+            $bills = Bill::whereIn('bill_no', $request->bill_no)->orderBy('id', 'desc')->where('status', 'ready')->get();
+            if (count($bills) == 0) {
+                return response()->json([
+                    'msg' => 'bills not found or status not ready .',
+                    'status' => 'ERROR',
+                    'data' => array()
+                ], 400);
+            }
+            $phoneInBill = array_column($bills->toArray(), 'phone');
+            $phoneInBill = array_unique($phoneInBill);
+
+            foreach ($phoneInBill as $key => $phone) {
+                if (isset($phone) && $phone != 0) {
+                    $bill_no_by_phone = collect($bills)->where('phone', $phone);
+                    foreach ($bill_no_by_phone as $bill_ship) {
+                        $bill_ship->status = 'shipped';
+                        $bill_ship->save();
+                        foreach ($bill_ship->Parcels as $parcel) {
+                            $parcel->shipping_at = Carbon::now();
+                            $parcel->save();
+                        }
+                    }
+                    $bill_create_payement =  $bill_no_by_phone->pluck('id')->toArray();
+                    $this->CreatePaymentDraft($bill_create_payement, $auth_id);
+                }
+            }
             DB::commit();
             return response()->json([
                 'code' => 200,
