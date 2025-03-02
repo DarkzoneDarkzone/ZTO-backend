@@ -12,27 +12,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('income_expenses', function (Blueprint $table) {
+        Schema::create('zto_balance_transaction', function (Blueprint $table) {
             $table->id();
-            $table->enum('type', ['income', 'expenses']);
-            $table->enum('sub_type', ['return', 'refund', 'other', 'top_up']);
-            // $table->enum('pay_type', ['cash', 'transffer']);
-            $table->enum('status', ['pending', 'verify']);
+            $table->float('amount_lak')->default(0);
+            $table->float('balance_amount_lak')->default(0);
+            $table->string('description')->nullable();
+            $table->string('bank_name')->nullable();
+
             $table->float('pay_cash')->nullable();
             $table->float('pay_transfer')->nullable();
             $table->float('pay_alipay')->nullable();
             $table->float('pay_wechat')->nullable();
 
-            $table->string('description')->nullable();
-            $table->float('amount_lak')->nullable();
-            $table->float('amount_cny')->nullable();
-            // $table->boolean('verify')->default(false);
-
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
             $table->softDeletes();
-
-
         });
     }
 
@@ -41,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('income_expenses');
+        Schema::dropIfExists('zto_balance_transaction');
     }
 };

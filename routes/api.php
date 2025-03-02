@@ -13,6 +13,7 @@ use App\Http\Controllers\ParcelController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ZtoBalanceCreditController;
 use App\Models\CustomerLevel;
 use App\Models\IncomeExpense;
 use App\Models\Parcel;
@@ -147,5 +148,9 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/report/income-expenses', [ReportController::class, 'reportIncomeExpenses']);
     Route::get('/export/income-expenses', [ReportController::class, 'exportReportIncomeExpenses']);
     Route::get('/report/daily-report', [ReportController::class, 'reportDailyReport']);
+
+    // credit - topup
+    Route::get('/credit/report-parcel-topup', [ZtoBalanceCreditController::class, 'reportParcelTopup']);
+    Route::post('/credit/topup', [ZtoBalanceCreditController::class, 'createTopup']);
 
 });
