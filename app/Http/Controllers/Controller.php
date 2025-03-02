@@ -109,5 +109,7 @@ abstract class Controller
         $payment->payment_no = $payment_no_defult;
         $payment->save();
         $payment->Bills()->sync($biils_id);
+
+        return $payment;
     }
 }

@@ -349,6 +349,8 @@ class BillController extends Controller
             $phoneInBill = array_column($bills->toArray(), 'phone');
             $phoneInBill = array_unique($phoneInBill);
 
+            $payment_no = null;
+            
             foreach ($phoneInBill as $key => $phone) {
                 if (isset($phone) && $phone != 0) {
                     $bill_no_by_phone = collect($bills)->where('phone', $phone);
@@ -361,14 +363,17 @@ class BillController extends Controller
                         }
                     }
                     $bill_create_payement =  $bill_no_by_phone->pluck('id')->toArray();
-                    $this->CreatePaymentDraft($bill_create_payement, $auth_id);
+                    $payment = $this->CreatePaymentDraft($bill_create_payement, $auth_id);
+                    if (count($phoneInBill) == 1) {
+                        $payment_no = $payment->payment_no;
+                    }
                 }
             }
             DB::commit();
             return response()->json([
                 'code' => 200,
                 'status' => 'created',
-                'data' => array()
+                'data' => $payment_no
             ], 200);
         } catch (Exception $e) {
             DB::rollBack();
