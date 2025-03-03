@@ -8,7 +8,9 @@ use App\Models\Bill;
 use App\Models\Currency;
 use App\Models\Customer;
 use App\Models\Parcel;
+use App\Models\ParcelBalanceTransaction;
 use App\Models\ReturnParcel;
+use App\Models\ZtoBalanceCredit;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Query\JoinClause;
@@ -308,6 +310,7 @@ class ParcelController extends Controller
         DB::beginTransaction();
 
         try {
+            $timenow = Carbon::now()->format('Y-m-d H:i:s');
             $import = new ParcelImport;
             $import->import($request->file('file'));
 
@@ -361,6 +364,26 @@ class ParcelController extends Controller
             Customer::insert($customerArr);
             Parcel::insert($parcelArrCreate);
 
+            $parcelCreatedLast = Parcel::where('created_at', '>=', $timenow)->get()->toArray();
+            $ztoBalanceCredit = ZtoBalanceCredit::orderBy('created_at', 'desc')->first();
+            $balance = $ztoBalanceCredit ? $ztoBalanceCredit->balance_amount_lak : 0;
+            $parcelBalanceTransaction = [];
+            foreach ($parcelCreatedLast as $key => $value) {
+                $balance -= $value->price;
+                $parcelBalanceObj = [
+                    'amount_lak' => $value->price,
+                    'balance_amount_lak' => $balance,
+                    'parcel_id' => $value->id,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ];
+                array_push($parcelBalanceTransaction, $parcelBalanceObj);
+            }
+
+            ParcelBalanceTransaction::insert($parcelBalanceTransaction);
+            $ztoBalanceCredit->balance_amount_lak = $balance;
+            $ztoBalanceCredit->save();
+            
             foreach ($customer_phone as $key => $value) {
                 $this->CreateBillByPhone($value);
             }
