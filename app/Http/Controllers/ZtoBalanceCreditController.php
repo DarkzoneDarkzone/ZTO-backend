@@ -59,7 +59,7 @@ class ZtoBalanceCreditController extends Controller
                 'parcels.track_no',
                 'parcels.zto_track_no',
                 'parcels.weight',
-                'parcels.price', 
+                'parcels.price',
                 'parcels.created_at as import_at',
                 // DB::raw('CASE WHEN parcels.price IS NOT NULL THEN parcels.price * -1 ELSE 0 END as cost_price'),
             )
@@ -75,7 +75,8 @@ class ZtoBalanceCreditController extends Controller
             if ($request->has('searchText')) {
                 $arraySearchText = ['parcels.track_no'];
                 foreach ($arraySearchText as $key => $value) {
-                    $parcelBalance_parcel->orWhereLike($value,  '%' . $request->query('searchText') . '%');
+                    // $parcelBalance_parcel->orWhereLike($value,  '%' . $request->query('searchText') . '%');
+                    $parcelBalance_parcel->whereAny($arraySearchText, 'like', '%' . $request->query('searchText') . '%');
                 }
             }
             // dd($parcelBalance_parcel->toSql());
@@ -88,6 +89,10 @@ class ZtoBalanceCreditController extends Controller
                 'cost_price' => number_format($parcelBalance_parcel->sum('price') * -1, 2),
                 'balance' => number_format($parcelBalance_parcel->sum('balance_amount_lak'), 2),
             ];
+
+            $balanceCredit = ZtoBalanceCredit::orderBy('id', 'desc')->first();
+            $responseData['topup'] = isset($balanceCredit) ? $balanceCredit->balance_amount_lak : 0;
+
 
             return response()->json([
                 'data' => $responseData,
