@@ -16,6 +16,25 @@ use Illuminate\Support\Facades\Validator;
 class ZtoBalanceCreditController extends Controller
 {
 
+    public function getTopup()
+    {
+        try {
+            $balanceCredit = ZtoBalanceCredit::orderBy('id', 'desc')->first();
+            return response()->json([
+                'data' => $balanceCredit->balance_amount_lak,
+                'status' => 'OK',
+                'code' => 200,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'msg' => 'Get Topup Credit failed',
+                'errors' => $e->getMessage(),
+                'status' => 'ERROR',
+                'data' => [],
+            ], 400);
+        }
+    }
+
 
     public function reportParcelTopup(Request $request)
     {
