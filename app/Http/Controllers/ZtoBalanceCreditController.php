@@ -60,7 +60,7 @@ class ZtoBalanceCreditController extends Controller
                 }
             }
             // dd($parcelBalance_parcel->toSql());
-            $data_parcelBalance = $parcelBalance_parcel->orderByDesc('id', 'created_at')->get();
+            $data_parcelBalance = $parcelBalance_parcel->orderBy('id', 'asc')->orderBy('created_at', 'desc')->get();
 
             $responseData = [];
             $responseData['parcel_balance'] = $data_parcelBalance;
