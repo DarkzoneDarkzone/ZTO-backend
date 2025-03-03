@@ -124,15 +124,21 @@ class ZtoBalanceCreditController extends Controller
             $balanceTransaction->save();
 
             $balanceCredit_last = ZtoBalanceCredit::orderBy('id', 'desc')->first();
-            $balanceCredit = new ZtoBalanceCredit();
+            // $balanceCredit = new ZtoBalanceCredit();
             if ($balanceCredit_last) {
-                $balanceCredit->balance_amount_lak = $balanceCredit_last->balance_amount_lak + $request->amount;
-                $balanceCredit_last->delete();
+                $balanceCredit_last->balance_amount_lak = $balanceCredit_last->balance_amount_lak + $request->amount;
+                $balanceCredit_last->save();
+                
+                // $balanceCredit->balance_amount_lak = $balanceCredit_last->balance_amount_lak + $request->amount;
+                // $balanceCredit_last->delete();
             } else {
+                $balanceCredit = new ZtoBalanceCredit();
                 $balanceCredit->balance_amount_lak = $request->amount;
-            }
-            $balanceCredit->save();
+                $balanceCredit->save();
 
+                // $balanceCredit->balance_amount_lak = $request->amount;
+            }
+            // $balanceCredit->save();
 
 
             DB::commit();
