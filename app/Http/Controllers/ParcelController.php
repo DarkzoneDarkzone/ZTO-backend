@@ -364,7 +364,7 @@ class ParcelController extends Controller
             Customer::insert($customerArr);
             Parcel::insert($parcelArrCreate);
 
-            $parcelCreatedLast = Parcel::where('created_at', '>=', $timenow)->get()->toArray();
+            $parcelCreatedLast = Parcel::where('created_at', '>=', $timenow)->get();
             $ztoBalanceCredit = ZtoBalanceCredit::orderBy('created_at', 'desc')->first();
             $balance = $ztoBalanceCredit ? $ztoBalanceCredit->balance_amount_lak : 0;
             $parcelBalanceTransaction = [];
@@ -383,7 +383,7 @@ class ParcelController extends Controller
             ParcelBalanceTransaction::insert($parcelBalanceTransaction);
             $ztoBalanceCredit->balance_amount_lak = $balance;
             $ztoBalanceCredit->save();
-            
+
             foreach ($customer_phone as $key => $value) {
                 $this->CreateBillByPhone($value);
             }
