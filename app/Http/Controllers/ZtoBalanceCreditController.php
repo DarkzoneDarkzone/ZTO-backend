@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Parcel;
-use App\Models\ParcelBalanceCredit;
+use App\Models\ParcelBalanceTransaction;
 use App\Models\ZtoBalanceCredit;
 use App\Models\ZtoBalanceTransaction;
 use Carbon\Carbon;
@@ -35,7 +35,7 @@ class ZtoBalanceCreditController extends Controller
         }
 
         try {
-            $parcelBalance_parcel = ParcelBalanceCredit::select(
+            $parcelBalance_parcel = ParcelBalanceTransaction::select(
                 'parcel_balance_credit.*',
                 'parcels.track_no',
                 'parcels.zto_track_no',
@@ -127,10 +127,13 @@ class ZtoBalanceCreditController extends Controller
             $balanceCredit = new ZtoBalanceCredit();
             if ($balanceCredit_last) {
                 $balanceCredit->balance_amount_lak = $balanceCredit_last->balance_amount_lak + $request->amount;
+                $balanceCredit_last->delete();
             } else {
                 $balanceCredit->balance_amount_lak = $request->amount;
             }
             $balanceCredit->save();
+
+
 
             DB::commit();
             return response()->json([

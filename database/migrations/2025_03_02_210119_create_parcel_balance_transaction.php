@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parcel_balance_credis', function (Blueprint $table) {
+        Schema::create('parcel_balance_transaction', function (Blueprint $table) {
             $table->id();
             $table->float('amount_lak')->default(0);
             $table->float('balance_amount_lak')->default(0);
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('parcel_balance_credis');
+        Schema::dropIfExists('parcel_balance_transaction');
     }
 };
