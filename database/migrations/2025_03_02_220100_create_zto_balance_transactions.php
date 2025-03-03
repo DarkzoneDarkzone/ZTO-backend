@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('zto_balance_transaction', function (Blueprint $table) {
+        Schema::create('zto_balance_transactions', function (Blueprint $table) {
             $table->id();
             $table->float('amount_lak')->default(0);
             $table->float('balance_amount_lak')->default(0);
@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('zto_balance_transaction');
+        Schema::dropIfExists('zto_balance_transactions');
     }
 };

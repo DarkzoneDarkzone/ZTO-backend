@@ -12,13 +12,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('zto_balance_credit', function (Blueprint $table) {
+        Schema::create('parcel_balance_transactions', function (Blueprint $table) {
             $table->id();
+            $table->float('amount_lak')->default(0);
             $table->float('balance_amount_lak')->default(0);
+            $table->unsignedBigInteger('parcel_id')->nullable();
 
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
             $table->softDeletes();
+
+            $table->foreign('parcel_id')->references('id')->on('parcels')->nullable()->nullOnDelete()->cascadeOnUpdate();
+
         });
     }
 
@@ -27,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('zto_balance_credit');
+        Schema::dropIfExists('parcel_balance_transactions');
     }
 };

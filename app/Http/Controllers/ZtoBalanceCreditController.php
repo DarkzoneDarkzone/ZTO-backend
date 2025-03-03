@@ -36,21 +36,21 @@ class ZtoBalanceCreditController extends Controller
 
         try {
             $parcelBalance_parcel = ParcelBalanceTransaction::select(
-                'parcel_balance_credit.*',
+                'parcel_balance_transactions.*',
                 'parcels.track_no',
                 'parcels.zto_track_no',
                 'parcels.weight',
-                // 'parcels.price', 
+                'parcels.price', 
                 'parcels.created_at as import_at',
-                DB::raw('CASE WHEN parcels.price IS NOT NULL THEN parcels.parcels.price * -1 ELSE 0 END as cost_price'),
+                // DB::raw('CASE WHEN parcels.price IS NOT NULL THEN parcels.price * -1 ELSE 0 END as cost_price'),
             )
-                ->leftJoin('parcels', 'parcels.id', '=', 'parcel_balance_credit.parcel_id')
-                ->orderBy('parcel_balance_credit.id', 'desc');
+                ->leftJoin('parcels', 'parcels.id', '=', 'parcel_balance_transactions.parcel_id')
+                ->orderBy('parcel_balance_transactions.id', 'desc');
 
             if ($request->start_at && $request->end_at) {
-                $parcelBalance_parcel->whereBetween('parcel_balance_credit.created_at', [$request->start_at, $request->end_at]);
+                $parcelBalance_parcel->whereBetween('parcel_balance_transactions.created_at', [$request->start_at, $request->end_at]);
             } else {
-                $parcelBalance_parcel->whereDate('parcel_balance_credit.created_at', Carbon::now());
+                $parcelBalance_parcel->whereDate('parcel_balance_transactions.created_at', Carbon::now());
             }
 
             if ($request->has('searchText')) {
@@ -59,13 +59,14 @@ class ZtoBalanceCreditController extends Controller
                     $parcelBalance_parcel->orWhereLike($value,  '%' . $request->query('searchText') . '%');
                 }
             }
+            // dd($parcelBalance_parcel->toSql());
             $data_parcelBalance = $parcelBalance_parcel->get();
 
             $responseData = [];
             $responseData['parcel_balance'] = $data_parcelBalance;
             $responseData['total'] = [
                 'weight' => number_format($parcelBalance_parcel->sum('weight'), 2),
-                'cost_price' => number_format($parcelBalance_parcel->sum('cost_price'), 2),
+                'cost_price' => number_format($parcelBalance_parcel->sum('price') * -1, 2),
                 'balance' => number_format($parcelBalance_parcel->sum('balance_amount_lak'), 2),
             ];
 
@@ -128,7 +129,7 @@ class ZtoBalanceCreditController extends Controller
             if ($balanceCredit_last) {
                 $balanceCredit_last->balance_amount_lak = $balanceCredit_last->balance_amount_lak + $request->amount;
                 $balanceCredit_last->save();
-                
+
                 // $balanceCredit->balance_amount_lak = $balanceCredit_last->balance_amount_lak + $request->amount;
                 // $balanceCredit_last->delete();
             } else {

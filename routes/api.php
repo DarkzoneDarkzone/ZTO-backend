@@ -150,7 +150,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/report/daily-report', [ReportController::class, 'reportDailyReport']);
 
     // credit - topup
-    Route::get('/credit/report-parcel-topup', [ZtoBalanceCreditController::class, 'reportParcelTopup']);
+    Route::get('/credit/report-topup', [ZtoBalanceCreditController::class, 'reportParcelTopup']);
     Route::post('/credit/topup', [ZtoBalanceCreditController::class, 'createTopup']);
 
 });
