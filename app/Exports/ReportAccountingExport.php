@@ -35,7 +35,7 @@ class ReportAccountingExport implements FromGenerator, WithMapping, WithHeadings
     {
         return [
             $row->created_at,
-            $row->payment_no,
+            // $row->payment_no,
             $row->bill_reference,
             $row->amount,
             $row->cash,
